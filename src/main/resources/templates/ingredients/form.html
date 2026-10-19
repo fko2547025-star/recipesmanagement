@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>食材登録</title>
+</head>
+<body>
+    <h1 th:text="${ingredient.id == null} ? '食材登録' : '食材編集'">食材登録</h1>
+
+    <form th:action="${ingredient.id == null} ? @{/ingredients} : @{/ingredients/{id}(id=${ingredient.id})}"
+          th:object="${ingredient}" method="post">
+        <p>
+            食材名：<input type="text" th:field="*{name}" required>
+        </p>
+        <p>
+            数量：<input type="number" step="any" min="0" name="quantity" th:value="*{quantityText}" required>
+            単位：<input type="text" th:field="*{unit}" list="units" required>
+            <datalist id="units">
+                <option value="個"></option>
+                <option value="g"></option>
+                <option value="ml"></option>
+                <option value="本"></option>
+                <option value="パック"></option>
+            </datalist>
+        </p>
+        <p>
+            カテゴリ：
+            <select th:field="*{category}">
+                <option value="肉">肉</option>
+                <option value="魚">魚</option>
+                <option value="野菜">野菜</option>
+                <option value="調味料">調味料</option>
+                <option value="その他">その他</option>
+            </select>
+        </p>
+        <p>
+            期限の種類：
+            <select th:field="*{expiryType}">
+                <option value="賞味期限">賞味期限</option>
+                <option value="消費期限">消費期限</option>
+            </select>
+            期限日：<input type="date" th:field="*{expiryDate}" required>
+        </p>
+        <p>
+            開封日（任意）：<input type="date" th:field="*{openedDate}">
+        </p>
+        <button type="submit" th:text="${ingredient.id == null} ? '登録' : '更新'">登録</button>
+    </form>
+
+    <a href="/ingredients">一覧に戻る</a>
+</body>
+</html>

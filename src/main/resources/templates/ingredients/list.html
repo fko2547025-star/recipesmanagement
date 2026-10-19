@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>食材一覧</title>
+</head>
+<body>
+    <h1>食材一覧</h1>
+    <a href="/ingredients/new">＋ 食材を登録</a>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>食材名</th>
+                <th>数量</th>
+                <th>カテゴリ</th>
+                <th>期限</th>
+                <th>開封日</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="item : ${ingredients}">
+                <td th:text="${item.name}">卵</td>
+                <td th:text="${item.quantityText} + ' ' + ${item.unit}">6 個</td>
+                <td th:text="${item.category}">その他</td>
+                <td th:text="${item.expiryType} + '：' + ${item.expiryDate}">賞味期限：2026-10-25</td>
+                <td th:text="${item.openedDate}">-</td>
+                <td>
+                    <a th:href="@{/ingredients/{id}/edit(id=${item.id})}">編集</a>
+                    <form th:action="@{/ingredients/{id}/delete(id=${item.id})}" method="post" style="display:inline"
+                        onsubmit="return confirm('削除しますか？');">
+                        <button type="submit">削除</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
