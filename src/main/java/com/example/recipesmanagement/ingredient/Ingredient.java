@@ -62,4 +62,9 @@ public class Ingredient {
 
     public LocalDate getOpenedDate() { return openedDate; }
     public void setOpenedDate(LocalDate openedDate) { this.openedDate = openedDate; }
+
+    // 数量を変更する（0未満にはしない）
+    public void changeQuantity(double newQuantity) {
+        this.quantity = Math.max(0, newQuantity);
+    }
 }

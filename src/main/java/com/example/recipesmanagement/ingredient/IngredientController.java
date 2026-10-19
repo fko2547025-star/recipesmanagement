@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/ingredients")
@@ -19,10 +22,31 @@ public class IngredientController {
         this.repository = repository;
     }
 
-    // 一覧（期限が近い順）
+    // 一覧（カテゴリ絞り込み・並べ替え）
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("ingredients", repository.findAll(Sort.by("expiryDate")));
+    public String list(@RequestParam(required = false) String category,
+                    @RequestParam(defaultValue = "expiry") String sort,
+                    Model model) {
+
+        // 並び順を決める
+        Sort order = switch (sort) {
+            case "expiryDesc" -> Sort.by("expiryDate").descending();
+            case "name"       -> Sort.by("name");
+            case "newest"     -> Sort.by("id").descending();
+            default           -> Sort.by("expiryDate");
+        };
+
+        // カテゴリが指定されていれば絞り込み、なければ全件
+        List<Ingredient> ingredients;
+        if (category == null || category.isEmpty()) {
+            ingredients = repository.findAll(order);
+        } else {
+            ingredients = repository.findByCategory(category, order);
+        }
+
+        model.addAttribute("ingredients", ingredients);
+        model.addAttribute("category", category);
+        model.addAttribute("sort", sort);
         return "ingredients/list";
     }
 
@@ -60,6 +84,14 @@ public class IngredientController {
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id) {
         repository.deleteById(id);
+        return "redirect:/ingredients";
+    }
+
+    @PostMapping("/{id}/quantity")
+    public String changeQuantity(@PathVariable Long id, @RequestParam double quantity) {
+        Ingredient ingredient = repository.findById(id).orElseThrow();
+        ingredient.changeQuantity(quantity);
+        repository.save(ingredient);
         return "redirect:/ingredients";
     }
 

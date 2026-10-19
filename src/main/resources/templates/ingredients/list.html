@@ -8,6 +8,26 @@
     <h1>食材一覧</h1>
     <a href="/ingredients/new">＋ 食材を登録</a>
 
+    <form th:action="@{/ingredients}" method="get">
+        カテゴリ：
+        <select name="category" onchange="this.form.submit()">
+            <option value="">すべて</option>
+            <option value="肉" th:selected="${category == '肉'}">肉</option>
+            <option value="魚" th:selected="${category == '魚'}">魚</option>
+            <option value="野菜" th:selected="${category == '野菜'}">野菜</option>
+            <option value="調味料" th:selected="${category == '調味料'}">調味料</option>
+            <option value="その他" th:selected="${category == 'その他'}">その他</option>
+        </select>
+
+        並び順：
+        <select name="sort" onchange="this.form.submit()">
+            <option value="expiry" th:selected="${sort == 'expiry'}">期限が近い順</option>
+            <option value="expiryDesc" th:selected="${sort == 'expiryDesc'}">期限が遠い順</option>
+            <option value="name" th:selected="${sort == 'name'}">名前順</option>
+            <option value="newest" th:selected="${sort == 'newest'}">新しく登録した順</option>
+        </select>
+    </form>
+
     <table border="1">
         <thead>
             <tr>
@@ -22,14 +42,24 @@
         <tbody>
             <tr th:each="item : ${ingredients}">
                 <td th:text="${item.name}">卵</td>
-                <td th:text="${item.quantityText} + ' ' + ${item.unit}">6 個</td>
+                <td>
+                    <form th:action="@{/ingredients/{id}/quantity(id=${item.id})}" method="post" style="display:inline">
+                        <button type="button"
+                                onclick="const q = this.form.quantity; q.value = Math.max(0, (parseFloat(q.value) || 0) - 1); this.form.submit();">−</button>
+                        <input type="number" name="quantity" th:value="${item.quantityText}" step="any" min="0"
+                               style="width:70px" onchange="this.form.submit()" required>
+                        <button type="button"
+                                onclick="const q = this.form.quantity; q.value = (parseFloat(q.value) || 0) + 1; this.form.submit();">＋</button>
+                    </form>
+                    <span th:text="${item.unit}">個</span>
+                </td>
                 <td th:text="${item.category}">その他</td>
                 <td th:text="${item.expiryType} + '：' + ${item.expiryDate}">賞味期限：2026-10-25</td>
                 <td th:text="${item.openedDate}">-</td>
                 <td>
                     <a th:href="@{/ingredients/{id}/edit(id=${item.id})}">編集</a>
                     <form th:action="@{/ingredients/{id}/delete(id=${item.id})}" method="post" style="display:inline"
-                        onsubmit="return confirm('削除しますか？');">
+                          onsubmit="return confirm('削除しますか？');">
                         <button type="submit">削除</button>
                     </form>
                 </td>
