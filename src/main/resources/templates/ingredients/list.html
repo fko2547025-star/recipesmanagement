@@ -6,6 +6,14 @@
 </head>
 <body>
     <h1>食材一覧</h1>
+
+    <p>
+        ログイン中：<span th:text="${username}">taro</span>
+        <form th:action="@{/logout}" method="post" style="display:inline">
+            <button type="submit">ログアウト</button>
+        </form>
+    </p>
+
     <a href="/ingredients/new">＋ 食材を登録</a>
 
     <form th:action="@{/ingredients}" method="get">

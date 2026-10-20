@@ -3,13 +3,19 @@ package com.example.recipesmanagement.ingredient;
 import java.time.LocalDate;
 import java.text.DecimalFormat;
 
+import com.example.recipesmanagement.user.AppUser;
+
 import org.springframework.format.annotation.DateTimeFormat;
+
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 
 @Entity
@@ -19,6 +25,10 @@ public class Ingredient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;            // 番号（自動で振られる）
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn (name = "user_id", nullable = false)
+    private AppUser user;      //この食材の持ち主
 
     private String name;        // 食材名
     private Double quantity;    // 数量
@@ -67,4 +77,7 @@ public class Ingredient {
     public void changeQuantity(double newQuantity) {
         this.quantity = Math.max(0, newQuantity);
     }
+
+    public AppUser getUser() { return user; }
+    public void setUser(AppUser user) { this.user = user; }
 }
