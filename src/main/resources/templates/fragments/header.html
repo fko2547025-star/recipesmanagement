@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!--
+        全画面共通のナビゲーション。
+        th:fragment="header"：この部分に「header」という名前を付けて、他の画面から読み込めるようにする
+        読み込む側では <div th:replace="~{fragments/header :: header}"></div> と書く
+    -->
+    <header th:fragment="header">
+        <nav>
+            <!-- ===== 誰でも見られるページ ===== -->
+            <a href="/recipes">レシピ一覧</a> |
+
+            <!-- ===== ログイン中だけ表示 ===== -->
+            <!-- th:block：表示されないタグ。中身をまとめて th:if で出し分けるために使う -->
+            <th:block th:if="${loginUsername != null}">
+                <a href="/recipes/new">レシピを投稿</a> |
+            </th:block>
+
+            <a href="/ranking">ランキング</a>
+
+            <th:block th:if="${loginUsername != null}">
+                | <a href="/meal-plans">献立</a>
+                | <a href="/ingredients">食材管理</a>
+                | <a href="/mypage">マイページ</a>
+            </th:block>
+        </nav>
+
+        <!-- ===== 右側：ログイン状態 ===== -->
+        <div>
+            <!-- 未ログイン：ログイン・新規登録へのリンク -->
+            <th:block th:if="${loginUsername == null}">
+                <a href="/login">ログイン</a> |
+                <a href="/register">新規登録</a>
+            </th:block>
+
+            <!-- ログイン中：ユーザー名とログアウトボタン -->
+            <th:block th:if="${loginUsername != null}">
+                <span th:text="${loginUsername} + 'さん'">1さん</span>
+                <!-- ログアウトはログイン状態を変える操作なので POST -->
+                <form th:action="@{/logout}" method="post" style="display:inline">
+                    <button type="submit">ログアウト</button>
+                </form>
+            </th:block>
+        </div>
+        <hr>
+    </header>
+</body>
+</html>

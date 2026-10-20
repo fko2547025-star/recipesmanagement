@@ -28,7 +28,7 @@ public class SecurityConfig {
             // ログイン画面の設定
             .formLogin(form -> form
                 .loginPage("/login")               // 自作のログイン画面を使う
-                .defaultSuccessUrl("/ingredients")  // ログイン成功後の移動先
+                .defaultSuccessUrl("/recipes")  // ログイン成功後の移動先
                 .permitAll()
             )
             // ログアウトの設定

@@ -66,7 +66,6 @@ public class IngredientController {
         model.addAttribute("ingredients", ingredients);
         model.addAttribute("category", category);
         model.addAttribute("sort", sort);
-        model.addAttribute("username", principal.getName());
         return "ingredients/list";
     }
 
