@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!-- タブにレシピのタイトルを表示する -->
+    <title th:text="${recipe.title}">レシピ詳細</title>
+</head>
+<body>
+    <!-- 共通ナビゲーション -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <h1 th:text="${recipe.title}">豚の生姜焼き</h1>
+    <!--
+        投稿者本人にだけ、編集・削除ボタンを表示する。
+        loginUsername は LoginUserAdvice が全画面に渡しているログイン中のユーザー名。
+        ※ボタンを隠すのは見た目の話で、本当の守りはサーバー側の findOwned()（他人なら 403）
+    -->
+    <div th:if="${loginUsername != null and loginUsername == recipe.user.username}">
+        <a th:href="@{/recipes/{id}/edit(id=${recipe.id})}">編集</a>
+        <form th:action="@{/recipes/{id}/delete(id=${recipe.id})}" method="post" style="display:inline"
+              onsubmit="return confirm('このレシピを削除しますか？');">
+            <button type="submit">削除</button>
+        </form>
+    </div>    
+    <!-- 写真があるときだけ表示。/uploads/ファイル名 で WebConfig の設定から写真が返される -->
+    <img th:if="${recipe.imagePath}"
+         th:src="@{/uploads/{file}(file=${recipe.imagePath})}"
+         th:alt="${recipe.title}" style="max-width: 400px">    
+    <p>カテゴリ：<span th:text="${recipe.category}">肉</span></p>
+
+    <!-- 説明は任意なので、入っているときだけ表示 -->
+    <p th:if="${recipe.description}" th:text="${recipe.description}">ご飯がすすむ定番おかず。</p>
+
+    <!-- ===== 材料 ===== -->
+    <h2>材料</h2>
+    <ul>
+        <!-- recipe.ingredients：@OneToMany でつながった材料のリスト（sortOrder 順） -->
+        <li th:each="ing : ${recipe.ingredients}">
+            <span th:text="${ing.name}">豚ロース</span>
+            <!-- 分量は数字が無い材料もあるので、quantityText と単位をつなげて表示 -->
+            <span th:text="${ing.quantityText} + ${ing.unit != null ? ing.unit : ''}">200g</span>
+        </li>
+    </ul>
+
+    <!-- ===== 作り方 ===== -->
+    <h2>作り方</h2>
+    <!--
+        white-space: pre-line：文章の中の改行を、そのまま改行として表示する CSS。
+        th:utext で改行を <br> に置き換える方法もあるが、
+        投稿された文章に HTML タグが入っていると、そのまま実行されてしまう危険がある（XSS）。
+        th:text は自動でタグを無害な文字に変換してくれるので、こちらが安全。
+    -->
+    <div style="white-space: pre-line" th:text="${recipe.steps}">
+        1. 玉ねぎを薄切りにする
+    </div>
+
+    <!-- ===== 投稿者・投稿日時（仕様：レシピの最後に表示） ===== -->
+    <hr>
+    <p>
+        投稿者：<span th:text="${recipe.user.username}">taro</span><br>
+        投稿日時：<span th:text="${#temporals.format(recipe.createdAt, 'yyyy/MM/dd HH:mm')}">2026/10/20 12:00</span>
+        <!-- 編集されたレシピだけ表示（投稿時は 投稿日時 = 更新日時 なので表示しない） -->
+        <th:block th:if="${recipe.updatedAt != null and recipe.updatedAt != recipe.createdAt}">
+            <br>更新日時：<span th:text="${#temporals.format(recipe.updatedAt, 'yyyy/MM/dd HH:mm')}">2026/10/23 12:00</span>
+        </th:block>    
+    </p>
+
+    <a href="/recipes">レシピ一覧に戻る</a>
+</body>
+</html>

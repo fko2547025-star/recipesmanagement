@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!-- recipeId が null なら投稿、あれば編集 -->
+    <title th:text="${recipeId == null} ? 'レシピを投稿' : 'レシピを編集'">レシピを投稿</title>
+</head>
+<body>
+    <!-- 共通ナビゲーション -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <h1 th:text="${recipeId == null} ? 'レシピを投稿' : 'レシピを編集'">レシピを投稿</h1>
+
+    <!-- ===== エラーメッセージ ===== -->
+    <ul th:if="${errors != null}">
+        <li th:each="e : ${errors}" th:text="${e}" style="color: red">エラー</li>
+    </ul>
+
+    <!--
+        送信先：投稿なら POST /recipes、編集なら POST /recipes/{id}
+        enctype="multipart/form-data"：写真（ファイル）を送るために必要
+    -->
+    <form th:action="${recipeId == null} ? @{/recipes} : @{/recipes/{id}(id=${recipeId})}"
+          th:object="${form}" method="post" enctype="multipart/form-data">
+
+        <p>タイトル：<input type="text" th:field="*{title}" maxlength="100" required></p>
+
+        <p>
+            カテゴリ：
+            <select th:field="*{category}">
+                <option th:each="c : ${categories}" th:value="${c}" th:text="${c}">肉</option>
+            </select>
+        </p>
+
+        <p>
+            説明（任意）：<br>
+            <textarea th:field="*{description}" rows="2" cols="50" maxlength="500"></textarea>
+        </p>
+
+        <!-- ===== 写真 ===== -->
+        <!-- 編集で、今の写真があるときは表示し、削除のチェックボックスを出す -->
+        <div th:if="${currentImage != null}">
+            今の写真：<br>
+            <img th:src="@{/uploads/{file}(file=${currentImage})}" style="width: 160px"><br>
+            <!-- チェックすると removeImage=true が送られる。チェックしないと何も送られない -->
+            <label><input type="checkbox" name="removeImage" value="true"> 写真を削除する</label>
+        </div>
+        <p>
+            <span th:text="${currentImage != null} ? '写真を差し替える（任意）：' : '写真（任意）：'">写真（任意）：</span>
+            <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"
+                   onchange="checkImageSize(this)">
+            <br>
+            <small>JPEG・PNG・WebP・GIF、5MBまで</small>
+            <br th:if="${errors != null}">
+            <small th:if="${errors != null}" style="color: red">※写真を選んでいた場合は、もう一度選んでください</small>
+        </p>
+
+        <!-- ===== 材料 ===== -->
+        <h2>材料</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>材料名</th>
+                    <th>分量</th>
+                    <th>単位</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="ingredient-rows">
+                <!-- st.index：今が何番目か。分量と単位は同じ番号の値を表示する -->
+                <tr th:each="name, st : ${form.ingredientNames}">
+                    <td><input type="text" name="ingredientNames" th:value="${name}" maxlength="100"></td>
+                    <td><input type="number" name="ingredientQuantities" th:value="${form.ingredientQuantities[st.index]}"
+                               step="any" min="0" style="width:80px"></td>
+                    <td><input type="text" name="ingredientUnits" th:value="${form.ingredientUnits[st.index]}"
+                               list="units" maxlength="20" style="width:80px"></td>
+                    <td><button type="button" onclick="removeIngredientRow(this)">削除</button></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <datalist id="units">
+            <option value="g"></option>
+            <option value="ml"></option>
+            <option value="個"></option>
+            <option value="本"></option>
+            <option value="枚"></option>
+            <option value="大さじ"></option>
+            <option value="小さじ"></option>
+            <option value="かけ"></option>
+            <option value="少々"></option>
+            <option value="適量"></option>
+        </datalist>
+
+        <button type="button" onclick="addIngredientRow()">＋ 材料を追加</button>
+        <p>※「少々」「適量」のときは、分量を空欄にして単位に入力してください</p>
+
+        <!-- ===== 作り方 ===== -->
+        <h2>作り方</h2>
+        <textarea th:field="*{steps}" rows="8" cols="50" maxlength="4000" required
+                  placeholder="1. 玉ねぎを薄切りにする&#10;2. ..."></textarea>
+
+        <p><button type="submit" th:text="${recipeId == null} ? '投稿する' : '更新する'">投稿する</button></p>
+    </form>
+
+    <!-- 戻り先：投稿ならレシピ一覧、編集ならそのレシピの詳細 -->
+    <a th:if="${recipeId == null}" href="/recipes">レシピ一覧に戻る</a>
+    <a th:if="${recipeId != null}" th:href="@{/recipes/{id}(id=${recipeId})}">編集をやめる</a>
+
+    <script>
+        // ===== 材料の行を追加する =====
+        function addIngredientRow() {
+            const tbody = document.getElementById('ingredient-rows');
+            const newRow = tbody.rows[0].cloneNode(true);
+            newRow.querySelectorAll('input').forEach(input => input.value = '');
+            tbody.appendChild(newRow);
+        }
+
+        // ===== 材料の行を削除する（最後の1行は中身だけ空にする） =====
+        function removeIngredientRow(button) {
+            const tbody = document.getElementById('ingredient-rows');
+            const row = button.closest('tr');
+            if (tbody.rows.length > 1) {
+                row.remove();
+            } else {
+                row.querySelectorAll('input').forEach(input => input.value = '');
+            }
+        }
+
+        // ===== 写真のサイズチェック（5MB を超えたら選択を取り消す） =====
+        function checkImageSize(input) {
+            const file = input.files[0];
+            if (file && file.size > 5 * 1024 * 1024) {
+                alert('写真は5MB以下のものを選んでください');
+                input.value = '';
+            }
+        }
+    </script>
+</body>
+</html>

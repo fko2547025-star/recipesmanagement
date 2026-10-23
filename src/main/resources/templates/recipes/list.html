@@ -5,11 +5,57 @@
     <title>レシピ一覧</title>
 </head>
 <body>
-    <!-- 共通ナビゲーションを読み込む -->
-    <!-- th:replace：この div タグを、fragments/header.html の header 部品に丸ごと置き換える -->
+    <!-- 共通ナビゲーション -->
     <div th:replace="~{fragments/header :: header}"></div>
 
     <h1>レシピ一覧</h1>
-    <p>準備中です。次のステップでレシピを表示できるようにします。</p>
+
+    <!-- ===== カテゴリで絞り込み（データを変えないので GET） ===== -->
+    <form th:action="@{/recipes}" method="get">
+        カテゴリ：
+        <select name="category" onchange="this.form.submit()">
+            <option value="">すべて</option>
+            <!--
+                選択肢は Recipe.CATEGORIES から作る。
+                カテゴリを増やしたいときは Java 側だけ直せば、ここにも反映される
+            -->
+            <option th:each="c : ${categories}"
+                    th:value="${c}" th:text="${c}"
+                    th:selected="${c == category}">肉</option>
+        </select>
+    </form>
+
+    <!-- レシピが1件も無いとき -->
+    <!-- #lists.isEmpty()：Thymeleaf の便利機能。リストが空なら true -->
+    <p th:if="${#lists.isEmpty(recipes)}">レシピがありません</p>
+
+    <!-- ===== レシピ一覧 ===== -->
+    <table border="1" th:unless="${#lists.isEmpty(recipes)}">
+        <thead>
+            <tr>
+                <th>写真</th>
+                <th>タイトル</th>
+                <th>カテゴリ</th>
+                <th>投稿者</th>
+                <th>投稿日</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="recipe : ${recipes}">
+                <td>
+                    <img th:if="${recipe.imagePath}"
+                         th:src="@{/uploads/{file}(file=${recipe.imagePath})}"
+                         th:alt="${recipe.title}" style="width: 80px">
+                </td>                
+                <!-- タイトルをクリックすると詳細画面へ -->
+                <td><a th:href="@{/recipes/{id}(id=${recipe.id})}" th:text="${recipe.title}">豚の生姜焼き</a></td>
+                <td th:text="${recipe.category}">肉</td>
+                <!-- recipe.user.username：レシピ → 投稿者 → ユーザー名 とたどっている -->
+                <td th:text="${recipe.user.username}">taro</td>
+                <!-- #temporals.format()：日時を好きな形に整えて表示する -->
+                <td th:text="${#temporals.format(recipe.createdAt, 'yyyy/MM/dd')}">2026/10/20</td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 </html>
