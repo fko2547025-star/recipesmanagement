@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>レシピ一覧</title>
-</head>
+<head th:replace="~{fragments/head :: head('レシピ一覧')}"></head>
 <body>
     <!-- 共通ナビゲーション -->
     <div th:replace="~{fragments/header :: header}"></div>
 
     <h1>レシピ一覧</h1>
 
-    <!-- ===== カテゴリ・材料で絞り込み（データを変えないので GET） ===== -->
+    <!-- ===== カテゴリ・料理名・材料で検索（データを変えないので GET） ===== -->
     <form th:action="@{/recipes}" method="get">
         カテゴリ：
         <select name="category" onchange="this.form.submit()">
@@ -20,19 +17,19 @@
                     th:selected="${c == category}">肉</option>
         </select>
 
-        材料：
-        <!-- th:value で、検索した文字を入れたままにする -->
-        <input type="text" name="ingredient" th:value="${ingredient}" placeholder="例：豚ロース" maxlength="100">
+        <!-- type="search"：検索用の入力欄（スマホでは「検索」キーが出る、入力を消す × が付くブラウザもある） -->
+        <input type="search" name="q" th:value="${q}" placeholder="料理名または材料" maxlength="100">
         <button type="submit">検索</button>
+
         <!-- 条件があるときだけ「解除」リンク -->
-        <a th:if="${ingredient != null and ingredient != ''} or ${category != null and category != ''}"
+        <a th:if="${(q != null and q != '') or (category != null and category != '')}"
            href="/recipes">条件を解除</a>
     </form>
 
-    <!-- 材料で検索したときは、件数を表示 -->
-    <p th:if="${ingredient != null and ingredient != ''}"
-       th:text="'「' + ${ingredient} + '」を使うレシピ：' + ${#lists.size(recipes)} + '件'">
-        「豚ロース」を使うレシピ：2件
+    <!-- 検索したときは、件数を表示 -->
+    <p th:if="${q != null and q != ''}"
+       th:text="'「' + ${q} + '」の検索結果：' + ${#lists.size(recipes)} + '件'">
+        「豚」の検索結果：8件
     </p>
 
     <!-- レシピが1件も無いとき -->

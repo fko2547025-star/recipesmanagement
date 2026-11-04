@@ -17,6 +17,7 @@ public class RecipeForm {
     private String category;       // カテゴリ
     private String description;    // 説明（任意）
     private String steps;          // 作り方
+    private Integer servings;      // 何人分
 
     // 材料（行ごとの入力値）。分量は空欄や数字以外もありえるので String で受け取る
     private List<String> ingredientNames = new ArrayList<>();
@@ -33,6 +34,7 @@ public class RecipeForm {
         form.setCategory(recipe.getCategory());
         form.setDescription(recipe.getDescription());
         form.setSteps(recipe.getSteps());
+        form.setServings(recipe.getServings());
 
         for (RecipeIngredient ing : recipe.getIngredients()) {
             form.ingredientNames.add(ing.getName());
@@ -83,6 +85,10 @@ public class RecipeForm {
         } else if (steps.length() > 4000) {
             errors.add("作り方は4000文字以内で入力してください");
         }
+    
+        if (servings == null || servings < 1 || servings > 20) {
+            errors.add("何人分かを1〜20で入力してください");
+        } 
 
         // 材料：名前のある行が1つ以上あるか、分量が数字になっているか
         boolean hasIngredient = false;
@@ -135,4 +141,9 @@ public class RecipeForm {
 
     public List<String> getIngredientUnits() { return ingredientUnits; }
     public void setIngredientUnits(List<String> ingredientUnits) { this.ingredientUnits = ingredientUnits; }
+
+
+    public Integer getServings() { return servings; }
+    public void setServings(Integer servings) { this.servings = servings; }
+
 }

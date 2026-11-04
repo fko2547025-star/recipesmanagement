@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title th:text="${recipe.title}">レシピ詳細</title>
-</head>
+<head th:replace="~{fragments/head :: head(${recipe.title})}"></head>
 <body>
     <!-- 共通ナビゲーション -->
     <div th:replace="~{fragments/header :: header}"></div>
@@ -26,14 +23,39 @@
          th:alt="${recipe.title}" style="max-width: 400px">
 
     <p>カテゴリ：<span th:text="${recipe.category}">肉</span></p>
+    <p th:text="${recipe.servings} + '人分'">2人分</p>
     <p th:if="${recipe.description}" th:text="${recipe.description}">ご飯がすすむ定番おかず。</p>
 
-    <!-- ===== 材料 ===== -->
-    <h2>材料</h2>
+    <!-- ===== 材料（人数の切り替えつき） ===== -->
+    <!-- id="ingredients"：人数を変えた後、ここまでスクロールした状態で表示するため -->
+    <h2 id="ingredients">材料</h2>
+
+    <!-- 人数の切り替え。データを変えない操作なので GET -->
+    <form th:action="@{/recipes/{id}(id=${recipe.id})} + '#ingredients'" method="get">
+        <!-- −/＋：1人減らした・増やした URL へのリンク。1人分・20人分より先には行けない -->
+        <a th:if="${servings > 1}"
+           th:href="@{/recipes/{id}(id=${recipe.id},servings=${servings - 1})} + '#ingredients'">[−]</a>
+        <!-- 数字を直接変えたら、すぐ送信 -->
+        <input type="number" name="servings" th:value="${servings}" min="1" max="20"
+               style="width: 50px" onchange="this.form.submit()">
+        <a th:if="${servings < 20}"
+           th:href="@{/recipes/{id}(id=${recipe.id},servings=${servings + 1})} + '#ingredients'">[＋]</a>
+        人分
+    </form>
+
+    <!-- 元の人数と違うときだけ表示 -->
+    <p th:if="${servings != recipe.servings}">
+        <small th:text="'元のレシピは' + ${recipe.servings} + '人分です。分量を' + ${servings} + '人分に換算しています。'">
+            元のレシピは2人分です。分量を4人分に換算しています。
+        </small>
+        <a th:href="@{/recipes/{id}(id=${recipe.id})} + '#ingredients'">元に戻す</a>
+    </p>
+
     <ul>
         <li th:each="ing : ${recipe.ingredients}">
             <span th:text="${ing.name}">豚ロース</span>
-            <span th:text="${ing.quantityText} + ${ing.unit != null ? ing.unit : ''}">200g</span>
+            <!-- getQuantityText(factor)：人数に合わせて計算した分量 -->
+            <span th:text="${ing.getQuantityText(factor)} + ${ing.unit != null ? ing.unit : ''}">400g</span>
         </li>
     </ul>
 
@@ -44,6 +66,7 @@
     <th:block th:if="${stockCheck != null}">
         <h3>
             在庫チェック
+            <span th:text="'（' + ${servings} + '人分で判定）'">（4人分で判定）</span>
             <span th:if="${missingCount > 0}" th:text="'（足りない・在庫なし：' + ${missingCount} + '件）'" style="color: red">
                 （足りない・在庫なし：2件）
             </span>

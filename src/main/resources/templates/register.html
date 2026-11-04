@@ -1,21 +1,36 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>新規登録</title>
-</head>
-<body>
-    <div th:replace="~{fragments/header :: header}"></div>
-    <h1>新規登録</h1>
+<head th:replace="~{fragments/head :: head('新規登録')}"></head>
+<body class="auth-page">
 
-    <p th:if="${error}" th:text="${error}">エラーメッセージ</p>
+    <main class="auth-card">
+        <a href="/recipes" class="brand brand--large">
+            <span class="material-symbols-rounded">soup_kitchen</span>Recipi
+        </a>
+        <p class="auth-card__lead">新規登録して始めましょう！</p>
 
-    <form th:action="@{/register}" method="post">
-        <p>ユーザー名：<input type="text" name="username" maxlength="50" required></p>
-        <p>パスワード：<input type="password" name="password" minlength="4" required></p>
-        <button type="submit">登録</button>
-    </form>
+        <!-- エラーメッセージ（ユーザー名の重複など）。AuthController から渡される -->
+        <div th:if="${error}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span><span th:text="${error}">エラー</span>
+        </div>
 
-    <a href="/login">ログイン画面に戻る</a>
+        <!-- 送信先は AuthController の @PostMapping("/register") -->
+        <form th:action="@{/register}" method="post" class="auth-form">
+            <label class="input-icon">
+                <span class="material-symbols-rounded">person</span>
+                <input type="text" name="username" placeholder="ユーザー名" maxlength="50" required autocomplete="username">
+            </label>
+            <label class="input-icon">
+                <span class="material-symbols-rounded">lock</span>
+                <!-- new-password：ブラウザが新しいパスワードの提案を出せるようにする -->
+                <input type="password" name="password" placeholder="パスワード（4文字以上）" minlength="4" required
+                       autocomplete="new-password">
+            </label>
+            <button type="submit" class="btn--block">登録する</button>
+        </form>
+
+        <a href="/login" class="auth-card__link">ログインはこちら</a>
+    </main>
+
 </body>
 </html>

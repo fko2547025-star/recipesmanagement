@@ -64,22 +64,24 @@ public class RecipeController {
     }
 
     /**
-     * レシピ一覧を表示する（カテゴリ・材料での絞り込みつき）。
-     * 例：/recipes?category=肉&ingredient=豚ロース
+     * レシピ一覧を表示する（カテゴリと、料理名・材料での検索つき）。
+     * 例：/recipes?category=肉&q=豚
+     *
+     * @param q 検索語（料理名または材料）
      */
     @GetMapping
     public String list(@RequestParam(required = false) String category,
-                       @RequestParam(required = false) String ingredient,
+                       @RequestParam(required = false) String q,
                        Model model) {
 
         boolean hasCategory = category != null && !category.isEmpty();
-        // 空白を取り除いた検索語（在庫チェックと同じそろえ方）
-        String keyword = IngredientNameMatcher.normalize(ingredient);
+        // 空白を取り除いた検索語（「豚 汁」でも「豚汁」で探す）
+        String keyword = IngredientNameMatcher.normalize(q);
 
         List<Recipe> recipes;
         if (!keyword.isEmpty()) {
-            // 材料で探し、カテゴリも指定されていればさらに絞り込む
-            recipes = repository.findByIngredientName(keyword);
+            // 料理名・材料で探し、カテゴリも指定されていればさらに絞り込む
+            recipes = repository.findByKeyword(keyword);
             if (hasCategory) {
                 recipes = recipes.stream()
                         .filter(r -> category.equals(r.getCategory()))
@@ -93,33 +95,47 @@ public class RecipeController {
 
         model.addAttribute("recipes", recipes);
         model.addAttribute("category", category);
-        model.addAttribute("ingredient", ingredient);          // 検索欄に入力した文字を残すため
+        model.addAttribute("q", q);                      // 検索欄に入力した文字を残すため
         model.addAttribute("categories", Recipe.CATEGORIES);
         return "recipes/list";
     }
+    
     /**
-     * レシピ詳細を表示する（いいね・コメント・在庫チェックつき）。
-     * principal はログインしていなければ null。
+     * レシピ詳細を表示する（いいね・コメント・在庫チェック・人数の切り替えつき）。
+     *
+     * @param servings 表示したい人数（例：/recipes/1?servings=4）。指定が無ければレシピの人数
      */
     @GetMapping("/{id:\\d+}")
-    public String detail(@PathVariable Long id, Principal principal, Model model) {
+    public String detail(@PathVariable Long id,
+                         @RequestParam(required = false) Integer servings,
+                         Principal principal,
+                         Model model) {
+
         Recipe recipe = repository.findWithDetailsById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+        // ----- 人数と倍率 -----
+        // 1〜20 以外や、指定が無いときはレシピの人数にする
+        int displayServings = (servings != null && servings >= 1 && servings <= 20)
+                ? servings
+                : recipe.getServings();
+        // 倍率：int 同士の割り算だと小数が切り捨てられる（1 / 2 = 0）ので、double にしてから割る
+        double factor = (double) displayServings / recipe.getServings();
+
         boolean liked = false;
 
-        // ログインしているときだけ：いいね済みか、在庫チェック
         if (principal != null) {
             AppUser user = currentUser(principal);
             liked = likeRepository.existsByUserAndRecipe(user, recipe);
 
-            List<StockCheckItem> stockCheck = stockCheckService.check(recipe, user);
+            List<StockCheckItem> stockCheck = stockCheckService.check(recipe, user, factor);
             model.addAttribute("stockCheck", stockCheck);
-            // 「足りない」「在庫なし」の数
             model.addAttribute("missingCount", stockCheck.stream().filter(StockCheckItem::isProblem).count());
         }
 
         model.addAttribute("recipe", recipe);
+        model.addAttribute("servings", displayServings);
+        model.addAttribute("factor", factor);
         model.addAttribute("likeCount", likeRepository.countByRecipe(recipe));
         model.addAttribute("liked", liked);
         model.addAttribute("comments", commentRepository.findByRecipeOrderByIdAsc(recipe));
@@ -131,6 +147,7 @@ public class RecipeController {
     @GetMapping("/new")
     public String newForm(Model model) {
         RecipeForm form = new RecipeForm();
+        form.setServings(2);
         form.ensureRows(3);
         return showForm(form, null, null, model);
     }

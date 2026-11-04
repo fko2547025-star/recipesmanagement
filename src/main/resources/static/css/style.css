@@ -1,0 +1,848 @@
+/* ==================================================
+   Recipi 共通スタイル（カフェ風デザイン）
+
+   構成
+   1. 色・文字などの基本設定（CSS変数）
+   2. 全体（body・見出し・リンク）
+   3. ボタン
+   4. 入力欄
+   5. 表
+   6. カード・チップ・お知らせなどの部品
+   7. ヘッダー（スマホでは画面下のメニュー）
+   8. ログイン・新規登録画面
+   9. スマホ用の調整
+   ================================================== */
+
+
+/* ==================================================
+   1. 基本設定
+   --名前 は CSS変数。色を変えたいときはここだけ直せば、全画面に反映される
+   ================================================== */
+:root {
+    /* 背景・面 */
+    --bg: #f7efe4;              /* ページの背景（クリーム） */
+    --surface: #fffaf3;         /* カードなどの面 */
+    --surface-2: #f1e5d4;       /* 表の見出し・控えめな面 */
+
+    /* 文字 */
+    --text: #3d2a1e;            /* 本文（こげ茶） */
+    --text-muted: #8b7462;      /* 補足の文字 */
+
+    /* メインの色（コーヒーブラウン） */
+    --primary: #7b4a2c;
+    --primary-dark: #5c351e;
+    --primary-light: #f3e3d1;   /* 選択中・ホバーの薄い茶色 */
+
+    /* 線・影 */
+    --border: #e4d4bf;
+    --shadow: 0 2px 10px rgba(92, 53, 30, 0.08);
+    --shadow-strong: 0 8px 24px rgba(92, 53, 30, 0.16);
+
+    /* 状態の色 */
+    --danger: #c0533a;          /* 期限切れ・エラー */
+    --danger-bg: #fbe8e2;
+    --warning: #c97a17;         /* 期限間近 */
+    --warning-bg: #fdf1dc;
+    --success: #5a8a47;         /* 完了 */
+    --success-bg: #e9f2e2;
+
+    /* 形 */
+    --radius: 14px;
+    --radius-sm: 8px;
+    --radius-pill: 999px;
+
+    /* 文字の種類 */
+    --font-base: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    --font-hand: "Klee One", var(--font-base);
+
+    /* ヘッダー・下部メニューの高さ */
+    --header-height: 60px;
+    --bottom-nav-height: 64px;
+}
+
+
+/* ==================================================
+   2. 全体
+   ================================================== */
+
+/* 余白の計算に枠線も含める（幅の指定どおりの大きさになる） */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-base);
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+}
+
+/*
+   ページの中身の幅をそろえる。
+   作り直す前の画面は <main> で囲んでいないので、
+   ヘッダー以外の「body の直下の要素」を中央寄せにしている
+*/
+body > :not(.site-header):not(script) {
+    max-width: 1080px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+/* body 直下の表は、内側の余白を付けず、左右16pxずつ空けた幅にする
+   （:not(.site-header) を付けているのは、上のルールより優先させるため） */
+body > table:not(.site-header) {
+    padding: 0;
+    width: calc(100% - 32px);
+    max-width: calc(1080px - 32px);
+}
+
+/* body 直下のリンク（「＋ 食材を登録」など）は、1行の大きさにして左端をそろえる */
+body > a:not(.site-header) {
+    display: block;
+    width: fit-content;
+    max-width: none;
+    margin-left: max(16px, calc((100% - 1080px) / 2 + 16px));
+    padding: 0;
+}
+
+/* 作り直した画面は <main class="container"> で囲む */
+.container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+
+h1, h2, h3 {
+    color: var(--primary-dark);
+    line-height: 1.4;
+    font-weight: 700;
+}
+
+h1 {
+    font-size: 1.6rem;
+    margin: 24px auto 16px;
+}
+
+h2 {
+    font-size: 1.25rem;
+    margin: 28px auto 12px;
+}
+
+h3 {
+    font-size: 1.05rem;
+    margin: 20px auto 8px;
+}
+
+a {
+    color: var(--primary);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+a:hover {
+    color: var(--primary-dark);
+}
+
+hr {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 20px 0;
+}
+
+img {
+    max-width: 100%;
+    border-radius: var(--radius-sm);
+}
+
+small {
+    color: var(--text-muted);
+}
+
+/* アイコン（Material Symbols）の大きさと位置をそろえる */
+.material-symbols-rounded {
+    font-size: 1.25em;
+    line-height: 1;
+    vertical-align: -0.2em;
+    user-select: none;
+}
+
+
+/* ==================================================
+   3. ボタン
+   <button> はすべてこの見た目になる。リンクをボタンに見せたいときは class="btn"
+   ================================================== */
+button,
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 18px;
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-pill);
+    background: var(--primary);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.05s;
+}
+
+button:hover,
+.btn:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: #fff;
+}
+
+/* 押した瞬間に少し沈む */
+button:active,
+.btn:active {
+    transform: translateY(1px);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 枠線だけのボタン（キャンセル・サブの操作） */
+.btn--outline {
+    background: var(--surface);
+    color: var(--primary);
+}
+
+.btn--outline:hover {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+/* 削除などの危ない操作 */
+.btn--danger {
+    background: var(--surface);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.btn--danger:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+}
+
+/* ヘッダーなど、茶色い背景の上に置く白いボタン */
+.btn--light {
+    background: #fff;
+    border-color: #fff;
+    color: var(--primary-dark);
+}
+
+.btn--light:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.btn--sm {
+    padding: 4px 12px;
+    font-size: 0.82rem;
+}
+
+/* 横幅いっぱいのボタン */
+.btn--block {
+    width: 100%;
+    padding: 12px 18px;
+    font-size: 1rem;
+}
+
+
+/* ==================================================
+   4. 入力欄
+   ================================================== */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="search"],
+input[type="file"],
+select,
+textarea {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    max-width: 100%;
+}
+
+textarea {
+    width: 100%;
+    resize: vertical;
+}
+
+/* 選択中の入力欄に、薄い茶色の枠を出す */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #b9a593;
+}
+
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);   /* チェックの色 */
+    vertical-align: -3px;
+}
+
+/* 入力欄＋説明のまとまり */
+.form-field {
+    margin-bottom: 18px;
+}
+
+.form-field > label,
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.form-field input[type="text"],
+.form-field input[type="password"],
+.form-field input[type="search"],
+.form-field select {
+    width: 100%;
+}
+
+
+/* ==================================================
+   5. 表
+   HTML に border="1" が付いていても、ここで上書きして角丸のカード風にする
+   ================================================== */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin: 12px auto 24px;
+}
+
+th,
+td {
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+th {
+    background: var(--surface-2);
+    color: var(--primary-dark);
+    font-size: 0.88rem;
+    white-space: nowrap;
+}
+
+/* 最後の行は下線なし */
+tbody tr:last-child td,
+tbody tr:last-child th {
+    border-bottom: none;
+}
+
+tbody tr:hover {
+    background: #fffdf8;
+}
+
+/* 表の中のフォーム（削除ボタンなど）は横に並べる */
+td form {
+    display: inline;
+}
+
+/* 表の中のボタンは小さめに */
+td button,
+td .btn {
+    padding: 4px 12px;
+    font-size: 0.82rem;
+}
+
+/* 表の中の写真 */
+td img {
+    display: block;
+    object-fit: cover;
+    aspect-ratio: 4 / 3;
+}
+
+
+/* ==================================================
+   6. 部品
+   ================================================== */
+
+/* ----- カード（白っぽい面に角丸と影） ----- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+}
+
+/* ----- チップ（カテゴリなどの小さなラベル） ----- */
+.chip {
+    display: inline-block;
+    padding: 2px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--primary-dark);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.chip--active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+/* ----- お知らせ（エラー・完了など） ----- */
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.92rem;
+    margin: 12px 0;
+}
+
+.alert--error {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.alert--warning {
+    background: var(--warning-bg);
+    color: #8a5309;
+}
+
+.alert--success {
+    background: var(--success-bg);
+    color: #3f6a2f;
+}
+
+.alert--info {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+/* ----- 文字の色 ----- */
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-success { color: var(--success); }
+.text-muted { color: var(--text-muted); }
+
+/* ----- 何も無いときの表示 ----- */
+.empty {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+/* ----- タブ（ランキングの期間・マイページなど） ----- */
+.tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    width: fit-content;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.tabs a {
+    padding: 6px 18px;
+    border-radius: var(--radius-pill);
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.tabs a.is-active {
+    background: var(--primary);
+    color: #fff;
+}
+
+
+/* ==================================================
+   7. ヘッダー
+   ================================================== */
+.site-header {
+    position: sticky;            /* スクロールしても上に残る */
+    top: 0;
+    z-index: 100;
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.site-header__inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 1080px;
+    height: var(--header-height);
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+/* ----- ロゴ ----- */
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.brand:hover {
+    color: #fff;
+}
+
+.brand .material-symbols-rounded {
+    font-size: 1.6rem;
+    font-variation-settings: "FILL" 1;   /* 塗りつぶしのアイコン */
+}
+
+/* ----- メニュー ----- */
+.site-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;           /* ロゴ以外を右に寄せる */
+}
+
+.site-nav__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    color: #f6e7d6;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.site-nav__link:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+/* 今開いているページのメニュー */
+.site-nav__link.is-active {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-weight: 700;
+}
+
+/* ----- 右側（投稿ボタン・ユーザー） ----- */
+.site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.site-header__text-link {
+    color: #f6e7d6;
+    font-size: 0.88rem;
+    white-space: nowrap;
+}
+
+.site-header__text-link:hover {
+    color: #fff;
+}
+
+/* ----- ユーザーメニュー（アイコンを押すと開く） -----
+   <details> を使っているので JavaScript 不要 */
+.user-menu {
+    position: relative;
+}
+
+.user-menu > summary {
+    list-style: none;            /* ▶ の印を消す */
+    cursor: pointer;
+}
+
+.user-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f6e7d6;
+    color: var(--primary);
+}
+
+.avatar .material-symbols-rounded {
+    font-size: 1.5rem;
+    vertical-align: 0;
+    font-variation-settings: "FILL" 1;
+}
+
+.user-menu__panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 180px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-strong);
+    color: var(--text);
+}
+
+.user-menu__name {
+    margin: 4px 8px 8px;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.user-menu__panel a,
+.user-menu__panel button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--text);
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+    text-align: left;
+}
+
+.user-menu__panel a:hover,
+.user-menu__panel button:hover {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+
+/* ==================================================
+   8. ログイン・新規登録
+   ================================================== */
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 16px;
+    /* 料理写真の上に、クリーム色を半透明で重ねる。写真が無くても背景色で表示される */
+    background:
+        linear-gradient(rgba(247, 239, 228, 0.55), rgba(247, 239, 228, 0.55)),
+        url("../images/background.jpg") center / cover no-repeat,
+        var(--bg);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 36px 32px 28px;
+    border-radius: 20px;
+    background: rgba(255, 250, 243, 0.96);
+    box-shadow: var(--shadow-strong);
+    text-align: center;
+}
+
+/* ログイン画面は body 直下の幅の設定を使わない */
+body.auth-page > .auth-card {
+    padding-left: 32px;
+    padding-right: 32px;
+    margin: 0;
+}
+
+/* 茶色の大きなロゴ */
+.brand--large {
+    color: var(--primary-dark);
+    font-size: 2rem;
+}
+
+.brand--large:hover {
+    color: var(--primary-dark);
+}
+
+.brand--large .material-symbols-rounded {
+    font-size: 2.4rem;
+}
+
+.auth-card__lead {
+    margin: 4px 0 20px;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+/* アイコン付きの入力欄 */
+.input-icon {
+    position: relative;
+    display: block;
+}
+
+.input-icon .material-symbols-rounded {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    vertical-align: 0;
+}
+
+.input-icon input {
+    width: 100%;
+    padding: 11px 12px 11px 42px;
+}
+
+.auth-card__link {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.88rem;
+}
+
+
+/* ==================================================
+   9. スマホ（画面の幅が 768px 未満）
+   ================================================== */
+@media (max-width: 767px) {
+
+    body {
+        font-size: 14px;
+        /* 画面下のメニューに中身が隠れないよう、下に余白を空ける */
+        padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    }
+
+    h1 {
+        font-size: 1.35rem;
+    }
+
+    /* ----- メニューを画面の下に移動 ----- */
+    .site-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+        justify-content: space-around;
+        gap: 0;
+        height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+        padding-bottom: env(safe-area-inset-bottom);   /* iPhone の画面下の余白 */
+        margin: 0;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 10px rgba(92, 53, 30, 0.08);
+    }
+
+    /* アイコンを上、文字を下に */
+    .site-nav__link {
+        flex: 1;
+        flex-direction: column;
+        gap: 0;
+        padding: 6px 0;
+        border-radius: 0;
+        color: var(--text-muted);
+        font-size: 0.68rem;
+    }
+
+    .site-nav__link .material-symbols-rounded {
+        font-size: 1.6rem;
+        vertical-align: 0;
+    }
+
+    .site-nav__link:hover {
+        background: none;
+        color: var(--primary);
+    }
+
+    .site-nav__link.is-active {
+        background: none;
+        color: var(--primary);
+    }
+
+    .site-nav__link.is-active .material-symbols-rounded {
+        font-variation-settings: "FILL" 1;
+    }
+
+    /* ヘッダーは ロゴ | 右側 だけ */
+    .site-header__actions {
+        margin-left: auto;
+    }
+
+    /* 表は横にスクロールできるようにする（はみ出して画面が崩れないように） */
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    th,
+    td {
+        padding: 8px;
+        white-space: nowrap;
+    }
+
+    .auth-card {
+        padding: 28px 20px 20px;
+    }
+
+    body.auth-page > .auth-card {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}

@@ -17,7 +17,7 @@ public class SecurityConfig {
             // ページごとのアクセス制限（上から順に判定される）
             .authorizeHttpRequests(auth -> auth
                 // 新規登録・ログイン画面は誰でも
-                .requestMatchers("/login", "/register", "/error").permitAll()
+                .requestMatchers("/login", "/register", "/error", "/css/**", "/images/**").permitAll()
                 // レシピ投稿画面はログイン必須（下の /recipes/* より先に書く）
                 .requestMatchers("/recipes/new").authenticated()
                 // レシピ一覧・詳細・ランキングは「見るだけ」なら誰でも

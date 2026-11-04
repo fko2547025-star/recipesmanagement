@@ -140,6 +140,7 @@ public class RecipeService {
         recipe.setCategory(form.getCategory());
         recipe.setDescription(blankToNull(form.getDescription()));
         recipe.setSteps(form.getSteps().trim());
+        recipe.setServings(form.getServings());
 
         // 材料は「全部外してから、入力された行を入れ直す」
         // orphanRemoval = true なので、リストから外した古い材料は DB からも自動で DELETE される

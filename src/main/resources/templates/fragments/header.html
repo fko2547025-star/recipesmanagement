@@ -2,48 +2,99 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
     <!--
-        全画面共通のナビゲーション。
-        th:fragment="header"：この部分に「header」という名前を付けて、他の画面から読み込めるようにする
-        読み込む側では <div th:replace="~{fragments/header :: header}"></div> と書く
+        全画面共通のヘッダー。各画面では次の1行で読み込む（今までと同じ）。
+            <div th:replace="~{fragments/header :: header}"></div>
+
+        loginUsername：ログイン中のユーザー名（ログインしていなければ null）
+        currentPath  ：今開いているページの URL（例：/meal-plans）
+        どちらも LoginUserAdvice が全画面に渡している
+
+        PC：ヘッダーの中にメニューを横に並べる
+        スマホ：CSS でメニューを画面の下に移動し、アイコン＋文字のタブにする
     -->
-    <header th:fragment="header">
-        <nav>
-            <!-- ===== 誰でも見られるページ ===== -->
-            <a href="/recipes">レシピ一覧</a> |
+    <header th:fragment="header" class="site-header">
+        <div class="site-header__inner">
 
-            <!-- ===== ログイン中だけ表示 ===== -->
-            <!-- th:block：表示されないタグ。中身をまとめて th:if で出し分けるために使う -->
-            <th:block th:if="${loginUsername != null}">
-                <a href="/recipes/new">レシピを投稿</a> |
-            </th:block>
+            <!-- ===== ロゴ ===== -->
+            <a href="/recipes" class="brand">
+                <span class="material-symbols-rounded">soup_kitchen</span>Recipi
+            </a>
 
-            <a href="/ranking">ランキング</a>
+            <!-- ===== メニュー ===== -->
+            <!--
+                th:classappend：条件が true のとき class を追加する
+                #strings.startsWith(A, B)：A が B で始まるか
+                今開いているページのメニューに is-active を付けて、目立たせる
+            -->
+            <nav class="site-nav">
+                <a href="/recipes" class="site-nav__link"
+                   th:classappend="${#strings.startsWith(currentPath, '/recipes') and currentPath != '/recipes/new'} ? 'is-active'">
+                    <span class="material-symbols-rounded">home</span><span>ホーム</span>
+                </a>
+                <a href="/ranking" class="site-nav__link"
+                   th:classappend="${#strings.startsWith(currentPath, '/ranking')} ? 'is-active'">
+                    <span class="material-symbols-rounded">emoji_events</span><span>ランキング</span>
+                </a>
 
-            <th:block th:if="${loginUsername != null}">
-                | <a href="/meal-plans">献立</a>
-                | <a href="/ingredients">食材管理</a>
-                | <a href="/mypage">マイページ</a>
-            </th:block>
-        </nav>
+                <!-- ログイン中だけ表示 -->
+                <th:block th:if="${loginUsername != null}">
+                    <a href="/meal-plans" class="site-nav__link"
+                       th:classappend="${#strings.startsWith(currentPath, '/meal-plans')} ? 'is-active'">
+                        <span class="material-symbols-rounded">restaurant</span><span>献立</span>
+                    </a>
+                    <a href="/ingredients" class="site-nav__link"
+                       th:classappend="${#strings.startsWith(currentPath, '/ingredients')} ? 'is-active'">
+                        <span class="material-symbols-rounded">kitchen</span><span>食材管理</span>
+                    </a>
+                    <a href="/mypage" class="site-nav__link"
+                       th:classappend="${#strings.startsWith(currentPath, '/mypage')} ? 'is-active'">
+                        <span class="material-symbols-rounded">person</span><span>マイページ</span>
+                    </a>
+                </th:block>
+            </nav>
 
-        <!-- ===== 右側：ログイン状態 ===== -->
-        <div>
-            <!-- 未ログイン：ログイン・新規登録へのリンク -->
-            <th:block th:if="${loginUsername == null}">
-                <a href="/login">ログイン</a> |
-                <a href="/register">新規登録</a>
-            </th:block>
+            <!-- ===== 右側 ===== -->
+            <div class="site-header__actions">
 
-            <!-- ログイン中：ユーザー名とログアウトボタン -->
-            <th:block th:if="${loginUsername != null}">
-                <span th:text="${loginUsername} + 'さん'">1さん</span>
-                <!-- ログアウトはログイン状態を変える操作なので POST -->
-                <form th:action="@{/logout}" method="post" style="display:inline">
-                    <button type="submit">ログアウト</button>
-                </form>
-            </th:block>
+                <!-- 未ログイン：ログイン・新規登録 -->
+                <th:block th:if="${loginUsername == null}">
+                    <a href="/login" class="btn btn--light btn--sm">ログイン</a>
+                    <a href="/register" class="site-header__text-link">新規登録</a>
+                </th:block>
+
+                <!-- ログイン中：投稿ボタンとユーザーメニュー -->
+                <th:block th:if="${loginUsername != null}">
+                    <a href="/recipes/new" class="btn btn--light btn--sm">
+                        <span class="material-symbols-rounded">edit</span>投稿
+                    </a>
+
+                    <!--
+                        <details>：クリックで開閉する HTML の部品。JavaScript なしでメニューを作れる
+                        <summary> の部分（アイコン）を押すと、中身（パネル）が開く
+                    -->
+                    <details class="user-menu">
+                        <summary class="avatar" aria-label="ユーザーメニュー">
+                            <span class="material-symbols-rounded">person</span>
+                        </summary>
+                        <div class="user-menu__panel">
+                            <p class="user-menu__name" th:text="${loginUsername} + 'さん'">1さん</p>
+                            <a href="/mypage">
+                                <span class="material-symbols-rounded">person</span>マイページ
+                            </a>
+                            <a href="/meal-plans/shopping">
+                                <span class="material-symbols-rounded">shopping_cart</span>買い物リスト
+                            </a>
+                            <!-- ログアウトはログイン状態を変える操作なので POST -->
+                            <form th:action="@{/logout}" method="post">
+                                <button type="submit">
+                                    <span class="material-symbols-rounded">logout</span>ログアウト
+                                </button>
+                            </form>
+                        </div>
+                    </details>
+                </th:block>
+            </div>
         </div>
-        <hr>
     </header>
 </body>
 </html>

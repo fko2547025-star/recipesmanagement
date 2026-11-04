@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>食材一覧</title>
-</head>
+<head th:replace="~{fragments/head :: head('食材一覧')}"></head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
     
@@ -17,7 +14,7 @@
                 <span th:text="${#temporals.format(item.expiryDate, 'M/d')}">11/5</span>
                 <span th:if="${item.expired}" style="color: red">（期限切れ）</span>
                 <!-- この食材の名前で、レシピ一覧を材料検索する -->
-                <a th:href="@{/recipes(ingredient=${item.name})}">この食材を使うレシピ</a>
+                <a th:href="@{/recipes(q=${item.name})}">この食材を使うレシピ</a>
             </li>
         </ul>
 

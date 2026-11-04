@@ -98,4 +98,24 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
             ORDER BY r.id DESC
             """)
     List<Recipe> findByIngredientName(@Param("keyword") String keyword);
+
+    /**
+     * 料理名または材料名に、検索語が含まれるレシピを探す（新しい順）。レシピ一覧の検索欄用。
+     *
+     * ・料理名に含まれる：LOCATE(:keyword, r.title) > 0
+     * ・材料名に含まれる：EXISTS（検索語を含む材料が1つでもある）
+     * どちらか一方に当てはまれば表示する（OR）。
+     */
+    @Query("""
+            SELECT r FROM Recipe r
+            JOIN FETCH r.user
+            WHERE LOCATE(:keyword, r.title) > 0
+               OR EXISTS (
+                   SELECT 1 FROM RecipeIngredient ri
+                   WHERE ri.recipe = r
+                     AND LOCATE(:keyword, ri.name) > 0
+               )
+            ORDER BY r.id DESC
+            """)
+    List<Recipe> findByKeyword(@Param("keyword") String keyword);
 }

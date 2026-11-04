@@ -73,4 +73,18 @@ public class RecipeIngredient {
         }
         return new DecimalFormat("0.###").format(quantity);
     }
+
+    /**
+     * 人数に合わせた分量を表示用の文字にする。
+     *
+     * @param factor 倍率（表示したい人数 ÷ レシピの人数。例：2人分 → 4人分なら 2.0）
+     * @return 例：200g × 2.0 → "400"、0.5個 × 1.5 → "0.75"。分量が無い材料は空文字
+     */
+    public String getQuantityText(double factor) {
+        if (quantity == null) {
+            return "";   // 少々・適量などは人数を変えてもそのまま
+        }
+        // 小数点以下は2桁まで（1/3 倍などで 0.3333… と長くならないように）
+        return new DecimalFormat("0.##").format(quantity * factor);
+    }
 }

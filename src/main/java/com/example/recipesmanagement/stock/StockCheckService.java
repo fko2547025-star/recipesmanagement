@@ -53,14 +53,18 @@ public class StockCheckService {
 
     /**
      * レシピの材料ごとに、在庫をチェックする（レシピ詳細用）。
+     *
+     * @param factor 分量の倍率（表示している人数 ÷ レシピの人数）。元の人数のままなら 1.0
      */
     @Transactional(readOnly = true)
-    public List<StockCheckItem> check(Recipe recipe, AppUser user) {
+    public List<StockCheckItem> check(Recipe recipe, AppUser user, double factor) {
         List<Ingredient> stock = loadStock(user);
 
         List<StockCheckItem> result = new ArrayList<>();
         for (RecipeIngredient need : recipe.getIngredients()) {
-            result.add(checkOne(need.getName(), need.getQuantity(), need.getUnit(), stock));
+            // 分量がある材料だけ、倍率をかける（少々・適量は null のまま）
+            Double quantity = need.getQuantity() != null ? need.getQuantity() * factor : null;
+            result.add(checkOne(need.getName(), quantity, need.getUnit(), stock));
         }
         return result;
     }

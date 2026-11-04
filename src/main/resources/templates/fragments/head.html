@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+    全画面共通の <head>。
+    各画面では、<head> 〜 </head> を次の1行に置き換えて使う。
+        <head th:replace="~{fragments/head :: head('ページ名')}"></head>
+
+    th:fragment="head(title)"：引数付きの部品。呼び出し側から渡したページ名が title に入る
+-->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <!-- スマホで画面の幅に合わせて表示する（これが無いと、スマホでPC用の小さな表示になる） -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- タブに表示される名前。例：「ログイン | Recipi」 -->
+    <title th:text="${title} + ' | Recipi'">Recipi</title>
+
+    <!--
+        Google Fonts（インターネットから読み込むフォント）
+        ・Zen Maru Gothic：丸みのあるやわらかい日本語フォント（本文・見出し）
+        ・Klee One：手書き風の日本語フォント（ホームのキャッチコピー）
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=Klee+One:wght@600&display=swap">
+
+    <!--
+        Material Symbols（Google のアイコン）
+        <span class="material-symbols-rounded">home</span> のように、アイコンの名前を書くと絵になる
+        アイコンの一覧：https://fonts.google.com/icons
+    -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0">
+
+    <!-- アプリ共通の CSS（src/main/resources/static/css/style.css） -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+</html>

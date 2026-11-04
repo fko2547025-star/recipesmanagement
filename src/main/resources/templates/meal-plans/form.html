@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title th:text="${planId == null} ? '献立を追加' : '献立を編集'">献立を追加</title>
-</head>
+<head th:replace="~{fragments/head :: head(${planId == null} ? '献立を追加' : '献立を編集')}"></head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 

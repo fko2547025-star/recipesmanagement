@@ -1,23 +1,48 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>ログイン</title>
-</head>
-<body>
-    <div th:replace="~{fragments/header :: header}"></div>
-    <h1>ログイン</h1>
+<!-- 共通の head（フォント・アイコン・CSS）を読み込む -->
+<head th:replace="~{fragments/head :: head('ログイン')}"></head>
+<!-- auth-page：料理写真を背景に、真ん中にカードを置くレイアウト（ヘッダーは出さない） -->
+<body class="auth-page">
 
-    <p th:if="${param.error}">ユーザー名またはパスワードが違います</p>
-    <p th:if="${param.logout}">ログアウトしました</p>
-    <p th:if="${param.registered}">登録が完了しました。ログインしてください</p>
+    <main class="auth-card">
+        <a href="/recipes" class="brand brand--large">
+            <span class="material-symbols-rounded">soup_kitchen</span>Recipi
+        </a>
+        <p class="auth-card__lead">ログインして、もっと便利に！</p>
 
-    <form th:action="@{/login}" method="post">
-        <p>ユーザー名：<input type="text" name="username" required></p>
-        <p>パスワード：<input type="password" name="password" required></p>
-        <button type="submit">ログイン</button>
-    </form>
+        <!-- URL の ?error / ?logout / ?registered によってメッセージを出し分ける -->
+        <div th:if="${param.error}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span>ユーザー名またはパスワードが違います
+        </div>
+        <div th:if="${param.logout}" class="alert alert--info">
+            <span class="material-symbols-rounded">logout</span>ログアウトしました
+        </div>
+        <div th:if="${param.registered}" class="alert alert--success">
+            <span class="material-symbols-rounded">check_circle</span>登録が完了しました。ログインしてください
+        </div>
 
-    <a href="/register">新規登録はこちら</a>
+        <!--
+            POST /login の処理は Spring Security が自動で行う。
+            name="username" と name="password" は決まった名前なので変えないこと
+        -->
+        <form th:action="@{/login}" method="post" class="auth-form">
+            <!-- アイコン付きの入力欄。label で囲むと、アイコンを押しても入力欄が選ばれる -->
+            <label class="input-icon">
+                <span class="material-symbols-rounded">person</span>
+                <!-- autocomplete：ブラウザに保存したユーザー名・パスワードを自動入力できるようにする -->
+                <input type="text" name="username" placeholder="ユーザー名" required autocomplete="username">
+            </label>
+            <label class="input-icon">
+                <span class="material-symbols-rounded">lock</span>
+                <input type="password" name="password" placeholder="パスワード" required autocomplete="current-password">
+            </label>
+            <button type="submit" class="btn--block">ログイン</button>
+        </form>
+
+        <a href="/register" class="auth-card__link">新規登録はこちら</a>
+        <a href="/recipes" class="auth-card__link">ログインせずにレシピを見る</a>
+    </main>
+
 </body>
 </html>
