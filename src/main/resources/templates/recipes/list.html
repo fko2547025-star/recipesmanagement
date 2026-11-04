@@ -4,27 +4,23 @@
 <body>
     <!-- 共通ナビゲーション -->
     <div th:replace="~{fragments/header :: header}"></div>
+    <!-- ヒーロー：ページ上部の大きな見出しエリア（写真の背景＋キャッチコピー＋検索欄） -->
+    <section class="hero">
+        <div class="hero__inner">
+            <h1 class="hero__title">毎日の料理が<br>もっと楽しくなる</h1>
+            <span class="hero__line"></span>
+            <p class="hero__lead">みんなのレシピで、<br>食卓をもっと豊かに。</p>
+
+            <!-- 検索はデータを変えないので GET。URLが /recipes?q=カレー になる -->
+            <form th:action="@{/recipes}" method="get" class="search-bar">
+                <span class="material-symbols-rounded">search</span>
+                <input type="search" name="q" th:value="${q}" placeholder="料理名または材料" maxlength="100">
+                <button type="submit">検索</button>
+            </form>
+        </div>
+    </section>
 
     <h1>レシピ一覧</h1>
-
-    <!-- ===== カテゴリ・料理名・材料で検索（データを変えないので GET） ===== -->
-    <form th:action="@{/recipes}" method="get">
-        カテゴリ：
-        <select name="category" onchange="this.form.submit()">
-            <option value="">すべて</option>
-            <option th:each="c : ${categories}"
-                    th:value="${c}" th:text="${c}"
-                    th:selected="${c == category}">肉</option>
-        </select>
-
-        <!-- type="search"：検索用の入力欄（スマホでは「検索」キーが出る、入力を消す × が付くブラウザもある） -->
-        <input type="search" name="q" th:value="${q}" placeholder="料理名または材料" maxlength="100">
-        <button type="submit">検索</button>
-
-        <!-- 条件があるときだけ「解除」リンク -->
-        <a th:if="${(q != null and q != '') or (category != null and category != '')}"
-           href="/recipes">条件を解除</a>
-    </form>
 
     <!-- 検索したときは、件数を表示 -->
     <p th:if="${q != null and q != ''}"

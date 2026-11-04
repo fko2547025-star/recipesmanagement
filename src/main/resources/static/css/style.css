@@ -85,7 +85,7 @@ body {
    作り直す前の画面は <main> で囲んでいないので、
    ヘッダー以外の「body の直下の要素」を中央寄せにしている
 */
-body > :not(.site-header):not(script) {
+body > :not(.site-header):not(script):not(.hero) {
     max-width: 1080px;
     margin-left: auto;
     margin-right: auto;
@@ -845,4 +845,89 @@ body.auth-page > .auth-card {
         padding-left: 20px;
         padding-right: 20px;
     }
+}
+/* ===== ホーム：ヒーロー（写真の背景＋検索欄） ===== */
+.hero {
+    /* 背景は3枚重ね。上に書いたものほど手前に来る
+       1枚目：左側をクリーム色で隠すグラデーション（文字を読みやすくする）
+       2枚目：料理写真（右寄せで、エリアいっぱいに広げる）
+       3枚目：写真が無いときの予備の色 */
+    background:
+        linear-gradient(90deg, rgba(247, 239, 228, 0.97) 0%, rgba(247, 239, 228, 0.85) 38%, rgba(247, 239, 228, 0) 70%),
+        url("../images/hero.jpg") right center / cover no-repeat,
+        linear-gradient(135deg, #f7efe4, #ead6bf);
+}
+
+/* 中身はほかのページと同じ幅で中央に置く */
+.hero__inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 16px 40px;
+}
+
+.hero__title {
+    margin: 0;
+    font-family: var(--font-hand);   /* 手書き風のフォント */
+    font-size: 2.3rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* キャッチコピーの下の、手書き風の線 */
+.hero__line {
+    display: block;
+    width: 220px;
+    height: 10px;
+    margin: 6px 0 12px;
+    border-bottom: 3px solid #d39a5c;
+    border-radius: 0 0 60% 40% / 0 0 100% 100%;
+}
+
+.hero__lead {
+    margin: 0 0 24px;
+    font-size: 0.95rem;
+}
+
+/* 検索バー：白い丸い入れ物の中に、アイコン・入力欄・ボタンを横に並べる */
+.search-bar {
+    display: flex;            /* 中身を横並びにする */
+    align-items: center;      /* 縦の位置を真ん中にそろえる */
+    gap: 8px;
+    max-width: 560px;
+    padding: 6px 6px 6px 18px;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: var(--shadow-strong);
+}
+
+.search-bar > .material-symbols-rounded {
+    color: var(--text-muted);
+}
+
+/* 入力欄は残りの幅いっぱいに広げ、枠線は消す（白い入れ物の枠を使う） */
+.search-bar input[type="search"] {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    font-size: 1rem;
+}
+
+.search-bar button {
+    padding: 10px 24px;
+    white-space: nowrap;      /* 「検索」が縦に折り返さないように */
+}
+
+/* スマホ：写真を全体に薄く敷いて、文字を小さめにする */
+@media (max-width: 767px) {
+    .hero {
+        background:
+            linear-gradient(rgba(247, 239, 228, 0.82), rgba(247, 239, 228, 0.82)),
+            url("../images/hero.jpg") center / cover no-repeat,
+            var(--bg);
+    }
+    .hero__inner { padding: 28px 16px 24px; }
+    .hero__title { font-size: 1.7rem; }
+    .search-bar button { padding: 8px 16px; }
 }
