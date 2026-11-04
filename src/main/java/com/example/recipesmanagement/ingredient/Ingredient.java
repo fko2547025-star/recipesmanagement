@@ -22,6 +22,9 @@ import jakarta.persistence.ManyToOne;
 @Table(name = "ingredients")
 public class Ingredient {
 
+        // 期限がこの日数以内なら「期限が近い」とする（在庫チェックなどでも共通で使う）
+    public static final int EXPIRING_DAYS = 3;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;            // 番号（自動で振られる）
@@ -76,6 +79,19 @@ public class Ingredient {
     // 数量を変更する（0未満にはしない）
     public void changeQuantity(double newQuantity) {
         this.quantity = Math.max(0, newQuantity);
+    }
+    /**
+     * 期限切れか（期限日が今日より前）。
+     */
+    public boolean isExpired() {
+        return expiryDate != null && expiryDate.isBefore(LocalDate.now());
+    }
+
+    /**
+     * 期限が近いか（期限切れも含め、今日から EXPIRING_DAYS 日以内）。
+     */
+    public boolean isExpiringSoon() {
+        return expiryDate != null && !expiryDate.isAfter(LocalDate.now().plusDays(EXPIRING_DAYS));
     }
 
     public AppUser getUser() { return user; }

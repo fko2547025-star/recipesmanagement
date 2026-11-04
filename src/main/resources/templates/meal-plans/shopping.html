@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>買い物リスト</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <h1 th:text="'買い物リスト（' + ${#temporals.format(monday, 'M/d')} + ' 〜 ' + ${#temporals.format(sunday, 'M/d')} + '）'">
+        買い物リスト（10/26 〜 11/1）
+    </h1>
+
+    <p>
+        <a th:href="@{/meal-plans/shopping(date=${prevWeek})}">← 前の週</a> |
+        <a href="/meal-plans/shopping">今週</a> |
+        <a th:href="@{/meal-plans/shopping(date=${nextWeek})}">次の週 →</a> |
+        <a th:href="@{/meal-plans(date=${monday})}">この週の献立を見る</a>
+    </p>
+
+    <p th:if="${pastWeek}">過ぎた週なので、買い物リストはありません。</p>
+
+    <th:block th:unless="${pastWeek}">
+        <p>
+            対象：今日以降の、まだ作っていない献立（<span th:text="${planCount}">3</span>件）
+        </p>
+        <p th:if="${planCount == 0}">対象の献立がありません。献立にレシピを登録すると、ここに材料がまとまります。</p>
+
+        <!-- ===== 買うもの ===== -->
+        <th:block th:if="${!#lists.isEmpty(toBuy)}">
+            <h2>買うもの（<span th:text="${#lists.size(toBuy)}">3</span>件）</h2>
+            <button type="button" onclick="copyList()">テキストでコピー</button>
+
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>材料</th>
+                        <th>買う量</th>
+                        <th>在庫</th>
+                        <th>使う献立</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!--
+                        data-text：コピー用の文字（例：「玉ねぎ 1個」）を、行に持たせておく
+                        th:attr="data-text=..."：好きな属性に値を入れる書き方
+                    -->
+                    <tr th:each="item : ${toBuy}" th:attr="data-text=${item.check.name} + ' ' + ${item.buyText}">
+                        <!-- 買ったらチェック（画面だけで保存はしない）。チェックすると行に取り消し線 -->
+                        <td><input type="checkbox" onchange="this.closest('tr').style.textDecoration = this.checked ? 'line-through' : ''"></td>
+                        <td th:text="${item.check.name}">玉ねぎ</td>
+                        <td th:text="${item.buyText}">1個</td>
+                        <td th:text="${item.check.stockText}">-</td>
+                        <td th:text="${item.usedIn}">豚の生姜焼き（10/30）</td>
+                    </tr>
+                </tbody>
+            </table>
+        </th:block>
+
+        <p th:if="${planCount > 0 and #lists.isEmpty(toBuy)}">買うものはありません。在庫で足りています。</p>
+
+        <!-- ===== 量を確認 ===== -->
+        <th:block th:if="${!#lists.isEmpty(toCheck)}">
+            <h2>量を確認（単位が違うため、足りるかわからないもの）</h2>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>材料</th>
+                        <th>必要</th>
+                        <th>在庫</th>
+                        <th>使う献立</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${toCheck}">
+                        <td th:text="${item.check.name}">醤油</td>
+                        <td th:text="${item.check.neededText}">大さじ4</td>
+                        <td th:text="${item.check.stockText}">醤油 1本</td>
+                        <td th:text="${item.usedIn}">豚の生姜焼き（10/30）</td>
+                    </tr>
+                </tbody>
+            </table>
+        </th:block>
+
+        <!-- ===== 在庫で足りるもの ===== -->
+        <!-- details / summary：クリックで開閉できる HTML の部品（JavaScript 不要） -->
+        <details th:if="${!#lists.isEmpty(enough)}">
+            <summary th:text="'在庫で足りるもの（' + ${#lists.size(enough)} + '件）'">在庫で足りるもの（2件）</summary>
+            <ul>
+                <li th:each="item : ${enough}"
+                    th:text="${item.check.name} + ' ' + ${item.check.neededText} + '（在庫：' + ${item.check.stockText} + '）'">
+                    生姜 1かけ（在庫：生姜 2かけ）
+                </li>
+            </ul>
+        </details>
+    </th:block>
+
+    <script>
+        // ===== 買うものをテキストでコピー =====
+        // data-text を持つ行の文字を集めて、1行ずつ改行でつなげてコピーする
+        function copyList() {
+            const lines = Array.from(document.querySelectorAll('tr[data-text]'))
+                .map(tr => '・' + tr.dataset.text);
+            navigator.clipboard.writeText(lines.join('\n'))
+                .then(() => alert('コピーしました'));
+        }
+    </script>
+</body>
+</html>

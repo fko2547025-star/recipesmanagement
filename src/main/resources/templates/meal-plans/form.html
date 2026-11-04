@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${planId == null} ? '献立を追加' : '献立を編集'">献立を追加</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <h1 th:text="${planId == null} ? '献立を追加' : '献立を編集'">献立を追加</h1>
+
+    <ul th:if="${errors != null}">
+        <li th:each="e : ${errors}" th:text="${e}" style="color: red">エラー</li>
+    </ul>
+
+    <!-- 送信先：登録なら POST /meal-plans、編集なら POST /meal-plans/{id} -->
+    <form th:action="${planId == null} ? @{/meal-plans} : @{/meal-plans/{id}(id=${planId})}"
+          th:object="${form}" method="post">
+
+        <p>日付：<input type="date" th:field="*{planDate}" required></p>
+
+        <p>
+            時間（任意）：
+            <!-- th:field を付けると id="planTime" が自動で付くので、下の JavaScript から使える -->
+            <input type="time" th:field="*{planTime}">
+            <!-- ワンタップで時間を入れるボタン（type="button" なので送信はしない） -->
+            <button type="button" onclick="setTime('07:00')">朝 7:00</button>
+            <button type="button" onclick="setTime('12:00')">昼 12:00</button>
+            <button type="button" onclick="setTime('19:00')">夜 19:00</button>
+            <button type="button" onclick="setTime('')">未定</button>
+        </p>
+
+        <p>
+            レシピ（任意）：
+            <!-- value="" を選ぶと recipeId は null になる -->
+            <select th:field="*{recipeId}">
+                <option value="">（レシピを選ばない）</option>
+                <option th:each="r : ${recipes}" th:value="${r.id}" th:text="${r.title}">豚の生姜焼き</option>
+            </select>
+            <br>
+            <small>自分が投稿したレシピと、いいねしたレシピから選べます</small>
+        </p>
+
+        <p>
+            メモ（任意）：
+            <input type="text" th:field="*{memo}" maxlength="100" placeholder="例：外食、カレーの残り">
+        </p>
+        <p><small>※レシピかメモのどちらかは入力してください</small></p>
+
+        <button type="submit" th:text="${planId == null} ? '追加する' : '更新する'">追加する</button>
+    </form>
+
+    <a href="/meal-plans">献立に戻る</a>
+
+    <script>
+        // 時間の入力欄に値を入れる（'' なら空にして「時間未定」）
+        function setTime(time) {
+            document.getElementById('planTime').value = time;
+        }
+    </script>
+</body>
+</html>

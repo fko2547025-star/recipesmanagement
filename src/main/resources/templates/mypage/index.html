@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>マイページ</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <!-- loginUsername は LoginUserAdvice が全画面に渡しているログイン中のユーザー名 -->
+    <h1>マイページ（<span th:text="${loginUsername}">1</span>さん）</h1>
+
+    <!-- ===== タブ（GET のリンク。選択中は太字） ===== -->
+    <p>
+        <a href="/mypage" th:style="${tab == 'posted'} ? 'font-weight: bold'">投稿したレシピ</a> |
+        <a href="/mypage?tab=liked" th:style="${tab == 'liked'} ? 'font-weight: bold'">いいねしたレシピ</a> |
+        <a href="/mypage?tab=commented" th:style="${tab == 'commented'} ? 'font-weight: bold'">コメントしたレシピ</a>
+    </p>
+
+    <!-- 投稿したレシピのタブだけ、投稿へのリンクを出す -->
+    <p th:if="${tab == 'posted'}"><a href="/recipes/new">＋ レシピを投稿する</a></p>
+
+    <!--
+        ===== レシピが無いとき =====
+        th:switch / th:case：Java の switch 文と同じで、tab の値によって表示を切り替える
+    -->
+    <div th:if="${#lists.isEmpty(recipes)}" th:switch="${tab}">
+        <p th:case="'liked'">いいねしたレシピはまだありません</p>
+        <p th:case="'commented'">コメントしたレシピはまだありません</p>
+        <p th:case="*">投稿したレシピはまだありません</p>
+    </div>
+
+    <!-- ===== レシピ一覧 ===== -->
+    <table border="1" th:unless="${#lists.isEmpty(recipes)}">
+        <thead>
+            <tr>
+                <th>写真</th>
+                <th>タイトル</th>
+                <th>カテゴリ</th>
+                <th>投稿者</th>
+                <th>投稿日</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="recipe : ${recipes}">
+                <td>
+                    <img th:if="${recipe.imagePath}"
+                         th:src="@{/uploads/{file}(file=${recipe.imagePath})}"
+                         th:alt="${recipe.title}" style="width: 80px">
+                </td>
+                <td><a th:href="@{/recipes/{id}(id=${recipe.id})}" th:text="${recipe.title}">豚の生姜焼き</a></td>
+                <td th:text="${recipe.category}">肉</td>
+                <td th:text="${recipe.user.username}">taro</td>
+                <td th:text="${#temporals.format(recipe.createdAt, 'yyyy/MM/dd')}">2026/10/20</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

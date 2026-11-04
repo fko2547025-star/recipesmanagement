@@ -17,6 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
+import com.example.recipesmanagement.stock.ExpiringRecipeService;
+import com.example.recipesmanagement.stock.StockCheckService;
 
 @Controller
 @RequestMapping("/ingredients")
@@ -24,10 +26,17 @@ public class IngredientController {
 
     private final IngredientRepository repository;
     private final AppUserRepository userRepository;
+    private final StockCheckService stockCheckService;
+    private final ExpiringRecipeService expiringRecipeService;
 
-    public IngredientController(IngredientRepository repository, AppUserRepository userRepository) {
+    public IngredientController(IngredientRepository repository,
+                                AppUserRepository userRepository,
+                                StockCheckService stockCheckService,
+                                ExpiringRecipeService expiringRecipeService) {
         this.repository = repository;
         this.userRepository = userRepository;
+        this.stockCheckService = stockCheckService;
+        this.expiringRecipeService = expiringRecipeService;
     }
 
     // ログイン中のユーザーを取得
@@ -66,6 +75,16 @@ public class IngredientController {
         model.addAttribute("ingredients", ingredients);
         model.addAttribute("category", category);
         model.addAttribute("sort", sort);
+
+        // ----- 期限が近い食材と、それを使えるレシピ -----
+        // 一覧はカテゴリで絞り込まれていることがあるので、在庫全体から探す
+        List<Ingredient> expiring = stockCheckService.loadStock(user).stream()
+                .filter(Ingredient::isExpiringSoon)
+                .toList();
+
+        model.addAttribute("expiring", expiring);
+        model.addAttribute("suggestions", expiringRecipeService.suggest(expiring));
+
         return "ingredients/list";
     }
 

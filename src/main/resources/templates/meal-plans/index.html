@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>献立</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <h1>献立</h1>
+
+    <!-- 「作った」の結果（フラッシュ属性。作った直後の1回だけ表示される） -->
+    <div th:if="${cookTitle != null}" style="border: 1px solid green; padding: 8px">
+        <strong th:text="${cookTitle}">「豚の生姜焼き」を作りました</strong>
+        <ul>
+            <li th:each="m : ${cookMessages}" th:text="${m}">豚ロース：300g → 100g</li>
+        </ul>
+        <a href="/ingredients">食材管理を見る</a>
+    </div>
+
+    <!-- ===== 週の移動 ===== -->
+    <!-- @{/meal-plans(date=${prevWeek})} → /meal-plans?date=2026-10-19 -->
+    <p>
+        <a th:href="@{/meal-plans(date=${prevWeek})}">← 前の週</a> |
+        <a href="/meal-plans">今週</a> |
+        <a th:href="@{/meal-plans(date=${nextWeek})}">次の週 →</a>
+    </p>
+
+    <p><a th:href="@{/meal-plans/shopping(date=${monday})}">この週の買い物リストを見る</a></p>
+
+    <h2 th:text="${#temporals.format(monday, 'yyyy/M/d')} + ' 〜 ' + ${#temporals.format(sunday, 'M/d')}">
+        2026/10/26 〜 11/1
+    </h2>
+
+    <table border="1">
+        <!--
+            week は「日付 → その日の献立のリスト」の Map。
+            Map を th:each でループすると、1件ずつ day.key（日付）と day.value（献立のリスト）で取り出せる
+        -->
+        <tr th:each="day : ${week}">
+            <!-- 'M/d(E)'：E は曜日。日本語のブラウザなら「火」のように表示される。今日の行は色を付ける -->
+            <th th:text="${#temporals.format(day.key, 'M/d(E)')}"
+                th:style="${day.key == today} ? 'background: #fff3c4'">10/27(火)</th>
+            <td>
+                <!-- その日の献立（時間順） -->
+                <div th:each="plan : ${day.value}">
+                    <!-- 時間：未定なら「時間未定」 -->
+                    <span th:text="${plan.planTime != null ? #temporals.format(plan.planTime, 'HH:mm') : '時間未定'}">19:00</span>
+
+                    <!-- レシピ：選ばれていれば詳細へのリンク -->
+                    <a th:if="${plan.recipe != null}"
+                       th:href="@{/recipes/{id}(id=${plan.recipe.id})}" th:text="${plan.recipe.title}">豚の生姜焼き</a>
+
+                    <!-- メモ -->
+                    <span th:if="${plan.memo != null}" th:text="${plan.memo}">外食</span>
+
+                    <!-- レシピが削除されて、メモも無い献立 -->
+                    <span th:if="${plan.recipe == null and plan.memo == null}">（レシピが削除されました）</span>
+
+                    <!-- 作った献立には印を付ける -->
+                    <span th:if="${plan.cooked}" style="color: green">✓ 作った</span>
+                    <!-- レシピがあって、まだ作っていない献立だけ「作った」を出す（確認画面へ） -->
+                    <a th:if="${plan.recipe != null and !plan.cooked}"
+                       th:href="@{/meal-plans/{id}/cook(id=${plan.id})}">作った</a>
+                    <a th:href="@{/meal-plans/{id}/edit(id=${plan.id})}">編集</a>
+                    <form th:action="@{/meal-plans/{id}/delete(id=${plan.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('この献立を削除しますか？');">
+                        <button type="submit">削除</button>
+                    </form>
+                </div>
+
+                <!-- この日に献立を追加（日付を入れた状態で登録画面を開く） -->
+                <a th:href="@{/meal-plans/new(date=${day.key})}">＋ 追加</a>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

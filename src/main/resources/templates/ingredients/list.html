@@ -8,6 +8,30 @@
     <div th:replace="~{fragments/header :: header}"></div>
     
     <h1>食材一覧</h1>
+    <!-- ===== 期限が近い食材（3日以内・期限切れを含む） ===== -->
+    <div th:if="${!#lists.isEmpty(expiring)}" style="border: 1px solid orange; padding: 8px">
+        <h2>期限が近い食材（3日以内）</h2>
+        <ul>
+            <li th:each="item : ${expiring}">
+                <span th:text="${item.name}">豚ロース</span>
+                <span th:text="${#temporals.format(item.expiryDate, 'M/d')}">11/5</span>
+                <span th:if="${item.expired}" style="color: red">（期限切れ）</span>
+                <!-- この食材の名前で、レシピ一覧を材料検索する -->
+                <a th:href="@{/recipes(ingredient=${item.name})}">この食材を使うレシピ</a>
+            </li>
+        </ul>
+
+        <h3>期限が近い食材を使えるレシピ</h3>
+        <ul th:if="${!#lists.isEmpty(suggestions)}">
+            <li th:each="s : ${suggestions}">
+                <a th:href="@{/recipes/{id}(id=${s.recipe.id})}" th:text="${s.recipe.title}">親子丼</a>
+                <small th:text="'使える食材：' + ${s.usableText}">使える食材：豚ロース、卵</small>
+            </li>
+        </ul>
+        <p th:if="${#lists.isEmpty(suggestions)}">
+            これらの食材を使うレシピはまだありません。<a href="/recipes/new">レシピを投稿する</a>
+        </p>
+    </div>
 
     <a href="/ingredients/new">＋ 食材を登録</a>
 
@@ -57,7 +81,11 @@
                     <span th:text="${item.unit}">個</span>
                 </td>
                 <td th:text="${item.category}">その他</td>
-                <td th:text="${item.expiryType} + '：' + ${item.expiryDate}">賞味期限：2026-10-25</td>
+                <!-- 期限切れは赤、3日以内はオレンジ -->
+                <td th:text="${item.expiryType} + '：' + ${item.expiryDate}"
+                    th:style="${item.expired} ? 'color: red' : (${item.expiringSoon} ? 'color: orange')">
+                    賞味期限：2026-10-25
+                </td>
                 <td th:text="${item.openedDate}">-</td>
                 <td>
                     <a th:href="@{/ingredients/{id}/edit(id=${item.id})}">編集</a>

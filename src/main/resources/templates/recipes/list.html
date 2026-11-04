@@ -10,20 +10,30 @@
 
     <h1>レシピ一覧</h1>
 
-    <!-- ===== カテゴリで絞り込み（データを変えないので GET） ===== -->
+    <!-- ===== カテゴリ・材料で絞り込み（データを変えないので GET） ===== -->
     <form th:action="@{/recipes}" method="get">
         カテゴリ：
         <select name="category" onchange="this.form.submit()">
             <option value="">すべて</option>
-            <!--
-                選択肢は Recipe.CATEGORIES から作る。
-                カテゴリを増やしたいときは Java 側だけ直せば、ここにも反映される
-            -->
             <option th:each="c : ${categories}"
                     th:value="${c}" th:text="${c}"
                     th:selected="${c == category}">肉</option>
         </select>
+
+        材料：
+        <!-- th:value で、検索した文字を入れたままにする -->
+        <input type="text" name="ingredient" th:value="${ingredient}" placeholder="例：豚ロース" maxlength="100">
+        <button type="submit">検索</button>
+        <!-- 条件があるときだけ「解除」リンク -->
+        <a th:if="${ingredient != null and ingredient != ''} or ${category != null and category != ''}"
+           href="/recipes">条件を解除</a>
     </form>
+
+    <!-- 材料で検索したときは、件数を表示 -->
+    <p th:if="${ingredient != null and ingredient != ''}"
+       th:text="'「' + ${ingredient} + '」を使うレシピ：' + ${#lists.size(recipes)} + '件'">
+        「豚ロース」を使うレシピ：2件
+    </p>
 
     <!-- レシピが1件も無いとき -->
     <!-- #lists.isEmpty()：Thymeleaf の便利機能。リストが空なら true -->

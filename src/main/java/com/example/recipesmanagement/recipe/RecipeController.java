@@ -17,6 +17,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
+import com.example.recipesmanagement.comment.CommentRepository;
+import com.example.recipesmanagement.like.LikeRepository;
+import com.example.recipesmanagement.stock.StockCheckItem;
+import com.example.recipesmanagement.stock.StockCheckService;
+import com.example.recipesmanagement.stock.IngredientNameMatcher;
 
 /**
  * レシピ関係の画面を担当するコントローラー。
@@ -40,38 +45,84 @@ public class RecipeController {
     private final RecipeRepository repository;
     private final RecipeService recipeService;
     private final AppUserRepository userRepository;
+    private final LikeRepository likeRepository;
+    private final CommentRepository commentRepository;
+    private final StockCheckService stockCheckService;
 
     public RecipeController(RecipeRepository repository,
                             RecipeService recipeService,
-                            AppUserRepository userRepository) {
+                            AppUserRepository userRepository,
+                            LikeRepository likeRepository,
+                            CommentRepository commentRepository,
+                            StockCheckService stockCheckService) {
         this.repository = repository;
         this.recipeService = recipeService;
         this.userRepository = userRepository;
+        this.likeRepository = likeRepository;
+        this.commentRepository = commentRepository;
+        this.stockCheckService = stockCheckService;
     }
 
-    // ===== 一覧・詳細 =====
-
+    /**
+     * レシピ一覧を表示する（カテゴリ・材料での絞り込みつき）。
+     * 例：/recipes?category=肉&ingredient=豚ロース
+     */
     @GetMapping
-    public String list(@RequestParam(required = false) String category, Model model) {
+    public String list(@RequestParam(required = false) String category,
+                       @RequestParam(required = false) String ingredient,
+                       Model model) {
+
+        boolean hasCategory = category != null && !category.isEmpty();
+        // 空白を取り除いた検索語（在庫チェックと同じそろえ方）
+        String keyword = IngredientNameMatcher.normalize(ingredient);
+
         List<Recipe> recipes;
-        if (category == null || category.isEmpty()) {
-            recipes = repository.findAllByOrderByIdDesc();
-        } else {
+        if (!keyword.isEmpty()) {
+            // 材料で探し、カテゴリも指定されていればさらに絞り込む
+            recipes = repository.findByIngredientName(keyword);
+            if (hasCategory) {
+                recipes = recipes.stream()
+                        .filter(r -> category.equals(r.getCategory()))
+                        .toList();
+            }
+        } else if (hasCategory) {
             recipes = repository.findByCategoryOrderByIdDesc(category);
+        } else {
+            recipes = repository.findAllByOrderByIdDesc();
         }
 
         model.addAttribute("recipes", recipes);
         model.addAttribute("category", category);
+        model.addAttribute("ingredient", ingredient);          // 検索欄に入力した文字を残すため
         model.addAttribute("categories", Recipe.CATEGORIES);
         return "recipes/list";
     }
-
+    /**
+     * レシピ詳細を表示する（いいね・コメント・在庫チェックつき）。
+     * principal はログインしていなければ null。
+     */
     @GetMapping("/{id:\\d+}")
-    public String detail(@PathVariable Long id, Model model) {
+    public String detail(@PathVariable Long id, Principal principal, Model model) {
         Recipe recipe = repository.findWithDetailsById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+        boolean liked = false;
+
+        // ログインしているときだけ：いいね済みか、在庫チェック
+        if (principal != null) {
+            AppUser user = currentUser(principal);
+            liked = likeRepository.existsByUserAndRecipe(user, recipe);
+
+            List<StockCheckItem> stockCheck = stockCheckService.check(recipe, user);
+            model.addAttribute("stockCheck", stockCheck);
+            // 「足りない」「在庫なし」の数
+            model.addAttribute("missingCount", stockCheck.stream().filter(StockCheckItem::isProblem).count());
+        }
+
         model.addAttribute("recipe", recipe);
+        model.addAttribute("likeCount", likeRepository.countByRecipe(recipe));
+        model.addAttribute("liked", liked);
+        model.addAttribute("comments", commentRepository.findByRecipeOrderByIdAsc(recipe));
         return "recipes/detail";
     }
 

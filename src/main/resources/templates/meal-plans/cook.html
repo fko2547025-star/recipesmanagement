@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>作った</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <h1 th:text="'「' + ${plan.recipe.title} + '」を作りましたか？'">「豚の生姜焼き」を作りましたか？</h1>
+    <p>
+        <span th:text="${#temporals.format(plan.planDate, 'M/d(E)')}">10/27(火)</span>
+        <span th:text="${plan.planTime != null ? #temporals.format(plan.planTime, 'HH:mm') : '時間未定'}">19:00</span>
+    </p>
+
+    <p>「作った」にすると、食材管理の在庫が次のように減ります（期限が近い在庫から使います）。</p>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>材料</th>
+                <th>必要</th>
+                <th>減らす在庫</th>
+                <th>備考</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="line : ${lines}">
+                <td th:text="${line.name}">豚ロース</td>
+                <td th:text="${line.neededText}">200g</td>
+                <td>
+                    <!-- 減らす在庫が無いとき -->
+                    <span th:if="${#lists.isEmpty(line.deductions)}">-</span>
+                    <!-- 減らす在庫（複数のこともある） -->
+                    <div th:each="d : ${line.deductions}">
+                        <span th:text="${d.stockName}">豚ロース</span>
+                        <span th:if="${d.expiryDate != null}"
+                              th:text="'（期限' + ${#temporals.format(d.expiryDate, 'M/d')} + '）'">（期限10/28）</span>
+                        <span th:text="${d.beforeText} + ' → ' + ${d.afterText}">300g → 100g</span>
+                    </div>
+                </td>
+                <td th:text="${line.note}" style="color: red">在庫なし</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 在庫を減らすのでPOST。二重押しを防ぐため、押したらボタンを無効にする -->
+    <form th:action="@{/meal-plans/{id}/cook(id=${plan.id})}" method="post"
+          onsubmit="this.querySelector('button').disabled = true;">
+        <p><button type="submit">作った（在庫を減らす）</button></p>
+    </form>
+
+    <a th:href="@{/meal-plans(date=${plan.planDate})}">やめる</a>
+</body>
+</html>

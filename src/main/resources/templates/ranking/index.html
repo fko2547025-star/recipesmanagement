@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ランキング</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <h1>ランキング</h1>
+
+    <!--
+        ===== 期間の切り替え =====
+        データを変えない操作なのでリンク（GET）。選択中の期間は太字にする
+    -->
+    <p>
+        <a href="/ranking" th:style="${period == 'all'} ? 'font-weight: bold'">累計</a> |
+        <a href="/ranking?period=week" th:style="${period == 'week'} ? 'font-weight: bold'">週間（直近7日）</a> |
+        <a href="/ranking?period=month" th:style="${period == 'month'} ? 'font-weight: bold'">月間（直近30日）</a>
+    </p>
+
+    <p th:if="${#lists.isEmpty(items)}">この期間のいいねはまだありません</p>
+
+    <table border="1" th:unless="${#lists.isEmpty(items)}">
+        <thead>
+            <tr>
+                <th>順位</th>
+                <th>写真</th>
+                <th>タイトル</th>
+                <th>カテゴリ</th>
+                <th>投稿者</th>
+                <th>いいね</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- items は RankingItem のリスト。item.recipe でレシピ本体をたどれる -->
+            <tr th:each="item : ${items}">
+                <td th:text="${item.rank} + '位'">1位</td>
+                <td>
+                    <img th:if="${item.recipe.imagePath}"
+                         th:src="@{/uploads/{file}(file=${item.recipe.imagePath})}"
+                         th:alt="${item.recipe.title}" style="width: 80px">
+                </td>
+                <td><a th:href="@{/recipes/{id}(id=${item.recipe.id})}" th:text="${item.recipe.title}">豚の生姜焼き</a></td>
+                <td th:text="${item.recipe.category}">肉</td>
+                <td th:text="${item.recipe.user.username}">taro</td>
+                <td th:text="${item.likeCount}">5</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
