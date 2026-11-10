@@ -15,8 +15,40 @@
             <form th:action="@{/recipes}" method="get" class="search-bar">
                 <span class="material-symbols-rounded">search</span>
                 <input type="search" name="q" th:value="${q}" placeholder="料理名または材料" maxlength="100">
+                <!-- カテゴリを選んでいる状態で検索したら、カテゴリも一緒に送る -->
+                <input th:if="${category != null and category != ''}" type="hidden" name="category" th:value="${category}">
                 <button type="submit">検索</button>
             </form>
+        </div>
+    </section>
+
+    <!-- ===== カテゴリから探す ===== -->
+    <section>
+        <div class="section-head">
+            <h2 class="section-title">
+                <span class="material-symbols-rounded">restaurant</span>カテゴリから探す
+            </h2>
+            <!-- カテゴリを選んでいるときだけ「すべて見る」を出す（押すと選択を解除する。検索語は残す） -->
+            <a th:if="${category != null and category != ''}"
+            th:href="${q != null and q != ''} ? @{/recipes(q=${q})} : @{/recipes}"
+            class="section-link">すべて見る<span class="material-symbols-rounded">chevron_right</span></a>
+        </div>
+
+        <div class="category-cards">
+            <!--
+                選んでいるカード（c == category）を押したとき → カテゴリを外す（解除）
+                それ以外のカードを押したとき → そのカテゴリで絞り込む
+                どちらの場合も、検索語（q）があれば残す
+            -->
+            <a th:each="c : ${categories}"
+            th:href="${c == category}
+                        ? (${q != null and q != ''} ? @{/recipes(q=${q})} : @{/recipes})
+                        : (${q != null and q != ''} ? @{/recipes(category=${c},q=${q})} : @{/recipes(category=${c})})"
+            class="category-card" th:classappend="${c == category} ? 'is-active'"
+            th:title="${c == category} ? 'もう一度押すと解除' : ${c} + 'で絞り込む'">
+                <span class="category-card__icon" th:text="${categoryIcons.get(c)}">🍱</span>
+                <span class="category-card__name" th:text="${c}">和食</span>
+            </a>
         </div>
     </section>
 

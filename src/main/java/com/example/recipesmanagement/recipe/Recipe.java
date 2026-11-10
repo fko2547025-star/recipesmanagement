@@ -3,6 +3,7 @@ package com.example.recipesmanagement.recipe;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.example.recipesmanagement.user.AppUser;
 
@@ -30,11 +31,28 @@ import jakarta.persistence.Table;
 public class Recipe {
 
     /**
-     * レシピのカテゴリの一覧。
-     * 一覧の絞り込みや、次回作る投稿フォームの選択肢で使い回す。
-     * static なフィールドは DB の列としては扱われない。
+     * レシピのカテゴリ（表示する順番）。
+     * ホームのカテゴリカード、投稿フォームの選択肢、入力チェックで使い回す。
      */
-    public static final List<String> CATEGORIES = List.of("肉", "魚", "野菜", "ご飯・麺", "汁物", "その他");
+    public static final List<String> CATEGORIES = List.of(
+            "和食", "洋食", "中華", "肉", "魚", "野菜", "ご飯・麺", "汁物", "デザート", "その他");
+
+    /**
+     * カテゴリごとのアイコン（絵文字）。
+     * Map は「キー → 値」の対応表。ここでは「カテゴリ名 → 絵文字」。
+     * Map は順番を覚えていないので、並べるときは CATEGORIES を使い、アイコンだけこちらから取り出す。
+     */
+    public static final Map<String, String> CATEGORY_ICONS = Map.ofEntries(
+        Map.entry("和食", "🍱"),
+        Map.entry("洋食", "🍝"),
+        Map.entry("中華", "🥟"),
+        Map.entry("肉", "🍖"),
+        Map.entry("魚", "🐟"),
+        Map.entry("野菜", "🥗"),
+        Map.entry("ご飯・麺", "🍜"),
+        Map.entry("汁物", "🍲"),
+        Map.entry("デザート", "🍰"),
+        Map.entry("その他", "🍽️"));
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -129,6 +147,14 @@ public class Recipe {
         ingredient.setRecipe(this);       // 材料側に「自分はこのレシピの材料」とセット
     }
 
-        public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    /**
+     * このレシピのカテゴリのアイコン。画面では ${recipe.categoryIcon} で呼び出せる。
+     * getOrDefault：もし表に無いカテゴリだったら、代わりに 🍽️ を返す
+     */
+    public String getCategoryIcon() {
+        return CATEGORY_ICONS.getOrDefault(category, "🍽️");
+    }
 }

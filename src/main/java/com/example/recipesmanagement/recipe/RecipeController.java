@@ -94,9 +94,10 @@ public class RecipeController {
         }
 
         model.addAttribute("recipes", recipes);
-        model.addAttribute("category", category);
-        model.addAttribute("q", q);                      // 検索欄に入力した文字を残すため
-        model.addAttribute("categories", Recipe.CATEGORIES);
+        model.addAttribute("categories", Recipe.CATEGORIES);        // カードを並べる順番
+        model.addAttribute("categoryIcons", Recipe.CATEGORY_ICONS); // カテゴリ名 → 絵文字
+        model.addAttribute("category", category);                   // 今選んでいるカテゴリ
+        model.addAttribute("q", q);                                 // 今の検索語
         return "recipes/list";
     }
     
