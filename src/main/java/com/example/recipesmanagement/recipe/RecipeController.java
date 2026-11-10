@@ -97,7 +97,8 @@ public class RecipeController {
         model.addAttribute("categories", Recipe.CATEGORIES);        // カードを並べる順番
         model.addAttribute("categoryIcons", Recipe.CATEGORY_ICONS); // カテゴリ名 → 絵文字
         model.addAttribute("category", category);                   // 今選んでいるカテゴリ
-        model.addAttribute("q", q);                                 // 今の検索語
+        model.addAttribute("q", q);
+        model.addAttribute("likeCounts", likeRepository.countAllByRecipe());   // id → いいね数                                 // 今の検索語
         return "recipes/list";
     }
     

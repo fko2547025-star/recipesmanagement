@@ -52,45 +52,35 @@
         </div>
     </section>
 
-    <h1>レシピ一覧</h1>
-
-    <!-- 検索したときは、件数を表示 -->
-    <p th:if="${q != null and q != ''}"
-       th:text="'「' + ${q} + '」の検索結果：' + ${#lists.size(recipes)} + '件'">
-        「豚」の検索結果：8件
-    </p>
-
-    <!-- レシピが1件も無いとき -->
-    <!-- #lists.isEmpty()：Thymeleaf の便利機能。リストが空なら true -->
-    <p th:if="${#lists.isEmpty(recipes)}">レシピがありません</p>
-
     <!-- ===== レシピ一覧 ===== -->
-    <table border="1" th:unless="${#lists.isEmpty(recipes)}">
-        <thead>
-            <tr>
-                <th>写真</th>
-                <th>タイトル</th>
-                <th>カテゴリ</th>
-                <th>投稿者</th>
-                <th>投稿日</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="recipe : ${recipes}">
-                <td>
-                    <img th:if="${recipe.imagePath}"
-                         th:src="@{/uploads/{file}(file=${recipe.imagePath})}"
-                         th:alt="${recipe.title}" style="width: 80px">
-                </td>                
-                <!-- タイトルをクリックすると詳細画面へ -->
-                <td><a th:href="@{/recipes/{id}(id=${recipe.id})}" th:text="${recipe.title}">豚の生姜焼き</a></td>
-                <td th:text="${recipe.category}">肉</td>
-                <!-- recipe.user.username：レシピ → 投稿者 → ユーザー名 とたどっている -->
-                <td th:text="${recipe.user.username}">taro</td>
-                <!-- #temporals.format()：日時を好きな形に整えて表示する -->
-                <td th:text="${#temporals.format(recipe.createdAt, 'yyyy/MM/dd')}">2026/10/20</td>
-            </tr>
-        </tbody>
-    </table>
+    <section>
+        <div class="section-head">
+            <!-- 見出し：検索中 →「〇〇」の検索結果、カテゴリを選択中 → 〇〇のレシピ、それ以外 → 新着レシピ -->
+            <h2 class="section-title">
+                <span class="material-symbols-rounded">menu_book</span>
+                <span th:text="${q != null and q != ''} ? '「' + ${q} + '」の検索結果'
+                            : (${category != null and category != ''} ? ${category} + 'のレシピ' : '新着レシピ')">新着レシピ</span>
+                <small class="text-muted" th:text="${#lists.size(recipes)} + '件'">20件</small>
+            </h2>
+        </div>
+
+        <!-- 1件も無いとき -->
+        <div th:if="${#lists.isEmpty(recipes)}" class="empty card">
+            <span class="material-symbols-rounded empty__icon">search_off</span>
+            <p>レシピが見つかりませんでした</p>
+        </div>
+
+        <div class="recipe-grid">
+            <!--
+                th:block：画面には何も出さない「入れ物」のタグ。
+                th:each と th:replace を同じタグに書くと th:replace が先に動いてしまい、
+                recipe がまだ無い状態で部品を読み込もうとするので、th:block で繰り返して、その中で読み込む
+            -->
+            <th:block th:each="recipe : ${recipes}">
+                <article th:replace="~{fragments/recipe-card :: card(${recipe}, ${likeCounts.get(recipe.id)})}"></article>
+            </th:block>
+        </div>
+    </section>
+
 </body>
 </html>

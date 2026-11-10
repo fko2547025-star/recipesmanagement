@@ -4,46 +4,61 @@
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <h1>ランキング</h1>
+    <main class="container container--narrow">
+        <h1 class="page-title">
+            <span class="material-symbols-rounded is-filled">workspace_premium</span>ランキング
+        </h1>
 
-    <!--
-        ===== 期間の切り替え =====
-        データを変えない操作なのでリンク（GET）。選択中の期間は太字にする
-    -->
-    <p>
-        <a href="/ranking" th:style="${period == 'all'} ? 'font-weight: bold'">累計</a> |
-        <a href="/ranking?period=week" th:style="${period == 'week'} ? 'font-weight: bold'">週間（直近7日）</a> |
-        <a href="/ranking?period=month" th:style="${period == 'month'} ? 'font-weight: bold'">月間（直近30日）</a>
-    </p>
+        <!-- 期間の切り替え。データを変えないので、ただのリンク（GET）。選んでいる期間に is-active -->
+        <nav class="tabs tabs--wide">
+            <a th:href="@{/ranking(period='week')}"  th:classappend="${period == 'week'}  ? 'is-active'">週間</a>
+            <a th:href="@{/ranking(period='month')}" th:classappend="${period == 'month'} ? 'is-active'">月間</a>
+            <a th:href="@{/ranking}"                 th:classappend="${period == 'all'}   ? 'is-active'">累計</a>
+        </nav>
 
-    <p th:if="${#lists.isEmpty(items)}">この期間のいいねはまだありません</p>
+        <!-- この期間に1件もいいねが無いとき -->
+        <div th:if="${#lists.isEmpty(items)}" class="empty card">
+            <span class="material-symbols-rounded empty__icon">sentiment_neutral</span>
+            <p>この期間のいいねはまだありません</p>
+        </div>
 
-    <table border="1" th:unless="${#lists.isEmpty(items)}">
-        <thead>
-            <tr>
-                <th>順位</th>
-                <th>写真</th>
-                <th>タイトル</th>
-                <th>カテゴリ</th>
-                <th>投稿者</th>
-                <th>いいね</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- items は RankingItem のリスト。item.recipe でレシピ本体をたどれる -->
-            <tr th:each="item : ${items}">
-                <td th:text="${item.rank} + '位'">1位</td>
-                <td>
-                    <img th:if="${item.recipe.imagePath}"
-                         th:src="@{/uploads/{file}(file=${item.recipe.imagePath})}"
-                         th:alt="${item.recipe.title}" style="width: 80px">
-                </td>
-                <td><a th:href="@{/recipes/{id}(id=${item.recipe.id})}" th:text="${item.recipe.title}">豚の生姜焼き</a></td>
-                <td th:text="${item.recipe.category}">肉</td>
-                <td th:text="${item.recipe.user.username}">taro</td>
-                <td th:text="${item.likeCount}">5</td>
-            </tr>
-        </tbody>
-    </table>
+        <!-- ol：順番に意味のあるリスト（順位なので ul ではなく ol） -->
+        <ol class="ranking-list card" th:unless="${#lists.isEmpty(items)}">
+            <!-- 1〜3位には is-top（背景を明るく）と rank-1〜3（王冠の色）のクラスを付ける -->
+            <li th:each="item : ${items}" class="ranking-item"
+                th:classappend="${item.rank <= 3 ? 'is-top rank-' + item.rank : ''}">
+
+                <!-- 順位：1〜3位は王冠の上に数字を重ねる。4位以下は数字だけ -->
+                <span class="rank-badge">
+                    <span th:if="${item.rank <= 3}" class="material-symbols-rounded rank-badge__crown">emoji_events</span>
+                    <span class="rank-badge__num" th:text="${item.rank}">1</span>
+                </span>
+
+                <!-- 写真（無ければカテゴリの絵文字） -->
+                <a th:href="@{/recipes/{id}(id=${item.recipe.id})}" class="ranking-item__photo">
+                    <img th:if="${item.recipe.imagePath}" th:src="@{/uploads/{file}(file=${item.recipe.imagePath})}"
+                         th:alt="${item.recipe.title}" loading="lazy">
+                    <span th:unless="${item.recipe.imagePath}" class="photo-placeholder"
+                          th:text="${item.recipe.categoryIcon}">🍽️</span>
+                </a>
+
+                <!-- レシピ名・カテゴリ・投稿者 -->
+                <div class="ranking-item__body">
+                    <a th:href="@{/recipes/{id}(id=${item.recipe.id})}" class="ranking-item__title"
+                       th:text="${item.recipe.title}">親子丼</a>
+                    <small class="text-muted"
+                           th:text="${item.recipe.categoryIcon} + ' ' + ${item.recipe.category} + ' ・ ' + ${item.recipe.user.username}">
+                        🍜 ご飯・麺 ・ jiro
+                    </small>
+                </div>
+
+                <!-- いいね数 -->
+                <span class="like-count">
+                    <span class="material-symbols-rounded is-filled">favorite</span>
+                    <strong th:text="${item.likeCount}">4</strong>
+                </span>
+            </li>
+        </ol>
+    </main>
 </body>
 </html>
