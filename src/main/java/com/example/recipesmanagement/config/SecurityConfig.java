@@ -23,7 +23,7 @@ public class SecurityConfig {
                 // レシピ投稿画面はログイン必須（下の /recipes/* より先に書く）
                 .requestMatchers("/recipes/new").authenticated()
                 // レシピ一覧・詳細・ランキングは「見るだけ」なら誰でも
-                .requestMatchers(HttpMethod.GET, "/", "/recipes", "/recipes/*", "/ranking", "/uploads/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/", "/recipes", "/recipes/*", "/ranking", "/users/*").permitAll()
                 // それ以外（投稿・いいね・コメント・マイページ・献立・食材管理）はログイン必須
                 .anyRequest().authenticated()
             )

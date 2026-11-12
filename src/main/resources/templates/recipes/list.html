@@ -17,6 +17,7 @@
                 <input type="search" name="q" th:value="${q}" placeholder="料理名または材料" maxlength="100">
                 <!-- カテゴリを選んでいる状態で検索したら、カテゴリも一緒に送る -->
                 <input th:if="${category != null and category != ''}" type="hidden" name="category" th:value="${category}">
+                <input type="hidden" name="sort" th:value="${sort}">
                 <button type="submit">検索</button>
             </form>
         </div>
@@ -28,10 +29,10 @@
             <h2 class="section-title">
                 <span class="material-symbols-rounded">restaurant</span>カテゴリから探す
             </h2>
-            <!-- カテゴリを選んでいるときだけ「すべて見る」を出す（押すと選択を解除する。検索語は残す） -->
+            <!-- カテゴリを選んでいるときだけ「すべて見る」を出す（押すと選択を解除する。検索語と並び順は残す） -->
             <a th:if="${category != null and category != ''}"
-            th:href="${q != null and q != ''} ? @{/recipes(q=${q})} : @{/recipes}"
-            class="section-link">すべて見る<span class="material-symbols-rounded">chevron_right</span></a>
+               th:href="${q != null and q != ''} ? @{/recipes(q=${q},sort=${sort})} : @{/recipes(sort=${sort})}"
+               class="section-link">すべて見る<span class="material-symbols-rounded">chevron_right</span></a>
         </div>
 
         <div class="category-cards">
@@ -42,8 +43,8 @@
             -->
             <a th:each="c : ${categories}"
             th:href="${c == category}
-                        ? (${q != null and q != ''} ? @{/recipes(q=${q})} : @{/recipes})
-                        : (${q != null and q != ''} ? @{/recipes(category=${c},q=${q})} : @{/recipes(category=${c})})"
+                        ? (${q != null and q != ''} ? @{/recipes(q=${q},sort=${sort})} : @{/recipes(sort=${sort})})
+                        : (${q != null and q != ''} ? @{/recipes(category=${c},q=${q},sort=${sort})} : @{/recipes(category=${c},sort=${sort})})"
             class="category-card" th:classappend="${c == category} ? 'is-active'"
             th:title="${c == category} ? 'もう一度押すと解除' : ${c} + 'で絞り込む'">
                 <span class="category-card__icon" th:text="${categoryIcons.get(c)}">🍱</span>
@@ -54,14 +55,28 @@
 
     <!-- ===== レシピ一覧 ===== -->
     <section>
+                <!-- 見出し（左）と並び順（右）を、同じ行の左右の端に置く -->
         <div class="section-head">
-            <!-- 見出し：検索中 →「〇〇」の検索結果、カテゴリを選択中 → 〇〇のレシピ、それ以外 → 新着レシピ -->
             <h2 class="section-title">
                 <span class="material-symbols-rounded">menu_book</span>
+                <!-- 検索中 →「〇〇」の検索結果、カテゴリ選択中 → 〇〇のレシピ、
+                     それ以外 → 並び順に合わせて「新着レシピ」か「人気のレシピ」 -->
                 <span th:text="${q != null and q != ''} ? '「' + ${q} + '」の検索結果'
-                            : (${category != null and category != ''} ? ${category} + 'のレシピ' : '新着レシピ')">新着レシピ</span>
+                               : (${category != null and category != ''} ? ${category} + 'のレシピ'
+                               : (${sort == 'popular'} ? '人気のレシピ' : '新着レシピ'))">新着レシピ</span>
                 <small class="text-muted" th:text="${#lists.size(recipes)} + '件'">20件</small>
             </h2>
+
+            <!-- 並び順（GET のフォーム）。選んだらすぐ送信する。カテゴリと検索語は隠し項目で引き継ぐ -->
+            <form th:action="@{/recipes}" method="get" class="sort-select">
+                <input th:if="${category != null and category != ''}" type="hidden" name="category" th:value="${category}">
+                <input th:if="${q != null and q != ''}" type="hidden" name="q" th:value="${q}">
+                <span class="material-symbols-rounded">sort</span>
+                <select name="sort" onchange="this.form.submit()" aria-label="並び順">
+                    <option value="new" th:selected="${sort == 'new'}">新着順</option>
+                    <option value="popular" th:selected="${sort == 'popular'}">人気順</option>
+                </select>
+            </form>
         </div>
 
         <!-- 1件も無いとき -->

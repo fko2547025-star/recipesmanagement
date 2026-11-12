@@ -2,6 +2,7 @@ package com.example.recipesmanagement.mypage;
 
 import java.security.Principal;
 import java.util.List;
+import java.time.LocalDate;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import com.example.recipesmanagement.recipe.Recipe;
 import com.example.recipesmanagement.recipe.RecipeRepository;
@@ -38,17 +40,22 @@ public class MyPageController {
     private final ProfileService profileService;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
+    private final PasswordService passwordService;
+    private final CookingRecordService cookingRecordService;
 
-    public MyPageController(RecipeRepository recipeRepository, AppUserRepository userRepository, ProfileService profileService, LikeRepository likeRepository, CommentRepository commentRepository) {
+    public MyPageController(RecipeRepository recipeRepository, AppUserRepository userRepository, ProfileService profileService, LikeRepository likeRepository, CommentRepository commentRepository, PasswordService passwordService, CookingRecordService cookingRecordService) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
         this.profileService = profileService;
         this.likeRepository = likeRepository;
         this.commentRepository = commentRepository;
+        this.passwordService = passwordService;
+        this.cookingRecordService = cookingRecordService;
     }
 
     @GetMapping("/mypage")
     public String mypage(@RequestParam(defaultValue = "posted") String tab,
+                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate week,
                          Principal principal,
                          Model model) {
 
@@ -75,7 +82,11 @@ public class MyPageController {
         // プロフィールのカード用（ニックネーム・写真）
         model.addAttribute("user", user);
         // レシピカードのいいね数（ホームと同じ）
-        model.addAttribute("likeCounts", likeRepository.countAllByRecipe());        
+        model.addAttribute("likeCounts", likeRepository.countAllByRecipe());     
+        // 料理レベルと、今月のスタンプカード
+        model.addAttribute("level", cookingRecordService.level(user));
+        model.addAttribute("stampCard", cookingRecordService.stampCard(user, week));   // ← week を渡す
+        model.addAttribute("rewards", cookingRecordService.rewards(user));            // ← 追加
         return "mypage/index";
     }
 
@@ -125,4 +136,40 @@ public class MyPageController {
         redirectAttributes.addFlashAttribute("message", "プロフィールを更新しました");
         return "redirect:/mypage";
     }
+
+    // ===== パスワードの変更 =====
+
+    /**
+     * パスワードの変更画面を表示する。
+     */
+    @GetMapping("/mypage/password")
+    public String passwordForm(Model model) {
+        model.addAttribute("minLength", PasswordService.MIN_LENGTH);
+        return "mypage/password";
+    }
+
+    /**
+     * パスワードを変更する。
+     * パスワードは、エラーで画面に戻るときも入力欄に戻さない（安全のため、入力し直してもらう）。
+     */
+    @PostMapping("/mypage/password")
+    public String changePassword(@RequestParam String currentPassword,
+                                @RequestParam String newPassword,
+                                @RequestParam String confirmPassword,
+                                Principal principal,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
+
+        List<String> errors = passwordService.change(principal.getName(), currentPassword, newPassword, confirmPassword);
+        if (!errors.isEmpty()) {
+            model.addAttribute("errors", errors);
+            model.addAttribute("minLength", PasswordService.MIN_LENGTH);
+            return "mypage/password";
+        }
+
+        // プロフィール更新と同じく、マイページに戻って緑のメッセージを出す（PRG）
+        redirectAttributes.addFlashAttribute("message", "パスワードを変更しました");
+        return "redirect:/mypage";
+    }
+
 }

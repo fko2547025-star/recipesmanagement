@@ -1,8 +1,11 @@
 package com.example.recipesmanagement.common;
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
+import com.example.recipesmanagement.ingredient.Ingredient;
+import com.example.recipesmanagement.ingredient.IngredientRepository;
 
 import java.security.Principal;
+import java.time.LocalDate;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -21,9 +24,11 @@ import jakarta.servlet.http.HttpServletRequest;
 public class LoginUserAdvice {
 
     private final AppUserRepository userRepository;
+    private final IngredientRepository ingredientRepository;
 
-    public LoginUserAdvice(AppUserRepository userRepository) {
+    public LoginUserAdvice(AppUserRepository userRepository, IngredientRepository ingredientRepository) {
         this.userRepository = userRepository;
+        this.ingredientRepository = ingredientRepository;
     }
 
     /**
@@ -46,6 +51,23 @@ public class LoginUserAdvice {
             return null;
         }
         return userRepository.findByUsername(principal.getName()).orElse(null);
+    }
+
+    /**
+     * 期限が近い食材の数（ヘッダーの「食材管理」のバッジ用）。全画面で ${expiringCount} として使える。
+     * ログインしていなければ 0。
+     *
+     * 「期限が近い」の日数は、食材管理と同じ Ingredient.EXPIRING_DAYS（3日）を使う。
+     * 数量0（使い切り）の食材は数えない。
+     */
+    @ModelAttribute("expiringCount")
+    public long expiringCount(Principal principal) {
+        if (principal == null) {
+            return 0;
+        }
+        LocalDate limit = LocalDate.now().plusDays(Ingredient.EXPIRING_DAYS);
+        return ingredientRepository.countByUser_UsernameAndExpiryDateLessThanEqualAndQuantityGreaterThan(
+                principal.getName(), limit, 0.0);
     }
 
     /**

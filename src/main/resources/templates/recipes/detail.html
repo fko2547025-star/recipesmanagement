@@ -162,12 +162,20 @@
         <!-- ===== 投稿者・投稿日時 ===== -->
         <section class="card section-card">
             <h2 class="section-title"><span class="material-symbols-rounded">person</span>投稿者</h2>
-            <p>
-                <strong th:text="${recipe.user.username}">taro</strong><br>
-                <small class="text-muted" th:text="'投稿 ' + ${#temporals.format(recipe.createdAt, 'yyyy/MM/dd HH:mm')}">投稿 2026/10/20 12:00</small>
-                <small class="text-muted" th:if="${recipe.updatedAt != null and recipe.updatedAt != recipe.createdAt}"
-                       th:text="' ・ 更新 ' + ${#temporals.format(recipe.updatedAt, 'yyyy/MM/dd HH:mm')}"></small>
-            </p>
+            <!-- 左：写真と名前（投稿者のページへのリンク）／右：投稿日時・更新日時 -->
+            <div class="author-row">
+                <a th:href="@{/users/{id}(id=${recipe.user.id})}" class="author-link">
+                    <span th:replace="~{fragments/avatar :: avatar(${recipe.user}, 'avatar--md')}"></span>
+                    <strong th:text="${recipe.user.displayName}">さくら</strong>
+                </a>
+
+                <!-- 日時（投稿・更新を横に並べて、右の端に置く） -->
+                <div class="author-row__dates">
+                    <span th:text="'投稿 ' + ${#temporals.format(recipe.createdAt, 'yyyy/MM/dd HH:mm')}">投稿 2026/11/09 11:36</span>
+                    <span th:if="${recipe.updatedAt != null and recipe.updatedAt != recipe.createdAt}"
+                        th:text="'更新 ' + ${#temporals.format(recipe.updatedAt, 'yyyy/MM/dd HH:mm')}">更新 2026/11/12 13:42</span>
+                </div>
+            </div>
         </section>
 
         <!-- ===== コメント ===== -->

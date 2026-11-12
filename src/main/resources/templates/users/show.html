@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${user.displayName} + 'さんのレシピ')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container">
+        <a href="/recipes" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>レシピ一覧に戻る
+        </a>
+
+        <!-- ===== プロフィール（左）と数字のまとめ（右）。マイページと同じ部品 ===== -->
+        <div class="mypage-top">
+            <section class="card profile-card">
+                <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
+                <p class="profile-card__name" th:text="${user.displayName}">じろう</p>
+                <p class="profile-card__id" th:text="'@' + ${user.username}">@jiro</p>
+            </section>
+
+            <section class="card stats-card">
+                <h2 class="stats-card__title" th:text="${user.displayName} + 'さんの投稿・いいね'">じろうさんの投稿・いいね</h2>
+                <!-- 数字は2つなので、2列にする（stats--2） -->
+                <div class="stats stats--2">
+                    <div class="stat">
+                        <span class="material-symbols-rounded">edit</span>
+                        <span class="stat__label">投稿数</span>
+                        <strong class="stat__value" th:text="${postCount}">5</strong>
+                    </div>
+                    <div class="stat">
+                        <span class="material-symbols-rounded is-filled">favorite</span>
+                        <span class="stat__label">もらったいいね</span>
+                        <strong class="stat__value" th:text="${receivedLikeCount}">12</strong>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ===== 投稿したレシピ ===== -->
+        <div class="section-head">
+            <h2 class="section-title">
+                <span class="material-symbols-rounded">menu_book</span>
+                <span th:text="${user.displayName} + 'さんのレシピ'">じろうさんのレシピ</span>
+                <small class="text-muted" th:text="${#lists.size(recipes)} + '件'">5件</small>
+            </h2>
+        </div>
+
+        <div th:if="${#lists.isEmpty(recipes)}" class="empty card">
+            <span class="material-symbols-rounded empty__icon">menu_book</span>
+            <p>まだレシピを投稿していません</p>
+        </div>
+
+        <!-- レシピカードの部品を使い回す（ホーム・マイページと同じ） -->
+        <div class="recipe-grid">
+            <th:block th:each="recipe : ${recipes}">
+                <article th:replace="~{fragments/recipe-card :: card(${recipe}, ${likeCounts.get(recipe.id)})}"></article>
+            </th:block>
+        </div>
+    </main>
+</body>
+</html>

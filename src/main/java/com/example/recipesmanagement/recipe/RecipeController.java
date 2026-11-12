@@ -2,6 +2,8 @@ package com.example.recipesmanagement.recipe;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Comparator;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -72,6 +74,7 @@ public class RecipeController {
     @GetMapping
     public String list(@RequestParam(required = false) String category,
                        @RequestParam(required = false) String q,
+                       @RequestParam(defaultValue = "new") String sort,
                        Model model) {
 
         boolean hasCategory = category != null && !category.isEmpty();
@@ -93,12 +96,31 @@ public class RecipeController {
             recipes = repository.findAllByOrderByIdDesc();
         }
 
+        // ----- 並び替え -----
+        // いいね数は人気順の並べ替えと、カードの表示の両方で使うので、先に1回だけ数えておく
+        Map<Long, Long> likeCounts = likeRepository.countAllByRecipe();
+
+        // 決まった値以外が来たら新着順にする（URL を書き換えられても大丈夫なように）
+        if (!sort.equals("popular")) {
+            sort = "new";
+        }
+
+        if (sort.equals("popular")) {
+            // 人気順：いいね数の多い順。同じ数なら新しい順
+            // getOrDefault(id, 0L)：いいねが0件のレシピは Map に入っていないので、0 として扱う
+            recipes = recipes.stream()
+                    .sorted(Comparator.comparing((Recipe r) -> likeCounts.getOrDefault(r.getId(), 0L)).reversed()
+                            .thenComparing(Recipe::getId, Comparator.reverseOrder()))
+                    .toList();
+        }
+        // 新着順は、Repository で取り出した時点で id の大きい順（新しい順）になっているので、何もしない
         model.addAttribute("recipes", recipes);
         model.addAttribute("categories", Recipe.CATEGORIES);        // カードを並べる順番
         model.addAttribute("categoryIcons", Recipe.CATEGORY_ICONS); // カテゴリ名 → 絵文字
         model.addAttribute("category", category);                   // 今選んでいるカテゴリ
         model.addAttribute("q", q);
-        model.addAttribute("likeCounts", likeRepository.countAllByRecipe());   // id → いいね数                                 // 今の検索語
+        model.addAttribute("sort", sort);
+        model.addAttribute("likeCounts", likeCounts);   // id → いいね数                                 // 今の検索語
         return "recipes/list";
     }
     

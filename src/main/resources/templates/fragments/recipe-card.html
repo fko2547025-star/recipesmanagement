@@ -1,53 +1,44 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-    <!--
-        レシピのカード1枚分の部品（フラグメント）。
-        card(recipe, likeCount)：呼び出すときに、レシピといいね数を渡してもらう（メソッドの引数と同じ）。
-        ホームのほか、あとでマイページでも使い回す。
-    -->
     <article th:fragment="card(recipe, likeCount)" class="recipe-card">
-        <!-- カード全体をリンクにする（どこを押しても詳細へ） -->
-        <a th:href="@{/recipes/{id}(id=${recipe.id})}" class="recipe-card__link">
+    <!-- 上：写真・料理名・ラベル・一言（押すとレシピの詳細へ） -->
+    <a th:href="@{/recipes/{id}(id=${recipe.id})}" class="recipe-card__link">
+        <div class="recipe-card__photo">
+            <img th:if="${recipe.imagePath}" th:src="@{/uploads/{file}(file=${recipe.imagePath})}"
+                 th:alt="${recipe.title}" loading="lazy">
+            <span th:unless="${recipe.imagePath}" class="photo-placeholder"
+                  th:text="${recipe.categoryIcon}">🍽️</span>
+        </div>
 
-            <div class="recipe-card__photo">
-                <!-- 写真があれば写真、なければカテゴリの絵文字を大きく表示する -->
-                <!-- loading="lazy"：画面に近づいてから画像を読み込む（一覧を速く表示するため） -->
-                <img th:if="${recipe.imagePath}" th:src="@{/uploads/{file}(file=${recipe.imagePath})}"
-                     th:alt="${recipe.title}" loading="lazy">
-                <span th:unless="${recipe.imagePath}" class="photo-placeholder"
-                      th:text="${recipe.categoryIcon}">🍽️</span>
+        <div class="recipe-card__body">
+            <h3 class="recipe-card__title" th:text="${recipe.title}">肉じゃが</h3>
+            <div class="recipe-card__tags">
+                <span class="tag">
+                    <span class="material-symbols-rounded">restaurant</span>
+                    <span th:text="${recipe.servings} + '人分'">2人分</span>
+                </span>
+                <span class="tag">
+                    <span class="material-symbols-rounded">sell</span>
+                    <span th:text="${recipe.category}">洋食</span>
+                </span>
             </div>
+            <p th:if="${recipe.description != null and recipe.description != ''}"
+               class="recipe-card__desc" th:text="${recipe.description}">外はカリッ、中はふわっと！</p>
+        </div>
+    </a>
 
-            <div class="recipe-card__body">
-                <h3 class="recipe-card__title" th:text="${recipe.title}">肉じゃが</h3>
-                <!-- 料理名の下のラベル：何人分・カテゴリ -->
-                <div class="recipe-card__tags">
-                    <span class="tag">
-                        <span class="material-symbols-rounded">restaurant</span>
-                        <span th:text="${recipe.servings} + '人分'">2人分</span>
-                    </span>
-                    <span class="tag">
-                        <span class="material-symbols-rounded">sell</span>
-                        <span th:text="${recipe.category}">洋食</span>
-                    </span>
-                </div>
-                <!-- 一言（説明）。入力されていないレシピでは何も出さない -->
-                <p th:if="${recipe.description != null and recipe.description != ''}"
-                class="recipe-card__desc" th:text="${recipe.description}">外はカリッ、中はふわっと！</p>
-                <div class="recipe-card__meta">
-                    <span class="mini-user">
-                        <span class="material-symbols-rounded">person</span>
-                        <span th:text="${recipe.user.username}">はるお</span>
-                    </span>
-                    <span class="like-mini">
-                        <span class="material-symbols-rounded">favorite</span>
-                        <!-- いいねが0件のレシピは Map に入っていないので null になる。?: 0 で「null なら 0」 -->
-                        <span th:text="${likeCount ?: 0}">0</span>
-                    </span>
-                </div>
-            </div>
+    <!-- 下：投稿者（押すと投稿者のページへ）といいね数。<a> の中に <a> は入れられないので、外に出している -->
+    <div class="recipe-card__meta">
+        <a th:href="@{/users/{id}(id=${recipe.user.id})}" class="mini-user">
+            <span th:replace="~{fragments/avatar :: avatar(${recipe.user}, 'avatar--sm')}"></span>
+            <span th:text="${recipe.user.displayName}">はるお</span>
         </a>
-    </article>
+        <span class="like-mini">
+            <span class="material-symbols-rounded">favorite</span>
+            <span th:text="${likeCount ?: 0}">0</span>
+        </span>
+    </div>
+</article>
 </body>
 </html>

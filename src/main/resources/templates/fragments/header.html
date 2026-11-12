@@ -45,6 +45,10 @@
                     <a href="/ingredients" class="site-nav__link"
                        th:classappend="${#strings.startsWith(currentPath, '/ingredients')} ? 'is-active'">
                         <span class="material-symbols-rounded">kitchen</span><span>食材管理</span>
+                        <!-- 期限が近い食材があるときだけ、赤い丸で数を出す（100件以上は 99+） -->
+                        <span th:if="${expiringCount > 0}" class="nav-badge"
+                            th:text="${expiringCount > 99} ? '99+' : ${expiringCount}"
+                            th:title="'期限が近い食材が' + ${expiringCount} + '件あります'">3</span>
                     </a>
                     <a href="/mypage" class="site-nav__link"
                        th:classappend="${#strings.startsWith(currentPath, '/mypage')} ? 'is-active'">
@@ -81,6 +85,9 @@
                             <p class="user-menu__name" th:text="${loginUser != null ? loginUser.displayName : loginUsername} + 'さん'">はるおさん</p>
                             <a href="/mypage/profile">
                                 <span class="material-symbols-rounded">manage_accounts</span>プロフィール編集
+                            </a>
+                            <a href="/mypage/password">
+                                <span class="material-symbols-rounded">lock</span>パスワードの変更
                             </a>
                             <a href="/mypage">
                                 <span class="material-symbols-rounded">person</span>マイページ

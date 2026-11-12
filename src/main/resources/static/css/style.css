@@ -2492,3 +2492,475 @@ details > summary.section-title { cursor: pointer; }
     color: var(--text);
     box-shadow: var(--shadow);
 }
+/* ===== レシピ一覧の並び順 ===== */
+.sort-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;              /* 見出しが長くても、プルダウンは縮ませない */
+    color: var(--text-muted);
+}
+
+.sort-select select {
+    padding: 6px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+}
+
+/* 見出しが長いとき（長い検索語など）は、見出しの方を「…」で切って同じ行に収める */
+.section-head .section-title {
+    min-width: 0;
+}
+
+.section-head .section-title > span:not(.material-symbols-rounded) {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* 数字のまとめが2つのとき（投稿者のページ） */
+.stats--2 { grid-template-columns: repeat(2, 1fr); }
+
+/* カードの下の段（投稿者・いいね数）。リンクの外に出したので、余白をここで付ける */
+.recipe-card .recipe-card__meta {
+    padding: 0 14px 12px;
+}
+
+/* 投稿者名のリンク：普段は灰色、マウスを乗せると下線 */
+.recipe-card a.mini-user {
+    color: var(--text-muted);
+    text-decoration: none;
+    min-width: 0;
+}
+
+.recipe-card a.mini-user:hover { text-decoration: underline; }
+
+/* 名前が長いときは「…」 */
+.recipe-card a.mini-user > span:last-child {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 767px) {
+    .recipe-card .recipe-card__meta { padding: 0 10px 10px; }
+}
+
+/* レシピ詳細の投稿者（写真＋名前のリンク） */
+.author-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.author-link:hover strong { text-decoration: underline; }
+
+/* レシピ詳細の投稿者：名前は左、日時は右の端 */
+.author-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;   /* 左右の端に分ける */
+    flex-wrap: wrap;                  /* せまい画面では日時が下の行に回る */
+    gap: 8px 16px;
+}
+
+/* 投稿・更新を横に並べる。文字の大きさはふつう、色は少し薄く */
+.author-row__dates {
+    display: flex;
+    flex-wrap: wrap;               /* せまい画面では、更新が下の行に回る */
+    justify-content: flex-end;     /* 右に寄せる */
+    gap: 4px 16px;                 /* 投稿と更新の間をあける */
+    color: var(--text-muted);
+}
+
+
+/* プロフィール編集の下の「パスワードを変更する」 */
+.profile-form__password {
+    margin: 20px 0 0;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    text-align: center;
+}
+
+.profile-form__password a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 700;
+}
+
+/* ===== ヘッダーのバッジ（期限が近い食材の数） ===== */
+/* バッジを、メニューの文字の右上に重ねるための基準 */
+.site-nav a {
+    position: relative;
+}
+
+.nav-badge {
+    position: absolute;
+    top: 2px;
+    right: -6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;               /* 1桁でも丸く、2桁以上は横に伸びる */
+    height: 18px;
+    padding: 0 5px;
+    border: 2px solid var(--primary-dark);   /* ヘッダーの色で縁取りして、浮いて見えるように */
+    border-radius: var(--radius-pill);
+    background: #e0533c;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* スマホ：画面の下のメニューでは、アイコンの右上に出す */
+@media (max-width: 767px) {
+    .nav-badge {
+        top: 0;
+        right: calc(50% - 22px);   /* 真ん中のアイコンの、少し右 */
+        border-color: var(--surface);
+    }
+}
+
+/* ===== 料理レベル ===== */
+.level {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    background: #fff;
+}
+
+.level__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.level__icon { font-size: 1.8rem; }
+
+/* 「Lv.2」の丸いラベル */
+.level__lv {
+    padding: 1px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.level__title { font-size: 1.1rem; }
+
+.level__points {
+    margin-left: auto;              /* ポイントだけ右端へ */
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+/* バーの外枠（灰色）と中身（緑〜金のグラデーション） */
+.level__bar {
+    height: 10px;
+    margin: 10px 0 6px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+}
+
+.level__fill {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, #9cc46a, #e5b72c);
+    transition: width 0.6s;
+}
+
+.level__next {
+    display: block;
+    color: var(--primary-dark);
+    font-weight: 700;
+}
+
+.level__hint {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+/* ===== 料理スタンプカード ===== */
+.stamp-card { margin-top: 20px; }
+
+.stamp-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.stamp-card__stats {
+    display: flex;
+    gap: 16px;
+    color: var(--text-muted);
+}
+
+.stamp-card__stats strong {
+    color: var(--primary-dark);
+    font-size: 1.3rem;
+}
+
+/* 7列のマス目 */
+.stamp-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.stamp-grid--head span {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.stamp-grid--head .is-sat { color: #4a7fb5; }
+.stamp-grid--head .is-sun { color: #c0533a; }
+
+/* 1マス：正方形 */
+.stamp {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    max-height: 56px;
+    border: 1px dashed var(--border);
+    border-radius: 50%;
+    background: #fff;
+}
+
+.stamp.is-blank {
+    border: none;
+    background: transparent;
+}
+
+.stamp__date {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* 作った日：スタンプを大きく押して、日にちは右下に小さく */
+.stamp.is-cooked {
+    border: 2px solid #e8a35c;
+    background: #fff3e2;
+}
+
+.stamp__mark {
+    font-size: 1.4rem;
+    transform: rotate(-12deg);      /* 少し傾けて、手で押したスタンプらしく */
+}
+
+.stamp.is-cooked .stamp__date {
+    position: absolute;
+    right: 2px;
+    bottom: 0;
+    font-size: 0.65rem;
+}
+
+/* 今日のマスは緑の枠 */
+.stamp.is-today {
+    border: 2px solid #9cc46a;
+}
+
+.stamp.is-today .stamp__date {
+    color: var(--success);
+    font-weight: 700;
+}
+
+@media (max-width: 767px) {
+    .stamp-grid { gap: 4px; }
+    .stamp__mark { font-size: 1.1rem; }
+}
+
+/* ===== 料理スタンプ（1週間） ===== */
+.stamp-card { margin-top: 20px; }
+
+.stamp-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.stamp-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 7日分を横に並べる */
+.stamp-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+.stamp-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.stamp-day__dow {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* スタンプの丸 */
+.stamp-day__circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 72px;
+    aspect-ratio: 1 / 1;
+    border: 2px dashed var(--border);
+    border-radius: 50%;
+    background: #fff;
+}
+
+.stamp-day__date {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.stamp-day__label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+/* 作った日：ハンコを押したように */
+.stamp-day.is-cooked .stamp-day__circle {
+    border: 3px solid #e07b4f;
+    background: #fff3e2;
+    animation: stamp-in 0.35s ease-out;      /* ポンと押されたように見せる */
+}
+
+.stamp-day__mark {
+    font-size: 2rem;
+    transform: rotate(-12deg);
+}
+
+/* 今日 */
+.stamp-day.is-today .stamp-day__circle { box-shadow: 0 0 0 3px #cfe3b0; }
+.stamp-day.is-today .stamp-day__label { color: var(--success); font-weight: 700; }
+
+/* まだ来ていない日は薄く */
+.stamp-day.is-future { opacity: 0.5; }
+
+/* 大きく出てから元の大きさに戻る（ハンコを押した感じ） */
+@keyframes stamp-in {
+    from { transform: scale(1.4); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+/* 1週間の目標 */
+.stamp-goal { margin-top: 16px; }
+
+.stamp-goal__text {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+/* ===== ごほうび ===== */
+.rewards {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+}
+
+.rewards__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.rewards__head strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rewards__head .material-symbols-rounded { color: var(--primary); }
+
+.reward-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+.reward {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 10px 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    text-align: center;
+    filter: grayscale(1);          /* まだのごほうびは白黒に */
+    opacity: 0.6;
+}
+
+.reward.is-achieved {
+    background: #fff8e6;
+    border-color: #f0dfb4;
+    filter: none;
+    opacity: 1;
+}
+
+.reward__icon { font-size: 1.6rem; }
+.reward__name { font-size: 0.72rem; font-weight: 700; line-height: 1.3; }
+.reward__req { color: var(--text-muted); font-size: 0.68rem; }
+
+/* プロフィールの称号 */
+.reward-badge {
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: #fff8e6;
+    color: var(--primary-dark);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+/* ===== プロフィール写真の枠（ごほうびの特典） ===== */
+/* box-shadow を2重にして、白いすき間＋色の輪にする */
+.frame--bronze .avatar--xl { box-shadow: 0 0 0 4px #fff, 0 0 0 8px #c98a52; }
+.frame--silver .avatar--xl { box-shadow: 0 0 0 4px #fff, 0 0 0 8px #a9b1bb; }
+.frame--gold   .avatar--xl { box-shadow: 0 0 0 4px #fff, 0 0 0 8px #e5b72c, 0 0 18px rgba(229, 183, 44, 0.6); }
+.frame--rainbow .avatar--xl {
+    box-shadow: 0 0 0 4px #fff, 0 0 0 6px #e0533c, 0 0 0 8px #e5b72c, 0 0 0 10px #9cc46a, 0 0 0 12px #4a7fb5;
+}
+
+@media (max-width: 767px) {
+    .stamp-week { gap: 4px; }
+    .stamp-day__mark { font-size: 1.4rem; }
+    .reward-list { grid-template-columns: repeat(3, 1fr); }
+}
