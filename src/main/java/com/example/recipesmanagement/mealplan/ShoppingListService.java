@@ -51,7 +51,8 @@ public class ShoppingListService {
         for (MealPlan plan : plans) {
             // 例：豚の生姜焼き（10/30）
             String label = plan.getRecipe().getTitle()
-                    + "（" + plan.getPlanDate().getMonthValue() + "/" + plan.getPlanDate().getDayOfMonth() + "）";
+                + "（" + plan.getPlanDate().getMonthValue() + "/" + plan.getPlanDate().getDayOfMonth()
+                + " " + plan.getMealType() + "）";
 
             for (RecipeIngredient ri : plan.getRecipe().getIngredients()) {
                 String key = IngredientNameMatcher.normalize(ri.getName())
@@ -88,7 +89,7 @@ public class ShoppingListService {
             return List.of();   // 過ぎた週は対象なし
         }
 
-        return mealPlanRepository.findByUserAndPlanDateBetween(user, from, sunday, Sort.by("planDate", "planTime"))
+        return mealPlanRepository.findByUserAndPlanDateBetween(user, from, sunday, Sort.by("planDate", "id"))
                 .stream()
                 .filter(p -> p.getRecipe() != null && !p.isCooked())
                 .toList();

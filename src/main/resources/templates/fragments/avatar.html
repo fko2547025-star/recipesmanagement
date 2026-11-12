@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!--
+        ユーザーのアイコン（丸い写真）。プロフィール写真が無ければ人のマークを出す。
+        使い方：<span th:replace="~{fragments/avatar :: avatar(${recipe.user}, 'avatar--sm')}"></span>
+          1つ目の引数：ユーザー（AppUser）
+          2つ目の引数：大きさのクラス（avatar--sm / avatar--md / avatar--xl。'' ならふつうの大きさ）
+    -->
+    <span th:fragment="avatar(user, size)" class="avatar" th:classappend="${size}">
+        <img th:if="${user != null and user.avatarPath != null}"
+             th:src="@{/uploads/{file}(file=${user.avatarPath})}" alt="">
+        <span th:unless="${user != null and user.avatarPath != null}"
+              class="material-symbols-rounded">person</span>
+    </span>
+</body>
+</html>

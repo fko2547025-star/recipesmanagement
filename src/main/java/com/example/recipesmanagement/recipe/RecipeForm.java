@@ -16,7 +16,7 @@ public class RecipeForm {
     private String title;          // タイトル
     private String category;       // カテゴリ
     private String description;    // 説明（任意）
-    private String steps;          // 作り方
+    private List<String> steps = new ArrayList<>();   // 作り方（行ごとの入力値）
     private Integer servings;      // 何人分
 
     // 材料（行ごとの入力値）。分量は空欄や数字以外もありえるので String で受け取る
@@ -33,7 +33,7 @@ public class RecipeForm {
         form.setTitle(recipe.getTitle());
         form.setCategory(recipe.getCategory());
         form.setDescription(recipe.getDescription());
-        form.setSteps(recipe.getSteps());
+        form.setSteps(new ArrayList<>(recipe.getStepList()));
         form.setServings(recipe.getServings());
 
         for (RecipeIngredient ing : recipe.getIngredients()) {
@@ -45,15 +45,19 @@ public class RecipeForm {
     }
 
     /**
-     * 材料の3つの List を同じ長さにそろえ、最低 minRows 行あるようにする。
+     * 材料の3つの List を同じ長さにそろえ、
+     * 材料は最低 minIngredients 行、作り方は最低 minSteps 行あるようにする。
      */
-    public void ensureRows(int minRows) {
-        int size = Math.max(minRows,
+    public void ensureRows(int minIngredients, int minSteps) {
+        int size = Math.max(minIngredients,
                 Math.max(ingredientNames.size(),
                         Math.max(ingredientQuantities.size(), ingredientUnits.size())));
         while (ingredientNames.size() < size) ingredientNames.add("");
         while (ingredientQuantities.size() < size) ingredientQuantities.add("");
         while (ingredientUnits.size() < size) ingredientUnits.add("");
+
+        // 作り方：足りない分だけ空の行を足す
+        while (steps.size() < minSteps) steps.add("");
     }
 
     /**
@@ -71,19 +75,20 @@ public class RecipeForm {
             errors.add("タイトルは100文字以内で入力してください");
         }
 
-        // 画面のプルダウン以外の値が送られてきても受け付けない
-        if (!Recipe.CATEGORIES.contains(category)) {
+        if (category == null || !Recipe.CATEGORIES.contains(category)) {
             errors.add("カテゴリを選んでください");
         }
 
         if (description != null && description.length() > 500) {
             errors.add("説明は500文字以内で入力してください");
         }
-
-        if (isBlank(steps)) {
-            errors.add("作り方を入力してください");
-        } else if (steps.length() > 4000) {
-            errors.add("作り方は4000文字以内で入力してください");
+        // 作り方：空でない手順が1つ以上あるか。
+        // DB には改行でつないで保存するので、つないだ合計がテーブルの上限（4000文字）以内か
+        List<String> filledSteps = steps.stream().filter(s -> !isBlank(s)).toList();
+        if (filledSteps.isEmpty()) {
+            errors.add("作り方を1つ以上入力してください");
+        } else if (String.join("\n", filledSteps).length() > 4000) {
+            errors.add("作り方は合計4000文字以内で入力してください");
         }
     
         if (servings == null || servings < 1 || servings > 20) {
@@ -130,8 +135,8 @@ public class RecipeForm {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public String getSteps() { return steps; }
-    public void setSteps(String steps) { this.steps = steps; }
+    public List<String> getSteps() { return steps; }
+    public void setSteps(List<String> steps) { this.steps = steps; }
 
     public List<String> getIngredientNames() { return ingredientNames; }
     public void setIngredientNames(List<String> ingredientNames) { this.ingredientNames = ingredientNames; }

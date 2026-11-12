@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('献立の詳細')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container container--narrow">
+        <!-- その献立の週に戻る -->
+        <a th:href="${planId == null} ? @{/meal-plans(date=${plan.planDate})} : @{/meal-plans/{id}(id=${planId})}" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>献立に戻る
+        </a>
+
+        <article class="card plan-detail">
+            <!-- 写真（無ければ、レシピならカテゴリの絵文字、メモだけならメモの絵文字） -->
+            <div class="plan-detail__photo">
+                <img th:if="${plan.recipe != null and plan.recipe.imagePath != null}"
+                     th:src="@{/uploads/{file}(file=${plan.recipe.imagePath})}" th:alt="${plan.displayName}">
+                <span th:unless="${plan.recipe != null and plan.recipe.imagePath != null}" class="photo-placeholder"
+                      th:text="${plan.recipe != null} ? ${plan.recipe.categoryIcon} : '📝'">📝</span>
+            </div>
+
+            <div>
+                <!-- いつの献立か（例：2026/11/4(水) 夜） -->
+                <p class="plan-detail__when">
+                    <span class="material-symbols-rounded" th:text="${plan.mealIcon}">dark_mode</span>
+                    <span th:text="${#temporals.format(plan.planDate, 'yyyy/M/d(E)')} + ' ' + ${plan.mealType}">2026/11/4(水) 夜</span>
+                </p>
+
+                <h1 class="plan-detail__title" th:text="${plan.displayName}">カレーライス</h1>
+
+                <!-- レシピとメモの両方があるときは、メモも表示する -->
+                <p th:if="${plan.recipe != null and plan.memo != null}" class="note" th:text="'メモ：' + ${plan.memo}">メモ</p>
+
+                <span th:if="${plan.cooked}" class="chip chip--success">
+                    <span class="material-symbols-rounded">check_circle</span>作った
+                </span>
+                <span th:if="${!plan.cooked and plan.recipe != null}" class="chip chip--soft">まだ作っていません</span>
+
+                <div class="plan-detail__main-actions">
+                    <a th:if="${plan.recipe != null}" th:href="@{/recipes/{id}(id=${plan.recipe.id})}" class="btn btn--outline">
+                        <span class="material-symbols-rounded">menu_book</span>レシピを見る
+                    </a>
+                    <!-- 作った：確認画面へ（在庫を減らす内容を確かめてから実行する） -->
+                    <a th:if="${plan.recipe != null and !plan.cooked}" th:href="@{/meal-plans/{id}/cook(id=${plan.id})}" class="btn">
+                        <span class="material-symbols-rounded">check</span>作った
+                    </a>
+                </div>
+
+                <!-- 変更・削除（前は一覧にあったボタンを、ここに移した） -->
+                <div class="owner-actions">
+                    <a th:href="@{/meal-plans/{id}/edit(id=${plan.id})}" class="btn btn--outline btn--sm">
+                        <span class="material-symbols-rounded">edit</span>変更
+                    </a>
+                    <form th:action="@{/meal-plans/{id}/delete(id=${plan.id})}" method="post"
+                          onsubmit="return confirm('この献立を削除しますか？');">
+                        <button type="submit" class="btn--danger btn--sm">
+                            <span class="material-symbols-rounded">delete</span>削除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </article>
+    </main>
+</body>
+</html>

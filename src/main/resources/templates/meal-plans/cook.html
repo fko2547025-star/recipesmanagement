@@ -7,7 +7,7 @@
     <h1 th:text="'「' + ${plan.recipe.title} + '」を作りましたか？'">「豚の生姜焼き」を作りましたか？</h1>
     <p>
         <span th:text="${#temporals.format(plan.planDate, 'M/d(E)')}">10/27(火)</span>
-        <span th:text="${plan.planTime != null ? #temporals.format(plan.planTime, 'HH:mm') : '時間未定'}">19:00</span>
+        <span th:text="${plan.mealType}">夜</span>
     </p>
 
     <p>「作った」にすると、食材管理の在庫が次のように減ります（期限が近い在庫から使います）。</p>
@@ -47,6 +47,6 @@
         <p><button type="submit">作った（在庫を減らす）</button></p>
     </form>
 
-    <a th:href="@{/meal-plans(date=${plan.planDate})}">やめる</a>
+    <a th:href="@{/meal-plans/{id}(id=${plan.id})}">やめる</a>
 </body>
 </html>

@@ -118,4 +118,7 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
             ORDER BY r.id DESC
             """)
     List<Recipe> findByKeyword(@Param("keyword") String keyword);
-}
+
+    // SELECT COUNT(*) FROM recipes WHERE user_id = ?
+    long countByUser(AppUser user);
+}       

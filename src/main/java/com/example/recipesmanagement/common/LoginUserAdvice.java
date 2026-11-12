@@ -1,4 +1,6 @@
 package com.example.recipesmanagement.common;
+import com.example.recipesmanagement.user.AppUser;
+import com.example.recipesmanagement.user.AppUserRepository;
 
 import java.security.Principal;
 
@@ -18,6 +20,12 @@ import jakarta.servlet.http.HttpServletRequest;
 @ControllerAdvice
 public class LoginUserAdvice {
 
+    private final AppUserRepository userRepository;
+
+    public LoginUserAdvice(AppUserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     /**
      * ログイン中のユーザー名。ログインしていなければ null。
      * ヘッダーで「ログイン中だけのメニュー」を出し分けるのに使う。
@@ -26,6 +34,18 @@ public class LoginUserAdvice {
     @ModelAttribute("loginUsername")
     public String loginUsername(Principal principal) {
         return principal != null ? principal.getName() : null;
+    }
+
+    /**
+     * ログイン中のユーザー（ヘッダーにニックネームとプロフィール写真を出すため）。
+     * 全画面で ${loginUser} として使える。ログインしていなければ null。
+     */
+    @ModelAttribute("loginUser")
+    public AppUser loginUser(Principal principal) {
+        if (principal == null) {
+            return null;
+        }
+        return userRepository.findByUsername(principal.getName()).orElse(null);
     }
 
     /**

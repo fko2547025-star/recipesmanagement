@@ -2,6 +2,7 @@ package com.example.recipesmanagement.recipe;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -139,7 +140,11 @@ public class RecipeService {
         recipe.setTitle(form.getTitle().trim());
         recipe.setCategory(form.getCategory());
         recipe.setDescription(blankToNull(form.getDescription()));
-        recipe.setSteps(form.getSteps().trim());
+        // 作り方：空の行を捨てて、前後の空白を取り、改行でつないで1つの文字列にして保存する
+        recipe.setSteps(form.getSteps().stream()
+                .filter(s -> !isBlank(s))
+                .map(String::trim)
+                .collect(Collectors.joining("\n")));
         recipe.setServings(form.getServings());
 
         // 材料は「全部外してから、入力された行を入れ直す」

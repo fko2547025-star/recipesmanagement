@@ -13,7 +13,7 @@
 
         <!-- URL の ?error / ?logout / ?registered によってメッセージを出し分ける -->
         <div th:if="${param.error}" class="alert alert--error">
-            <span class="material-symbols-rounded">error</span>ユーザー名またはパスワードが違います
+            <span class="material-symbols-rounded">error</span>ユーザーIDまたはパスワードが違います
         </div>
         <div th:if="${param.logout}" class="alert alert--info">
             <span class="material-symbols-rounded">logout</span>ログアウトしました
@@ -30,8 +30,8 @@
             <!-- アイコン付きの入力欄。label で囲むと、アイコンを押しても入力欄が選ばれる -->
             <label class="input-icon">
                 <span class="material-symbols-rounded">person</span>
-                <!-- autocomplete：ブラウザに保存したユーザー名・パスワードを自動入力できるようにする -->
-                <input type="text" name="username" placeholder="ユーザー名" required autocomplete="username">
+                <!-- autocomplete：ブラウザに保存したユーザーID・パスワードを自動入力できるようにする -->
+                <input type="text" name="username" placeholder="ユーザーID" required autocomplete="username">
             </label>
             <label class="input-icon">
                 <span class="material-symbols-rounded">lock</span>

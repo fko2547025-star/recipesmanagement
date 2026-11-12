@@ -2,6 +2,7 @@ package com.example.recipesmanagement.ingredient;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,22 @@ public class IngredientController {
         this.expiringRecipeService = expiringRecipeService;
     }
 
+    /**
+     * この Controller の画面すべてに、カテゴリとアイコンを渡す。
+     * メソッドに @ModelAttribute("名前") を付けると、この Controller の画面を表示する前に毎回呼ばれ、
+     * 戻り値が model.addAttribute("名前", 戻り値) されたのと同じになる。
+     * → 一覧・登録・編集のそれぞれで addAttribute を書かなくて済む
+     */
+    @ModelAttribute("categories")
+    public List<String> categories() {
+        return Ingredient.CATEGORIES;
+    }
+
+    @ModelAttribute("categoryIcons")
+    public Map<String, String> categoryIcons() {
+        return Ingredient.CATEGORY_ICONS;
+    }
+    
     // ログイン中のユーザーを取得
     private AppUser currentUser(Principal principal) {
         return userRepository.findByUsername(principal.getName()).orElseThrow();
@@ -91,7 +108,10 @@ public class IngredientController {
     // 登録画面を表示
     @GetMapping("/new")
     public String newForm(Model model) {
-        model.addAttribute("ingredient", new Ingredient());
+        Ingredient ingredient = new Ingredient();
+        ingredient.setCategory("野菜");          // よく使うカテゴリを最初から選んでおく
+        ingredient.setExpiryType("賞味期限");
+        model.addAttribute("ingredient", ingredient);
         return "ingredients/form";
     }
 
@@ -99,6 +119,12 @@ public class IngredientController {
     @PostMapping
     public String create(@ModelAttribute Ingredient ingredient, Principal principal) {
         ingredient.setUser(currentUser(principal));   // 持ち主をセット
+
+        // 選択肢以外の値（画面を書き換えて送られたものなど）なら「その他」にする
+        if (ingredient.getCategory() == null || !Ingredient.CATEGORIES.contains(ingredient.getCategory())) {
+            ingredient.setCategory("その他");
+        }
+
         repository.save(ingredient);
         return "redirect:/ingredients";
     }
@@ -120,6 +146,10 @@ public class IngredientController {
         ingredient.setQuantity(form.getQuantity());
         ingredient.setUnit(form.getUnit());
         ingredient.setCategory(form.getCategory());
+        // 選択肢以外の値（画面を書き換えて送られたものなど）なら「その他」にする
+        if (ingredient.getCategory() == null || !Ingredient.CATEGORIES.contains(ingredient.getCategory())) {
+            ingredient.setCategory("その他");
+        }
         ingredient.setExpiryType(form.getExpiryType());
         ingredient.setExpiryDate(form.getExpiryDate());
         ingredient.setOpenedDate(form.getOpenedDate());

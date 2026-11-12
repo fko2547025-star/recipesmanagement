@@ -157,4 +157,20 @@ public class Recipe {
     public String getCategoryIcon() {
         return CATEGORY_ICONS.getOrDefault(category, "🍽️");
     }
+    /**
+     * 作り方を1手順ずつのリストにする（画面で、番号の丸が付いたリストにするため）。
+     * 画面では ${recipe.stepList} で呼び出せる。
+     *
+     * 今のデータの「1. 玉ねぎを切る」の先頭の「1. 」は取り除く（番号は画面のCSSで付けるので）。
+     */
+    public List<String> getStepList() {
+        if (steps == null) {
+            return List.of();                     // 作り方が空なら、空のリスト
+        }
+        return steps.lines()                      // 改行で区切って1行ずつにする
+                // 正規表現：行の先頭の「空白・数字・点やカッコ・空白」を消す（1. や 2） や ３、など）
+                .map(line -> line.replaceFirst("^\\s*\\d+\\s*[.．、)）]\\s*", "").trim())
+                .filter(line -> !line.isEmpty())  // 空の行は捨てる
+                .toList();
+    }
 }

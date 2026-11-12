@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('プロフィール編集')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container container--narrow">
+        <a href="/mypage" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>マイページに戻る
+        </a>
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">manage_accounts</span>プロフィール編集
+        </h1>
+
+        <div th:if="${errors != null}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span>
+            <ul class="alert__list">
+                <li th:each="e : ${errors}" th:text="${e}">エラー</li>
+            </ul>
+        </div>
+
+        <!-- 写真を送るので multipart/form-data -->
+        <form th:action="@{/mypage/profile}" method="post" enctype="multipart/form-data" class="card">
+
+            <!-- ===== プロフィール写真 ===== -->
+            <div class="profile-form__avatar">
+                <span class="avatar avatar--xl">
+                    <!-- 今の写真。無ければ隠しておき、写真を選んだらここに表示する -->
+                    <img id="avatarPreview" alt=""
+                         th:src="${user.avatarPath != null} ? @{/uploads/{file}(file=${user.avatarPath})} : ''"
+                         th:classappend="${user.avatarPath == null} ? 'is-hidden'">
+                    <span id="avatarIcon" class="material-symbols-rounded"
+                          th:classappend="${user.avatarPath != null} ? 'is-hidden'">person</span>
+                </span>
+
+                <!-- ボタンの形の label の中に、見えないファイル選択欄を入れている（label を押すと選択欄が開く） -->
+                <label class="btn btn--outline btn--sm">
+                    <span class="material-symbols-rounded">photo_camera</span>写真を選ぶ
+                    <input type="file" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif"
+                           class="visually-hidden" onchange="previewAvatar(this)">
+                </label>
+                <label th:if="${user.avatarPath != null}" class="check">
+                    <input type="checkbox" name="removeAvatar" value="true"> 写真を削除する
+                </label>
+            </div>
+
+            <!-- ===== ニックネーム ===== -->
+            <div class="form-field">
+                <label for="nickname">ニックネーム</label>
+                <!-- th:attr：好きな属性に値を入れる。最大文字数は Java の定数と同じにしておく -->
+                <input type="text" id="nickname" name="nickname" th:value="${nickname}"
+                       th:attr="maxlength=${nicknameMax}" placeholder="例：はるお">
+                <small class="field-hint"
+                       th:text="'レシピやコメントに表示される名前です。空欄にすると、ユーザー名（' + ${user.username} + '）が表示されます'">
+                    空欄にすると、ユーザー名が表示されます
+                </small>
+            </div>
+
+            <div class="form-field">
+                <label>ユーザーID（ログイン用・変更できません）</label>
+                <input type="text" th:value="${user.username}" disabled>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn--wide">保存する</button>
+                <a href="/mypage" class="btn btn--outline">キャンセル</a>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        // 選んだ写真をその場で丸の中に表示する（まだ保存はしない）。レシピ投稿の previewPhoto と同じ仕組み
+        function previewAvatar(input) {
+            const file = input.files[0];
+            if (!file) {
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('写真は5MB以下のものを選んでください');
+                input.value = '';
+                return;
+            }
+            const img = document.getElementById('avatarPreview');
+            img.src = URL.createObjectURL(file);
+            img.classList.remove('is-hidden');
+            document.getElementById('avatarIcon').classList.add('is-hidden');
+        }
+    </script>
+</body>
+</html>

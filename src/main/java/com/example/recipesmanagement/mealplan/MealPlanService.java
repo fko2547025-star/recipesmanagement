@@ -2,6 +2,7 @@ package com.example.recipesmanagement.mealplan;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -50,31 +51,30 @@ public class MealPlanService {
     }
 
     /**
-     * 1週間分（月〜日）の献立を、日付ごとにまとめて返す。
+     * 1週間分（月〜日）の献立を、1日ずつ「朝・昼・夜の枠」に振り分けて返す。
      *
      * @param monday 週の始まり（月曜日）
-     * @return 「日付 → その日の献立のリスト」の Map。献立の無い日も空のリストで入っている
+     * @return 7日分の DayPlans（月曜から順番）。献立の無い日・枠も空で入っている
      */
     @Transactional(readOnly = true)
-    public Map<LocalDate, List<MealPlan>> getWeek(AppUser user, LocalDate monday) {
-        LocalDate sunday = monday.plusDays(6);
+    public List<DayPlans> getWeek(AppUser user, LocalDate monday) {
+        LocalDate today = LocalDate.now();
 
-        // 並び順：日付 → 時間（時間未定は一番後ろ）→ 登録順
-        Sort sort = Sort.by(
-                Sort.Order.asc("planDate"),
-                Sort.Order.asc("planTime").nullsLast(),
-                Sort.Order.asc("id"));
-
-        List<MealPlan> plans = mealPlanRepository.findByUserAndPlanDateBetween(user, monday, sunday, sort);
-
-        // 先に7日分の空のリストを用意してから、献立をその日のリストに振り分ける
-        // LinkedHashMap：入れた順番を覚えている Map（普通の HashMap は順番がバラバラになる）
-        Map<LocalDate, List<MealPlan>> week = new LinkedHashMap<>();
+        // 先に7日分の入れ物を用意する
+        List<DayPlans> week = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
-            week.put(monday.plusDays(i), new ArrayList<>());
+            LocalDate date = monday.plusDays(i);
+            week.add(new DayPlans(date, date.equals(today)));
         }
+
+        // 献立を取り出して（日付 → 登録順）、その日の入れ物に振り分ける
+        List<MealPlan> plans = mealPlanRepository.findByUserAndPlanDateBetween(
+                user, monday, monday.plusDays(6), Sort.by("planDate", "id"));
+
         for (MealPlan plan : plans) {
-            week.get(plan.getPlanDate()).add(plan);
+            // ChronoUnit.DAYS.between：2つの日付の差（日数）。月曜なら0、日曜なら6 → リストの番号になる
+            int index = (int) ChronoUnit.DAYS.between(monday, plan.getPlanDate());
+            week.get(index).add(plan);
         }
         return week;
     }
@@ -190,7 +190,7 @@ public class MealPlanService {
      */
     private void applyForm(MealPlan plan, MealPlanForm form) {
         plan.setPlanDate(form.getPlanDate());
-        plan.setPlanTime(form.getPlanTime());
+        plan.setMealType(form.getMealType());
 
         // レシピは id で受け取っているので、DB から本物を探してセットする
         Recipe recipe = null;

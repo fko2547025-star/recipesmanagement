@@ -16,6 +16,8 @@ public class AppUser {
 
     private String username;    // ユーザー名
     private String password;    // パスワード（暗号化済み）
+    private String nickname;
+    private String avatarPath;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -25,4 +27,18 @@ public class AppUser {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getNickname() { return nickname; }
+    public void setNickname(String nickname) { this.nickname = nickname; }
+
+    public String getAvatarPath() { return avatarPath; }
+    public void setAvatarPath(String avatarPath) { this.avatarPath = avatarPath; }
+
+    /**
+     * 画面に表示する名前。ニックネームがあればニックネーム、無ければユーザー名。
+     * 画面では ${user.displayName} で呼び出せる。
+     */
+    public String getDisplayName() {
+        return (nickname != null && !nickname.isBlank()) ? nickname : username;
+    }
 }

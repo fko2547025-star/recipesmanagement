@@ -3,96 +3,147 @@
 <head th:replace="~{fragments/head :: head('食材一覧')}"></head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
-    
-    <h1>食材一覧</h1>
-    <!-- ===== 期限が近い食材（3日以内・期限切れを含む） ===== -->
-    <div th:if="${!#lists.isEmpty(expiring)}" style="border: 1px solid orange; padding: 8px">
-        <h2>期限が近い食材（3日以内）</h2>
-        <ul>
-            <li th:each="item : ${expiring}">
-                <span th:text="${item.name}">豚ロース</span>
-                <span th:text="${#temporals.format(item.expiryDate, 'M/d')}">11/5</span>
-                <span th:if="${item.expired}" style="color: red">（期限切れ）</span>
-                <!-- この食材の名前で、レシピ一覧を材料検索する -->
-                <a th:href="@{/recipes(q=${item.name})}">この食材を使うレシピ</a>
-            </li>
-        </ul>
 
-        <h3>期限が近い食材を使えるレシピ</h3>
-        <ul th:if="${!#lists.isEmpty(suggestions)}">
-            <li th:each="s : ${suggestions}">
-                <a th:href="@{/recipes/{id}(id=${s.recipe.id})}" th:text="${s.recipe.title}">親子丼</a>
-                <small th:text="'使える食材：' + ${s.usableText}">使える食材：豚ロース、卵</small>
-            </li>
-        </ul>
-        <p th:if="${#lists.isEmpty(suggestions)}">
-            これらの食材を使うレシピはまだありません。<a href="/recipes/new">レシピを投稿する</a>
-        </p>
-    </div>
+    <main class="container">
+        <div class="page-head">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded">kitchen</span>食材管理
+            </h1>
+            <a href="/ingredients/new" class="btn">
+                <span class="material-symbols-rounded">add</span>食材を追加
+            </a>
+        </div>
 
-    <a href="/ingredients/new">＋ 食材を登録</a>
+        <!-- ===== 期限が近い食材のお知らせ（押すとページ下の一覧へ移動） ===== -->
+        <div th:if="${!#lists.isEmpty(expiring)}" class="alert alert--error banner">
+            <span class="material-symbols-rounded">error</span>
+            <span>期限が近い食材があります
+                <strong th:text="'（3日以内：' + ${#lists.size(expiring)} + '件）'">（3日以内：5件）</strong>
+            </span>
+            <!-- href="#expiring"：同じページの id="expiring" の場所までスクロールする -->
+            <a href="#expiring" class="banner__link">すべて見る<span class="material-symbols-rounded">chevron_right</span></a>
+        </div>
 
-    <form th:action="@{/ingredients}" method="get">
-        カテゴリ：
-        <select name="category" onchange="this.form.submit()">
-            <option value="">すべて</option>
-            <option value="肉" th:selected="${category == '肉'}">肉</option>
-            <option value="魚" th:selected="${category == '魚'}">魚</option>
-            <option value="野菜" th:selected="${category == '野菜'}">野菜</option>
-            <option value="調味料" th:selected="${category == '調味料'}">調味料</option>
-            <option value="その他" th:selected="${category == 'その他'}">その他</option>
-        </select>
+        <!-- ===== カテゴリ（チップ）と並び順 ===== -->
+        <div class="filters">
+            <!-- カテゴリのチップ。押すとそのカテゴリで絞り込む。並び順は引き継ぐ -->
+            <div class="chip-row">
+                <a th:href="@{/ingredients(sort=${sort})}" class="chip"
+                   th:classappend="${category == null or category == ''} ? 'chip--active'">すべて</a>
+                <a th:each="c : ${categories}" th:href="@{/ingredients(category=${c},sort=${sort})}" class="chip"
+                   th:classappend="${c == category} ? 'chip--active'"
+                   th:text="${categoryIcons.get(c)} + ' ' + ${c}">🥩 肉</a>
+            </div>
 
-        並び順：
-        <select name="sort" onchange="this.form.submit()">
-            <option value="expiry" th:selected="${sort == 'expiry'}">期限が近い順</option>
-            <option value="expiryDesc" th:selected="${sort == 'expiryDesc'}">期限が遠い順</option>
-            <option value="name" th:selected="${sort == 'name'}">名前順</option>
-            <option value="newest" th:selected="${sort == 'newest'}">新しく登録した順</option>
-        </select>
-    </form>
+            <!-- 並び順（GET）。選んでいるカテゴリは隠し項目で引き継ぐ -->
+            <form th:action="@{/ingredients}" method="get" class="filters__sort">
+                <input th:if="${category != null and category != ''}" type="hidden" name="category" th:value="${category}">
+                <span class="material-symbols-rounded">sort</span>
+                <select name="sort" onchange="this.form.submit()" aria-label="並び順">
+                    <option value="expiry" th:selected="${sort == 'expiry'}">期限が近い順</option>
+                    <option value="expiryDesc" th:selected="${sort == 'expiryDesc'}">期限が遠い順</option>
+                    <option value="name" th:selected="${sort == 'name'}">名前順</option>
+                    <option value="newest" th:selected="${sort == 'newest'}">新しく登録した順</option>
+                </select>
+            </form>
+        </div>
 
-    <table border="1">
-        <thead>
-            <tr>
-                <th>食材名</th>
-                <th>数量</th>
-                <th>カテゴリ</th>
-                <th>期限</th>
-                <th>開封日</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="item : ${ingredients}">
-                <td th:text="${item.name}">卵</td>
-                <td>
-                    <form th:action="@{/ingredients/{id}/quantity(id=${item.id})}" method="post" style="display:inline">
-                        <button type="button"
-                                onclick="const q = this.form.quantity; q.value = Math.max(0, (parseFloat(q.value) || 0) - 1); this.form.submit();">−</button>
-                        <input type="number" name="quantity" th:value="${item.quantityText}" step="any" min="0"
-                               style="width:70px" onchange="this.form.submit()" required>
-                        <button type="button"
-                                onclick="const q = this.form.quantity; q.value = (parseFloat(q.value) || 0) + 1; this.form.submit();">＋</button>
-                    </form>
-                    <span th:text="${item.unit}">個</span>
-                </td>
-                <td th:text="${item.category}">その他</td>
-                <!-- 期限切れは赤、3日以内はオレンジ -->
-                <td th:text="${item.expiryType} + '：' + ${item.expiryDate}"
-                    th:style="${item.expired} ? 'color: red' : (${item.expiringSoon} ? 'color: orange')">
-                    賞味期限：2026-10-25
-                </td>
-                <td th:text="${item.openedDate}">-</td>
-                <td>
-                    <a th:href="@{/ingredients/{id}/edit(id=${item.id})}">編集</a>
-                    <form th:action="@{/ingredients/{id}/delete(id=${item.id})}" method="post" style="display:inline"
+        <!-- 1件も無いとき -->
+        <div th:if="${#lists.isEmpty(ingredients)}" class="empty card">
+            <span class="material-symbols-rounded empty__icon">kitchen</span>
+            <p>食材が登録されていません</p>
+            <a href="/ingredients/new" class="btn btn--sm"><span class="material-symbols-rounded">add</span>食材を追加</a>
+        </div>
+
+        <!-- ===== 食材の一覧（1行 ＝ アイコン｜名前｜数量｜期限｜操作） ===== -->
+        <ul class="stock-list card" th:unless="${#lists.isEmpty(ingredients)}">
+            <!-- 数量0（使い切り）は薄く表示 -->
+            <li th:each="item : ${ingredients}" class="stock-item" th:classappend="${item.quantity == 0} ? 'is-empty'">
+
+                <span class="stock-item__icon" th:text="${item.categoryIcon}">🥩</span>
+
+                <div class="stock-item__main">
+                    <span class="stock-item__name" th:text="${item.name}">豚ロース</span>
+                    <!-- カテゴリと、開封日があれば「・開封 11/3」 -->
+                    <small class="text-muted"
+                           th:text="${item.category} + (${item.openedDate != null} ? ' ・ 開封 ' + ${#temporals.format(item.openedDate, 'M/d')} : '')">肉</small>
+                </div>
+
+                <!-- 数量の −［150］＋ g（今までと同じ仕組み。どれも新しい数量を送る） -->
+                <form th:action="@{/ingredients/{id}/quantity(id=${item.id})}" method="post" class="qty">
+                    <button type="button" class="qty__btn" title="1減らす"
+                            onclick="const q = this.form.quantity; q.value = Math.max(0, (parseFloat(q.value) || 0) - 1); this.form.submit();">
+                        <span class="material-symbols-rounded">remove</span></button>
+                    <input type="number" name="quantity" th:value="${item.quantityText}" step="any" min="0"
+                           onchange="this.form.submit()" required aria-label="残り">
+                    <button type="button" class="qty__btn" title="1増やす"
+                            onclick="const q = this.form.quantity; q.value = (parseFloat(q.value) || 0) + 1; this.form.submit();">
+                        <span class="material-symbols-rounded">add</span></button>
+                    <span class="qty__unit" th:text="${item.unit}">g</span>
+                </form>
+
+                <!-- 期限：切れていれば赤、3日以内ならオレンジ -->
+                <div class="stock-item__expiry"
+                     th:classappend="${item.expired} ? 'text-danger' : (${item.expiringSoon} ? 'text-warning')">
+                    <small th:text="${item.expiryType}">消費期限</small>
+                    <strong th:text="${#temporals.format(item.expiryDate, 'yyyy/MM/dd')}">2026/11/05</strong>
+                    <!-- 期限が近いものだけ「あと1日」「今日まで」「2日過ぎ」を出す -->
+                    <small th:if="${item.expiringSoon}"
+                           th:text="${item.daysLeft < 0 ? (-item.daysLeft) + '日過ぎ' : (item.daysLeft == 0 ? '今日まで' : 'あと' + item.daysLeft + '日')}">あと1日</small>
+                </div>
+
+                <div class="stock-item__actions">
+                    <a th:href="@{/ingredients/{id}/edit(id=${item.id})}" class="icon-btn" title="編集">
+                        <span class="material-symbols-rounded">edit</span></a>
+                    <form th:action="@{/ingredients/{id}/delete(id=${item.id})}" method="post"
                           onsubmit="return confirm('削除しますか？');">
-                        <button type="submit">削除</button>
+                        <button type="submit" class="icon-btn icon-btn--danger" title="削除">
+                            <span class="material-symbols-rounded">delete</span></button>
                     </form>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                </div>
+            </li>
+        </ul>
+
+        <!-- ===== 期限が近い食材と、それを使えるレシピ（今までの内容をカードにした） ===== -->
+        <section id="expiring" class="card section-card" th:if="${!#lists.isEmpty(expiring)}">
+            <h2 class="section-title">
+                <span class="material-symbols-rounded">schedule</span>期限が近い食材（3日以内）
+            </h2>
+            <ul class="simple-list">
+                <li th:each="item : ${expiring}">
+                    <span>
+                        <span th:text="${item.categoryIcon} + ' ' + ${item.name}">🥩 豚ロース</span>
+                        <small th:classappend="${item.expired} ? 'text-danger' : 'text-warning'"
+                               th:text="${#temporals.format(item.expiryDate, 'M/d')} + (${item.expired} ? '（期限切れ）' : '')">11/5</small>
+                    </span>
+                    <!-- この食材の名前で、レシピ一覧を検索する -->
+                    <a th:href="@{/recipes(q=${item.name})}" class="btn btn--outline btn--sm">この食材を使うレシピ</a>
+                </li>
+            </ul>
+
+            <h3 class="section-title">
+                <span class="material-symbols-rounded">lightbulb</span>期限が近い食材を使えるレシピ
+            </h3>
+            <ul class="suggest-list" th:if="${!#lists.isEmpty(suggestions)}">
+                <li th:each="s : ${suggestions}">
+                    <a th:href="@{/recipes/{id}(id=${s.recipe.id})}" class="suggest">
+                        <span class="suggest__photo">
+                            <img th:if="${s.recipe.imagePath}" th:src="@{/uploads/{file}(file=${s.recipe.imagePath})}"
+                                 th:alt="${s.recipe.title}" loading="lazy">
+                            <span th:unless="${s.recipe.imagePath}" class="photo-placeholder"
+                                  th:text="${s.recipe.categoryIcon}">🍽️</span>
+                        </span>
+                        <span>
+                            <strong th:text="${s.recipe.title}">親子丼</strong>
+                            <small class="text-muted" th:text="'使える食材：' + ${s.usableText}">使える食材：豚ロース、卵</small>
+                        </span>
+                    </a>
+                </li>
+            </ul>
+            <p th:if="${#lists.isEmpty(suggestions)}" class="text-muted">
+                これらの食材を使うレシピはまだありません。<a href="/recipes/new">レシピを投稿する</a>
+            </p>
+        </section>
+    </main>
 </body>
 </html>

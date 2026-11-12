@@ -73,11 +73,15 @@
                         <summary> の部分（アイコン）を押すと、中身（パネル）が開く
                     -->
                     <details class="user-menu">
-                        <summary class="avatar" aria-label="ユーザーメニュー">
-                            <span class="material-symbols-rounded">person</span>
+                        <!-- プロフィール写真（無ければ人のマーク）。loginUser は LoginUserAdvice が渡している -->
+                        <summary aria-label="ユーザーメニュー">
+                            <span th:replace="~{fragments/avatar :: avatar(${loginUser}, '')}"></span>
                         </summary>
                         <div class="user-menu__panel">
-                            <p class="user-menu__name" th:text="${loginUsername} + 'さん'">1さん</p>
+                            <p class="user-menu__name" th:text="${loginUser != null ? loginUser.displayName : loginUsername} + 'さん'">はるおさん</p>
+                            <a href="/mypage/profile">
+                                <span class="material-symbols-rounded">manage_accounts</span>プロフィール編集
+                            </a>
                             <a href="/mypage">
                                 <span class="material-symbols-rounded">person</span>マイページ
                             </a>

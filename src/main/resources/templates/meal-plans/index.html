@@ -4,72 +4,97 @@
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <h1>献立</h1>
+    <main class="container container--wide">
+        <div class="page-head">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded">calendar_month</span>献立
+            </h1>
+            <a href="/meal-plans/new" class="btn">
+                <span class="material-symbols-rounded">add</span>献立を追加
+            </a>
+        </div>
 
-    <!-- 「作った」の結果（フラッシュ属性。作った直後の1回だけ表示される） -->
-    <div th:if="${cookTitle != null}" style="border: 1px solid green; padding: 8px">
-        <strong th:text="${cookTitle}">「豚の生姜焼き」を作りました</strong>
-        <ul>
-            <li th:each="m : ${cookMessages}" th:text="${m}">豚ロース：300g → 100g</li>
-        </ul>
-        <a href="/ingredients">食材管理を見る</a>
-    </div>
+        <!-- 「作った」の結果（フラッシュ属性。作った直後の1回だけ表示される） -->
+        <div th:if="${cookTitle != null}" class="alert alert--success">
+            <span class="material-symbols-rounded">check_circle</span>
+            <div>
+                <strong th:text="${cookTitle}">「豚の生姜焼き」を作りました</strong>
+                <ul class="alert__list">
+                    <li th:each="m : ${cookMessages}" th:text="${m}">豚ロース：300g → 100g</li>
+                </ul>
+                <a href="/ingredients">食材管理を見る</a>
+            </div>
+        </div>
 
-    <!-- ===== 週の移動 ===== -->
-    <!-- @{/meal-plans(date=${prevWeek})} → /meal-plans?date=2026-10-19 -->
-    <p>
-        <a th:href="@{/meal-plans(date=${prevWeek})}">← 前の週</a> |
-        <a href="/meal-plans">今週</a> |
-        <a th:href="@{/meal-plans(date=${nextWeek})}">次の週 →</a>
-    </p>
+        <!-- ===== 週の移動 ===== -->
+        <div class="week-nav">
+            <a th:href="@{/meal-plans(date=${prevWeek})}" class="icon-btn" title="前の週">
+                <span class="material-symbols-rounded">chevron_left</span></a>
+            <strong th:text="${#temporals.format(monday, 'yyyy/M/d')} + ' 〜 ' + ${#temporals.format(sunday, 'M/d')}">2026/11/2 〜 11/8</strong>
+            <a th:href="@{/meal-plans(date=${nextWeek})}" class="icon-btn" title="次の週">
+                <span class="material-symbols-rounded">chevron_right</span></a>
+            <a href="/meal-plans" class="btn btn--outline btn--sm">今週</a>
+            <a th:href="@{/meal-plans/shopping(date=${monday})}" class="btn btn--outline btn--sm week-nav__shopping">
+                <span class="material-symbols-rounded">shopping_cart</span>この週の買い物リスト
+            </a>
+        </div>
 
-    <p><a th:href="@{/meal-plans/shopping(date=${monday})}">この週の買い物リストを見る</a></p>
-
-    <h2 th:text="${#temporals.format(monday, 'yyyy/M/d')} + ' 〜 ' + ${#temporals.format(sunday, 'M/d')}">
-        2026/10/26 〜 11/1
-    </h2>
-
-    <table border="1">
         <!--
-            week は「日付 → その日の献立のリスト」の Map。
-            Map を th:each でループすると、1件ずつ day.key（日付）と day.value（献立のリスト）で取り出せる
+            ===== 1週間（月〜日の7列） =====
+            week：DayPlans のリスト。1日ごとに slots（朝・昼・夜 → 献立のリスト）を持っている
         -->
-        <tr th:each="day : ${week}">
-            <!-- 'M/d(E)'：E は曜日。日本語のブラウザなら「火」のように表示される。今日の行は色を付ける -->
-            <th th:text="${#temporals.format(day.key, 'M/d(E)')}"
-                th:style="${day.key == today} ? 'background: #fff3c4'">10/27(火)</th>
-            <td>
-                <!-- その日の献立（時間順） -->
-                <div th:each="plan : ${day.value}">
-                    <!-- 時間：未定なら「時間未定」 -->
-                    <span th:text="${plan.planTime != null ? #temporals.format(plan.planTime, 'HH:mm') : '時間未定'}">19:00</span>
+        <div class="week">
+            <section th:each="day : ${week}" class="day" th:classappend="${day.today} ? 'is-today'">
+                <header class="day__head">
+                    <span class="day__date" th:text="${#temporals.format(day.date, 'M/d')}">11/4</span>
+                    <span class="day__dow" th:text="'(' + ${#temporals.format(day.date, 'E')} + ')'">(水)</span>
+                </header>
 
-                    <!-- レシピ：選ばれていれば詳細へのリンク -->
-                    <a th:if="${plan.recipe != null}"
-                       th:href="@{/recipes/{id}(id=${plan.recipe.id})}" th:text="${plan.recipe.title}">豚の生姜焼き</a>
+                <!-- Map を th:each で回すと、slot.key（朝・昼・夜）と slot.value（献立のリスト）で取り出せる -->
+                <div th:each="slot : ${day.slots}" class="slot">
+                    <div class="slot__head">
+                        <span class="slot__label">
+                            <span class="material-symbols-rounded" th:text="${mealIcons.get(slot.key)}">dark_mode</span>
+                            <span th:text="${slot.key}">夜</span>
+                        </span>
+                        <!-- この日・この区分を選んだ状態で、登録画面を開く（8Aで newForm に足した mealType を使う） -->
+                        <a th:href="@{/meal-plans/new(date=${day.date},mealType=${slot.key})}" class="slot__add"
+                           th:title="${slot.key} + 'の献立を追加'">
+                            <span class="material-symbols-rounded">add</span></a>
+                    </div>
 
-                    <!-- メモ -->
-                    <span th:if="${plan.memo != null}" th:text="${plan.memo}">外食</span>
+                    <div th:each="plan : ${slot.value}" class="plan" th:classappend="${plan.cooked} ? 'is-cooked'">
+                        <!-- 名前と写真のどちらを押しても、献立の詳細（変更・削除）へ -->
+                        <a th:href="@{/meal-plans/{id}(id=${plan.id})}" class="plan__link">
+                            <span class="plan__name" th:text="${plan.displayName}">カレーライス</span>
+                            <span class="plan__photo">
+                                <img th:if="${plan.recipe != null and plan.recipe.imagePath != null}"
+                                     th:src="@{/uploads/{file}(file=${plan.recipe.imagePath})}"
+                                     th:alt="${plan.displayName}" loading="lazy">
+                                <span th:unless="${plan.recipe != null and plan.recipe.imagePath != null}"
+                                      class="photo-placeholder"
+                                      th:text="${plan.recipe != null} ? ${plan.recipe.categoryIcon} : '📝'">📝</span>
+                            </span>
+                        </a>
 
-                    <!-- レシピが削除されて、メモも無い献立 -->
-                    <span th:if="${plan.recipe == null and plan.memo == null}">（レシピが削除されました）</span>
-
-                    <!-- 作った献立には印を付ける -->
-                    <span th:if="${plan.cooked}" style="color: green">✓ 作った</span>
-                    <!-- レシピがあって、まだ作っていない献立だけ「作った」を出す（確認画面へ） -->
-                    <a th:if="${plan.recipe != null and !plan.cooked}"
-                       th:href="@{/meal-plans/{id}/cook(id=${plan.id})}">作った</a>
-                    <a th:href="@{/meal-plans/{id}/edit(id=${plan.id})}">編集</a>
-                    <form th:action="@{/meal-plans/{id}/delete(id=${plan.id})}" method="post" style="display:inline"
-                          onsubmit="return confirm('この献立を削除しますか？');">
-                        <button type="submit">削除</button>
-                    </form>
+                        <!-- 写真の下：作った献立には印、まだならボタン（レシピのある献立だけ） -->
+                        <span th:if="${plan.cooked}" class="plan__done">
+                            <span class="material-symbols-rounded">check_circle</span>作った
+                        </span>
+                        <a th:if="${plan.recipe != null and !plan.cooked}"
+                           th:href="@{/meal-plans/{id}/cook(id=${plan.id})}" class="btn btn--sm plan__cook">作った</a>
+                    </div>
                 </div>
+            </section>
+        </div>
+    </main>
 
-                <!-- この日に献立を追加（日付を入れた状態で登録画面を開く） -->
-                <a th:href="@{/meal-plans/new(date=${day.key})}">＋ 追加</a>
-            </td>
-        </tr>
-    </table>
+    <script>
+        // スマホで横スクロールになるときは、今日の列が見えるところまで自動でスクロールする
+        const today = document.querySelector('.day.is-today');
+        if (today) {
+            today.scrollIntoView({ inline: 'center', block: 'nearest' });
+        }
+    </script>
 </body>
 </html>

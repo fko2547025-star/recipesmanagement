@@ -1,7 +1,9 @@
 package com.example.recipesmanagement.mealplan;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.util.List;
+import java.util.Map;
+
 
 import com.example.recipesmanagement.recipe.Recipe;
 import com.example.recipesmanagement.user.AppUser;
@@ -25,6 +27,14 @@ import jakarta.persistence.Table;
 @Table(name = "meal_plans")
 public class MealPlan {
 
+    public static final List<String> MEAL_TYPES = List.of("朝","昼","夜");
+
+    public static final Map<String, String> MEAL_ICONS = Map.of(
+        "朝", "wb_twilight",
+        "昼", "wb_sunny",
+        "夜", "dark_mode"
+    );
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,8 +47,7 @@ public class MealPlan {
     // 日付（必須）
     private LocalDate planDate;
 
-    // 時間（任意）。LocalTime は「日付なしの時刻」を表す型（LocalDate の時刻版）
-    private LocalTime planTime;
+    private String mealType;
 
     // レシピ（任意）。nullable = true なので空でもよい
     @ManyToOne(fetch = FetchType.LAZY)
@@ -61,8 +70,22 @@ public class MealPlan {
     public LocalDate getPlanDate() { return planDate; }
     public void setPlanDate(LocalDate planDate) { this.planDate = planDate; }
 
-    public LocalTime getPlanTime() { return planTime; }
-    public void setPlanTime(LocalTime planTime) { this.planTime = planTime; }
+    public String getMealType() { return mealType; }
+    public void setMealType(String mealType) { this.mealType = mealType; }
+
+    public String getMealIcon() {
+        return MEAL_ICONS.getOrDefault(mealType, "restaurant");
+    }
+
+    public String getDisplayName() {
+        if (recipe != null) {
+            return recipe.getTitle();
+        }
+        if (memo != null) {
+            return memo;
+        }
+        return "(レシピが削除されました)";
+    }
 
     public Recipe getRecipe() { return recipe; }
     public void setRecipe(Recipe recipe) { this.recipe = recipe; }

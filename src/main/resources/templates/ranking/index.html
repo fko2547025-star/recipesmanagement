@@ -30,7 +30,16 @@
 
                 <!-- 順位：1〜3位は王冠の上に数字を重ねる。4位以下は数字だけ -->
                 <span class="rank-badge">
-                    <span th:if="${item.rank <= 3}" class="material-symbols-rounded rank-badge__crown">emoji_events</span>
+                    <!-- 王冠（SVGで描く）。fill="currentColor"：CSSの color の色で塗る → 順位ごとに金・銀・銅に変えられる -->
+                    <svg th:if="${item.rank <= 3}" class="rank-badge__crown" viewBox="0 0 48 40" aria-hidden="true">
+                        <!-- 王冠の本体：左下 → 左の山 → 谷 → 真ん中の山 → 谷 → 右の山 → 右下 → 戻る -->
+                        <path d="M6 14 L15 23 L24 9 L33 23 L42 14 L39 34 Q39 36 37 36 L11 36 Q9 36 9 34 Z"
+                            fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+                        <!-- 山の先の丸い玉 -->
+                        <circle cx="6"  cy="12" r="3.5" fill="currentColor"/>
+                        <circle cx="24" cy="7"  r="3.5" fill="currentColor"/>
+                        <circle cx="42" cy="12" r="3.5" fill="currentColor"/>
+                    </svg>
                     <span class="rank-badge__num" th:text="${item.rank}">1</span>
                 </span>
 

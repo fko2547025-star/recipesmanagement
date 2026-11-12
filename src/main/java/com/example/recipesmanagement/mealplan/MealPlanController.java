@@ -67,7 +67,20 @@ public class MealPlanController {
         model.addAttribute("prevWeek", monday.minusWeeks(1));
         model.addAttribute("nextWeek", monday.plusWeeks(1));
         model.addAttribute("today", today);
+        model.addAttribute("mealIcons",MealPlan.MEAL_ICONS);
         return "meal-plans/index";
+    }
+
+    // ===== 詳細 =====
+
+    /**
+     * 献立の詳細。週表示で写真か名前を押すと開く。ここから変更・削除・作ったができる。
+     * findOwned：自分の献立でなければ 404
+     */
+    @GetMapping("/{id:\\d+}")
+    public String detail(@PathVariable Long id, Principal principal, Model model) {
+        model.addAttribute("plan", mealPlanService.findOwned(id, currentUser(principal)));
+        return "meal-plans/detail";
     }
 
     // ===== 登録 =====
@@ -78,12 +91,15 @@ public class MealPlanController {
      */
     @GetMapping("/new")
     public String newForm(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                          @RequestParam(required = false) Long recipeId,
-                          Principal principal,
-                          Model model) {
+                        @RequestParam(required = false) String mealType,
+                        @RequestParam(required = false) Long recipeId,
+                        Principal principal,
+                        Model model) {
 
         MealPlanForm form = new MealPlanForm();
         form.setPlanDate(date != null ? date : LocalDate.now());
+        // 朝昼夜の指定が無い（または変な値の）ときは「夜」を選んでおく
+        form.setMealType(mealType != null && MealPlan.MEAL_TYPES.contains(mealType) ? mealType : "夜");
         form.setRecipeId(recipeId);
         return showForm(form, null, currentUser(principal), model);
     }
@@ -127,8 +143,8 @@ public class MealPlanController {
             return showForm(form, id, user, model);
         }
 
-        MealPlan plan = mealPlanService.update(id, form, user);
-        return "redirect:/meal-plans?date=" + plan.getPlanDate();
+        mealPlanService.update(id, form, user);
+        return "redirect:/meal-plans/" + id;   // 変更した献立の詳細に戻る
     }
 
     // ===== 削除 =====
@@ -150,6 +166,9 @@ public class MealPlanController {
         model.addAttribute("form", form);
         model.addAttribute("planId", planId);
         model.addAttribute("recipes", mealPlanService.recipeOptions(user, form.getRecipeId()));
+        model.addAttribute("mealTypes", MealPlan.MEAL_TYPES);
+        model.addAttribute("mealIcons", MealPlan.MEAL_ICONS);   
+
         return "meal-plans/form";
     }
 

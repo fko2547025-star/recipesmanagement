@@ -17,13 +17,21 @@
                      th:alt="${recipe.title}" loading="lazy">
                 <span th:unless="${recipe.imagePath}" class="photo-placeholder"
                       th:text="${recipe.categoryIcon}">🍽️</span>
-                <!-- 写真の左上にカテゴリ -->
-                <span class="chip recipe-card__chip"
-                      th:text="${recipe.categoryIcon} + ' ' + ${recipe.category}">🍱 和食</span>
             </div>
 
             <div class="recipe-card__body">
                 <h3 class="recipe-card__title" th:text="${recipe.title}">肉じゃが</h3>
+                <!-- 料理名の下のラベル：何人分・カテゴリ -->
+                <div class="recipe-card__tags">
+                    <span class="tag">
+                        <span class="material-symbols-rounded">restaurant</span>
+                        <span th:text="${recipe.servings} + '人分'">2人分</span>
+                    </span>
+                    <span class="tag">
+                        <span class="material-symbols-rounded">sell</span>
+                        <span th:text="${recipe.category}">洋食</span>
+                    </span>
+                </div>
                 <!-- 一言（説明）。入力されていないレシピでは何も出さない -->
                 <p th:if="${recipe.description != null and recipe.description != ''}"
                 class="recipe-card__desc" th:text="${recipe.description}">外はカリッ、中はふわっと！</p>

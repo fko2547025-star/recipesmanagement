@@ -150,7 +150,7 @@ public class RecipeController {
     public String newForm(Model model) {
         RecipeForm form = new RecipeForm();
         form.setServings(2);
-        form.ensureRows(3);
+        form.ensureRows(3,2);
         return showForm(form, null, null, model);
     }
 
@@ -163,7 +163,7 @@ public class RecipeController {
         List<String> errors = validate(form, image);
         if (!errors.isEmpty()) {
             model.addAttribute("errors", errors);
-            form.ensureRows(1);
+            form.ensureRows(1,1);
             return showForm(form, null, null, model);
         }
 
@@ -181,7 +181,7 @@ public class RecipeController {
         Recipe recipe = recipeService.findOwned(id, currentUser(principal));
 
         RecipeForm form = RecipeForm.from(recipe);   // 今の内容をフォームに詰める
-        form.ensureRows(1);
+        form.ensureRows(1,1);
         return showForm(form, id, recipe.getImagePath(), model);
     }
 
@@ -206,7 +206,7 @@ public class RecipeController {
         List<String> errors = validate(form, image);
         if (!errors.isEmpty()) {
             model.addAttribute("errors", errors);
-            form.ensureRows(1);
+            form.ensureRows(1,1);
             return showForm(form, id, current.getImagePath(), model);
         }
 
@@ -236,6 +236,7 @@ public class RecipeController {
     private String showForm(RecipeForm form, Long recipeId, String currentImage, Model model) {
         model.addAttribute("form", form);
         model.addAttribute("categories", Recipe.CATEGORIES);
+        model.addAttribute("categoryIcons", Recipe.CATEGORY_ICONS);   // ← 追加：選択肢に絵文字を付けるため
         model.addAttribute("recipeId", recipeId);
         model.addAttribute("currentImage", currentImage);
         return "recipes/form";

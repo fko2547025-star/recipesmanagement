@@ -1235,8 +1235,8 @@ body.auth-page > .auth-card {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 40px;
     color: var(--primary-dark);
     font-weight: 700;
     font-size: 1.1rem;
@@ -1244,22 +1244,19 @@ body.auth-page > .auth-card {
 
 .rank-badge__crown {
     position: absolute;
-    inset: 0;                    /* 上下左右0 ＝ バッジいっぱいに広げる */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.6rem;
-    font-variation-settings: "FILL" 1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .rank-badge__num { position: relative; }   /* relative を付けると王冠より手前に出る */
 
 /* 王冠の上の数字は、白くして少し上にずらす */
 .is-top .rank-badge__num {
-    margin-top: -6px;
+    margin-top: 10px;
     color: #fff;
-    font-size: 0.85rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 0.95rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .rank-1 .rank-badge__crown { color: #e5b72c; }   /* 金 */
@@ -1317,4 +1314,1067 @@ body.auth-page > .auth-card {
         gap: 10px;
         padding: 10px 12px;
     }
+}
+
+/* ===== 共通：見出しの帯・戻るリンク・ラベル・補足・カードの間隔 ===== */
+.page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 20px 0 16px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+.chip--soft {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+}
+
+.note {
+    margin: 8px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.section-card { margin: 20px 0; }
+
+/* ===== レシピ詳細 ===== */
+/* 写真（左）と情報（右）を同じ幅の2列に */
+.recipe-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+}
+
+.recipe-detail__photo {
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-strong);
+    background: var(--surface-2);
+    /* sticky：スクロールしても、ヘッダーのすぐ下で写真が止まって見え続ける（PC） */
+    position: sticky;
+    top: calc(var(--header-height) + 16px);
+}
+
+.recipe-detail__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.recipe-detail__photo .photo-placeholder { font-size: 5rem; }
+
+.recipe-detail__title {
+    margin: 0 0 4px;
+    font-size: 1.7rem;
+}
+
+/* pre-line：説明に入っている改行を、そのまま改行として表示する */
+.recipe-detail__desc {
+    margin: 8px 0 16px;
+    white-space: pre-line;
+}
+
+/* 材料 */
+.ingredients-box { margin: 16px 0; }
+
+.ingredients-box__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+/* 材料の一覧：名前は左、分量は右、点線で区切る */
+.ingredient-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ingredient-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 4px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.ingredient-list li span:last-child {   /* 分量（2つ目の span）を太字に */
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* 人数の −［2］＋ */
+.stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stepper input[type="number"] {
+    width: 56px;
+    padding: 4px 6px;
+    text-align: center;
+}
+
+.stepper__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.stepper__btn:hover { background: var(--primary-light); }
+
+/* いいね・献立に追加を横に2つ並べる */
+.recipe-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 20px 0 8px;
+}
+
+/* 編集・削除は右寄せ */
+.owner-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* ===== 作り方：丸い番号付きのリスト ===== */
+.steps {
+    list-style: none;          /* ol のもとの「1.」は消して、自分で丸い番号を描く */
+    counter-reset: step;       /* 「step」という数える変数を 0 にする */
+    margin: 0;
+    padding: 0;
+}
+
+.steps li {
+    counter-increment: step;   /* li が1つ出るたびに step を1増やす */
+    position: relative;
+    padding: 10px 0 10px 44px; /* 左を空けて、番号の丸を置く場所を作る */
+    border-bottom: 1px dashed var(--border);
+}
+
+.steps li:last-child { border-bottom: none; }
+
+/* ::before：li の文字の前に飾りを足す。content: counter(step) で今の番号を表示 */
+.steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* スマホ：写真を上、情報を下の1列にする */
+@media (max-width: 767px) {
+    .recipe-detail {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .recipe-detail__photo { position: static; }   /* スマホでは写真を止めない */
+    .recipe-detail__title { font-size: 1.4rem; }
+}
+
+/* コメント1件ずつを点線で区切る */
+.comment {
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+/* pre-line：入力された改行をそのまま表示。anywhere：長い英数字でもはみ出さずに折り返す */
+.comment__text {
+    margin-top: 4px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+/* 入力欄は横いっぱい、ボタンは右寄せ */
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.comment-form textarea { width: 100%; }
+
+/* ===== カードのラベル（何人分・カテゴリ） ===== */
+.recipe-card__tags {
+    display: flex;
+    flex-wrap: wrap;            /* 入りきらなければ次の行へ */
+    gap: 6px;
+    margin: 0 0 10px;
+}
+
+/* 丸いラベル：うすいベージュの背景に、アイコンと文字を横並び */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px 3px 8px;
+    border-radius: var(--radius-pill);
+    background: #f3e6d6;
+    color: var(--primary-dark);
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.tag .material-symbols-rounded {
+    font-size: 1rem;
+    font-variation-settings: "FILL" 1;   /* アイコンを塗りつぶしの形にする */
+}
+
+/* スマホ：ラベルを少し小さく */
+@media (max-width: 767px) {
+    .tag {
+        padding: 2px 8px 2px 6px;
+        font-size: 0.72rem;
+    }
+    .tag .material-symbols-rounded { font-size: 0.9rem; }
+}
+
+/* ===== フォームの共通部品 ===== */
+.alert__list { margin: 0; padding-left: 1.2em; }
+
+.field-hint {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.inline-field { display: flex; align-items: center; gap: 8px; }
+.form-field input.input-short { width: 90px; }
+
+/* 「材料」「作り方」の見出し：下に線を引いて区切る */
+.form-section-title {
+    margin: 28px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.05rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.btn--wide { min-width: 200px; padding: 12px 28px; font-size: 1rem; }
+.btn--add { margin: 10px 0 4px; }
+
+.check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+/* class="is-hidden" を付けると隠れる（JavaScriptで付けたり外したりする） */
+.is-hidden { display: none !important; }
+
+/* アイコンだけの丸いボタン（削除など） */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.icon-btn:hover { background: var(--primary-light); color: var(--primary-dark); }
+.icon-btn--danger:hover { background: var(--danger-bg); color: var(--danger); }
+
+/* ===== レシピ投稿フォーム ===== */
+/* 上の段：写真 280px ＋ 残り全部 */
+.recipe-form__top {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 24px;
+}
+
+/* 写真の選択枠（点線の四角） */
+.photo-drop {
+    position: relative;          /* 中の透明な input を、この枠に重ねるため */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;         /* 正方形 */
+    border: 2px dashed #d5c2ab;
+    border-radius: var(--radius);
+    background: #fffdf9;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.photo-drop:hover { border-color: var(--primary); background: var(--primary-light); }
+
+.photo-drop img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-drop__placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.photo-drop__placeholder .material-symbols-rounded { font-size: 2.6rem; }
+
+/* 本物のファイル選択欄：枠いっぱいに広げて透明にする（クリックもドロップもここが受け取る） */
+.photo-drop input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* 材料の行：名前（残り全部）・分量 90px・単位 90px・削除 36px */
+.ingredient-rows { display: flex; flex-direction: column; gap: 8px; }
+
+.ingredient-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 90px 90px 36px;
+    gap: 8px;
+    align-items: center;
+}
+
+.ingredient-row input { width: 100%; }
+
+/* 作り方の行：丸い番号・入力欄・削除。番号はステップ5と同じCSSカウンター */
+.step-rows {
+    list-style: none;
+    counter-reset: step;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+.step-row {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) 36px;
+    gap: 8px;
+    align-items: center;
+}
+
+.step-row textarea { width: 100%; }
+
+/* 行を足したり消したりしても、CSSが数え直すので番号は自動で 1, 2, 3… になる */
+.step-row::before {
+    content: counter(step);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* スマホ：写真を上、入力欄を下の1列に。材料の列はせまく */
+@media (max-width: 767px) {
+    .recipe-form__top { grid-template-columns: 1fr; }
+    .photo-drop { aspect-ratio: 4 / 3; }
+    .ingredient-row {
+        grid-template-columns: minmax(0, 1fr) 64px 64px 32px;
+        gap: 6px;
+    }
+}
+
+/* ===== アバター（丸いプロフィール写真） ===== */
+.avatar {
+    flex-shrink: 0;              /* 横に並べたとき、つぶれないようにする */
+    overflow: hidden;            /* 丸からはみ出た写真を隠す */
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 大きさの違い */
+.avatar--sm { width: 24px; height: 24px; }
+.avatar--sm .material-symbols-rounded { font-size: 1rem; }
+
+.avatar--md { width: 48px; height: 48px; }
+.avatar--md .material-symbols-rounded { font-size: 2rem; }
+
+.avatar--xl {
+    width: 112px;
+    height: 112px;
+    background: #e7ddd2;
+    color: #a8968a;
+}
+.avatar--xl .material-symbols-rounded { font-size: 4.5rem; }
+
+/* ヘッダーのアバターは白い縁取り */
+.user-menu .avatar { border: 2px solid rgba(255, 255, 255, 0.7); }
+
+/* プロフィール編集：写真とボタンを縦に並べて中央に */
+.profile-form__avatar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* 画面には見えないが、存在はしている（クリックやファイル選択は動く） */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* ===== マイページ ===== */
+/* プロフィール 260px ＋ 数字のまとめ（残り全部） */
+.mypage-top {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 20px;
+}
+
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+.profile-card__name { margin: 6px 0 0; font-size: 1.15rem; font-weight: 700; }
+.profile-card__id { margin: 0 0 6px; color: var(--text-muted); font-size: 0.82rem; }
+
+.stats-card__title { margin: 0 0 14px; font-size: 1.05rem; }
+
+/* 3つの数字を、縦線で区切って横に並べる */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 16px 0;
+    border-radius: var(--radius);
+    background: #fff;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    border-right: 1px solid var(--border);
+}
+
+.stat:last-child { border-right: none; }   /* 最後の数字の右には線を引かない */
+
+.stat .material-symbols-rounded { color: var(--primary); font-size: 1.6rem; }
+.stat__label { color: var(--text-muted); font-size: 0.82rem; }
+.stat__value { font-size: 1.8rem; line-height: 1.2; }
+
+/* 一覧の切り替え（ボタンの形のタブを3つ並べる） */
+.mypage-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.mypage-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    color: var(--primary-dark);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.mypage-tab .material-symbols-rounded {
+    color: var(--primary);
+    font-variation-settings: "FILL" 1;
+}
+
+/* 選んでいるタブは茶色に塗りつぶす */
+.mypage-tab.is-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.mypage-tab.is-active .material-symbols-rounded { color: #fff; }
+
+/* スマホ：プロフィールと数字を縦に、タブも縦に並べる */
+@media (max-width: 767px) {
+    .mypage-top { grid-template-columns: 1fr; }
+    .mypage-tabs { grid-template-columns: 1fr; gap: 8px; }
+    .mypage-tab { padding: 10px 14px; }
+    .stat__value { font-size: 1.4rem; }
+}
+
+/* ===== セグメント（ラジオボタンを、つながったボタンの見た目にする） ===== */
+.segmented {
+    display: inline-flex;
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+}
+
+.segmented label {
+    margin: 0;
+    cursor: pointer;
+}
+
+/* 本物の丸いラジオボタンは隠す（クリックは label が受け取るので、隠しても選べる） */
+.segmented input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.segmented label > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 20px;
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-weight: 700;
+    transition: background 0.15s, color 0.15s;
+}
+
+/* チェックされたラジオの「すぐ後ろ」の span を茶色にする（+ は「すぐ隣の要素」という意味） */
+.segmented input[type="radio"]:checked + span {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* キーボードで選んでいるときも、どこにいるかわかるように */
+.segmented input[type="radio"]:focus-visible + span {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* 献立は7列並べるので、ほかの画面より広く */
+.container--wide { max-width: 1200px; }
+
+.chip--success {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e6f0de;
+    border-color: #e6f0de;
+    color: var(--success);
+}
+
+/* ===== 献立：週の移動 ===== */
+.week-nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.week-nav__shopping { margin-left: auto; }   /* 買い物リストだけ右端へ */
+
+/* ===== 7日分の列（せまい画面では横にスクロール） ===== */
+.week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(140px, 1fr));
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;   /* 横スクロールが1日ずつピタッと止まる */
+}
+
+.day {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    scroll-snap-align: start;
+}
+
+/* 今日の列は緑色 */
+.day.is-today { border-color: #b6cf8f; background: #f3f8e8; }
+
+.day__head {
+    padding: 10px 6px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--primary-dark);
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.3;
+}
+
+.day.is-today .day__head { background: #dcebc3; }
+.day__date { display: block; font-size: 1.05rem; }
+.day__dow { font-size: 0.85rem; }
+
+/* ===== 朝・昼・夜の枠 ===== */
+.slot {
+    padding: 8px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.slot:last-child { border-bottom: none; }
+
+.slot__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.slot__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.slot__label .material-symbols-rounded { font-size: 1.05rem; color: var(--warning); }
+
+/* 枠の右上の小さな「＋」 */
+.slot__add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.slot__add:hover { background: var(--primary-light); color: var(--primary-dark); }
+.slot__add .material-symbols-rounded { font-size: 1.1rem; }
+
+/* ===== 献立1つ（名前 → 写真 → 作った） ===== */
+.plan {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.plan__link {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    color: var(--text);
+    text-decoration: none;
+}
+
+/* 名前は1行で「…」 */
+.plan__name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.4;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.plan__photo {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+}
+
+.plan__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s;
+}
+
+/* マウスを乗せると写真が少し大きくなる（押せることがわかるように） */
+.plan__link:hover .plan__photo img { transform: scale(1.05); }
+.plan__photo .photo-placeholder { font-size: 1.8rem; }
+
+.plan__cook { width: 100%; }
+
+.plan__done {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--success);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.plan__done .material-symbols-rounded { font-size: 1.05rem; font-variation-settings: "FILL" 1; }
+
+/* 作った献立の写真は少し薄く */
+.plan.is-cooked .plan__photo { opacity: 0.6; }
+
+/* ===== 献立の詳細 ===== */
+.plan-detail {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.plan-detail__photo {
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+}
+
+.plan-detail__photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.plan-detail__photo .photo-placeholder { font-size: 4rem; }
+
+.plan-detail__when {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.plan-detail__when .material-symbols-rounded { color: var(--warning); }
+.plan-detail__title { margin: 4px 0 10px; }
+
+.plan-detail__main-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+/* 変更・削除は、点線で区切って左寄せ */
+.plan-detail .owner-actions {
+    justify-content: flex-start;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+}
+
+/* ===== スマホ ===== */
+@media (max-width: 767px) {
+    .week { grid-template-columns: repeat(7, 46%); }   /* 画面に約2日分ずつ見える */
+    .week-nav__shopping { margin-left: 0; }
+    .plan-detail { grid-template-columns: 1fr; }
+}
+
+/* ===== 共通：点線区切りのリスト・横並びの入力欄 ===== */
+.simple-list {
+    list-style: none;
+    margin: 0 0 8px;
+    padding: 0;
+}
+
+.simple-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.simple-list li:last-child { border-bottom: none; }
+
+/* 入力欄を2つ横に並べる */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-field input[type="date"],
+.form-field input[type="number"] { width: 100%; }
+
+/* ===== 食材管理：期限のお知らせ ===== */
+.banner { align-items: center; }
+
+/* 「すべて見る」を右端に */
+.banner__link {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    color: var(--danger);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ===== カテゴリのチップと並び順 ===== */
+.filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+/* チップは1行に並べて、入りきらなければ横にスクロール */
+.chip-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    flex: 1;
+}
+
+.chip-row .chip {
+    flex-shrink: 0;
+    padding: 4px 12px;
+    white-space: nowrap;
+}
+
+.filters__sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+/* ===== 食材の一覧 ===== */
+.stock-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* 1行 ＝ アイコン 52px｜名前（残り全部）｜数量（中身の幅）｜期限 150px｜操作（中身の幅） */
+.stock-item {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto 150px auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.stock-item:last-child { border-bottom: none; }
+
+/* 使い切った食材は薄く */
+.stock-item.is-empty { opacity: 0.55; }
+
+.stock-item__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    background: #f6e6d3;
+    font-size: 1.8rem;
+}
+
+.stock-item__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.stock-item__name {
+    font-weight: 700;
+    font-size: 1.02rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.stock-item__expiry {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.4;
+}
+
+.stock-item__expiry small { font-size: 0.75rem; }
+
+.stock-item__actions { display: flex; }
+
+/* 数量の −［150］＋ g */
+.qty {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.qty input[type="number"] {
+    width: 64px;
+    padding: 4px 6px;
+    text-align: center;
+}
+
+.qty__btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--primary);
+}
+
+.qty__btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.qty__btn .material-symbols-rounded { font-size: 1.05rem; }
+
+.qty__unit {
+    min-width: 2.5em;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+/* ===== 期限が近い食材を使えるレシピ ===== */
+.suggest-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+}
+
+.suggest {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.suggest:hover { border-color: var(--primary); }
+
+.suggest__photo {
+    flex-shrink: 0;
+    overflow: hidden;
+    width: 64px;
+    aspect-ratio: 4 / 3;
+    border-radius: 6px;
+    background: var(--surface-2);
+}
+
+.suggest__photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.suggest__photo .photo-placeholder { font-size: 1.3rem; }
+.suggest small { display: block; }
+
+/* ===== スマホ ===== */
+@media (max-width: 767px) {
+    /* チップと並び順を縦に並べる */
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /*
+        grid-template-areas：場所に名前を付けて、絵のように配置を決める書き方
+        1行目：アイコン｜名前　｜操作
+        2行目：アイコン｜数量　｜期限
+    */
+    .stock-item {
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        grid-template-areas:
+            "icon main actions"
+            "icon qty  expiry";
+        gap: 6px 10px;
+        padding: 12px;
+    }
+
+    .stock-item__icon { grid-area: icon; width: 44px; height: 44px; font-size: 1.5rem; }
+    .stock-item__main { grid-area: main; }
+    .stock-item__actions { grid-area: actions; }
+    .qty { grid-area: qty; }
+    .stock-item__expiry { grid-area: expiry; text-align: right; }
+
+    .form-row { grid-template-columns: 1fr; gap: 0; }
 }

@@ -4,48 +4,81 @@
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <h1 th:text="${ingredient.id == null} ? '食材登録' : '食材編集'">食材登録</h1>
+    <main class="container container--narrow">
+        <a href="/ingredients" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>食材管理に戻る
+        </a>
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">kitchen</span>
+            <span th:text="${ingredient.id == null} ? '食材を追加' : '食材を編集'">食材を追加</span>
+        </h1>
 
-    <form th:action="${ingredient.id == null} ? @{/ingredients} : @{/ingredients/{id}(id=${ingredient.id})}"
-          th:object="${ingredient}" method="post">
-        <p>
-            食材名：<input type="text" th:field="*{name}" required>
-        </p>
-        <p>
-            数量：<input type="number" step="any" min="0" name="quantity" th:value="*{quantityText}" required>
-            単位：<input type="text" th:field="*{unit}" list="units" required>
-            <datalist id="units">
-                <option value="個"></option>
-                <option value="g"></option>
-                <option value="ml"></option>
-                <option value="本"></option>
-                <option value="パック"></option>
-            </datalist>
-        </p>
-        <p>
-            カテゴリ：
-            <select th:field="*{category}">
-                <option value="肉">肉</option>
-                <option value="魚">魚</option>
-                <option value="野菜">野菜</option>
-                <option value="調味料">調味料</option>
-                <option value="その他">その他</option>
-            </select>
-        </p>
-        <p>
-            期限の種類：
-            <select th:field="*{expiryType}">
-                <option value="賞味期限">賞味期限</option>
-                <option value="消費期限">消費期限</option>
-            </select>
-            期限日：<input type="date" th:field="*{expiryDate}" required>
-        </p>
-        <p>
-            開封日（任意）：<input type="date" th:field="*{openedDate}">
-        </p>
-        <button type="submit" th:text="${ingredient.id == null} ? '登録' : '更新'">登録</button>
-    </form>
+        <!-- 登録・編集の兼用。id が無ければ POST /ingredients、あれば POST /ingredients/{id} -->
+        <form th:action="${ingredient.id == null} ? @{/ingredients} : @{/ingredients/{id}(id=${ingredient.id})}"
+              th:object="${ingredient}" method="post" class="card">
 
-    <a href="/ingredients">一覧に戻る</a>
+            <div class="form-field">
+                <label for="name">食材名</label>
+                <input type="text" id="name" th:field="*{name}" maxlength="100" required placeholder="例：豚ロース">
+            </div>
+
+            <!-- 数量と単位を横に並べる -->
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="quantity">数量</label>
+                    <!-- quantityText を使うと、200.0 ではなく 200 と表示される -->
+                    <input type="number" id="quantity" name="quantity" th:value="*{quantityText}"
+                           step="any" min="0" required>
+                </div>
+                <div class="form-field">
+                    <label for="unit">単位</label>
+                    <input type="text" id="unit" th:field="*{unit}" list="units" maxlength="20" required placeholder="例：g">
+                    <datalist id="units">
+                        <option value="個"></option>
+                        <option value="g"></option>
+                        <option value="ml"></option>
+                        <option value="本"></option>
+                        <option value="パック"></option>
+                        <option value="枚"></option>
+                        <option value="袋"></option>
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="category">カテゴリ</label>
+                <!-- 選択肢は Controller の @ModelAttribute("categories") から -->
+                <select id="category" th:field="*{category}">
+                    <option th:each="c : ${categories}" th:value="${c}"
+                            th:text="${categoryIcons.get(c)} + ' ' + ${c}">🥩 肉</option>
+                </select>
+            </div>
+
+            <!-- 期限の種類と期限日を横に並べる -->
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="expiryType">期限の種類</label>
+                    <select id="expiryType" th:field="*{expiryType}">
+                        <option value="賞味期限">賞味期限</option>
+                        <option value="消費期限">消費期限</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="expiryDate">期限日</label>
+                    <input type="date" id="expiryDate" th:field="*{expiryDate}" required>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="openedDate">開封日（任意）</label>
+                <input type="date" id="openedDate" th:field="*{openedDate}">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn--wide" th:text="${ingredient.id == null} ? '追加する' : '更新する'">追加する</button>
+                <a href="/ingredients" class="btn btn--outline">キャンセル</a>
+            </div>
+        </form>
+    </main>
 </body>
 </html>

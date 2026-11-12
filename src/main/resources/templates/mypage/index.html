@@ -4,53 +4,83 @@
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <!-- loginUsername は LoginUserAdvice が全画面に渡しているログイン中のユーザー名 -->
-    <h1>マイページ（<span th:text="${loginUsername}">1</span>さん）</h1>
+    <main class="container">
+        <h1 class="page-title">
+            <span class="material-symbols-rounded is-filled">person</span>マイページ
+        </h1>
 
-    <!-- ===== タブ（GET のリンク。選択中は太字） ===== -->
-    <p>
-        <a href="/mypage" th:style="${tab == 'posted'} ? 'font-weight: bold'">投稿したレシピ</a> |
-        <a href="/mypage?tab=liked" th:style="${tab == 'liked'} ? 'font-weight: bold'">いいねしたレシピ</a> |
-        <a href="/mypage?tab=commented" th:style="${tab == 'commented'} ? 'font-weight: bold'">コメントしたレシピ</a>
-    </p>
+        <!-- プロフィールを更新したあとのメッセージ（7Aで渡したフラッシュ属性） -->
+        <div th:if="${message}" class="alert alert--success">
+            <span class="material-symbols-rounded">check_circle</span><span th:text="${message}">更新しました</span>
+        </div>
 
-    <!-- 投稿したレシピのタブだけ、投稿へのリンクを出す -->
-    <p th:if="${tab == 'posted'}"><a href="/recipes/new">＋ レシピを投稿する</a></p>
+        <!-- ===== プロフィール（左）と数字のまとめ（右） ===== -->
+        <div class="mypage-top">
+            <section class="card profile-card">
+                <!-- 7Aで作ったアバターの部品を、いちばん大きいサイズで使う -->
+                <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
+                <p class="profile-card__name" th:text="${user.displayName}">はるお</p>
+                <p class="profile-card__id" th:text="'@' + ${user.username}">@1</p>
+                <a href="/mypage/profile" class="btn btn--outline btn--sm">
+                    <span class="material-symbols-rounded">manage_accounts</span>プロフィール編集
+                </a>
+            </section>
 
-    <!--
-        ===== レシピが無いとき =====
-        th:switch / th:case：Java の switch 文と同じで、tab の値によって表示を切り替える
-    -->
-    <div th:if="${#lists.isEmpty(recipes)}" th:switch="${tab}">
-        <p th:case="'liked'">いいねしたレシピはまだありません</p>
-        <p th:case="'commented'">コメントしたレシピはまだありません</p>
-        <p th:case="*">投稿したレシピはまだありません</p>
-    </div>
+            <section class="card stats-card">
+                <h2 class="stats-card__title">あなたの投稿・いいね</h2>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="material-symbols-rounded">edit</span>
+                        <span class="stat__label">投稿数</span>
+                        <strong class="stat__value" th:text="${postCount}">12</strong>
+                    </div>
+                    <div class="stat">
+                        <span class="material-symbols-rounded is-filled">favorite</span>
+                        <span class="stat__label">もらったいいね</span>
+                        <strong class="stat__value" th:text="${receivedLikeCount}">128</strong>
+                    </div>
+                    <div class="stat">
+                        <span class="material-symbols-rounded">chat_bubble</span>
+                        <span class="stat__label">コメント数</span>
+                        <strong class="stat__value" th:text="${commentCount}">27</strong>
+                    </div>
+                </div>
+            </section>
+        </div>
 
-    <!-- ===== レシピ一覧 ===== -->
-    <table border="1" th:unless="${#lists.isEmpty(recipes)}">
-        <thead>
-            <tr>
-                <th>写真</th>
-                <th>タイトル</th>
-                <th>カテゴリ</th>
-                <th>投稿者</th>
-                <th>投稿日</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="recipe : ${recipes}">
-                <td>
-                    <img th:if="${recipe.imagePath}"
-                         th:src="@{/uploads/{file}(file=${recipe.imagePath})}"
-                         th:alt="${recipe.title}" style="width: 80px">
-                </td>
-                <td><a th:href="@{/recipes/{id}(id=${recipe.id})}" th:text="${recipe.title}">豚の生姜焼き</a></td>
-                <td th:text="${recipe.category}">肉</td>
-                <td th:text="${recipe.user.username}">taro</td>
-                <td th:text="${#temporals.format(recipe.createdAt, 'yyyy/MM/dd')}">2026/10/20</td>
-            </tr>
-        </tbody>
-    </table>
+        <!-- ===== 一覧の切り替え（データを変えないので、ただのリンク＝GET） ===== -->
+        <nav class="mypage-tabs">
+            <a href="/mypage" class="mypage-tab" th:classappend="${tab == 'posted'} ? 'is-active'">
+                <span class="material-symbols-rounded">menu_book</span>投稿したレシピ
+            </a>
+            <a href="/mypage?tab=liked" class="mypage-tab" th:classappend="${tab == 'liked'} ? 'is-active'">
+                <span class="material-symbols-rounded">favorite</span>お気に入り（いいね）
+            </a>
+            <a href="/mypage?tab=commented" class="mypage-tab" th:classappend="${tab == 'commented'} ? 'is-active'">
+                <span class="material-symbols-rounded">forum</span>コメントしたレシピ
+            </a>
+        </nav>
+
+        <!--
+            レシピが無いとき。th:switch / th:case：Java の switch 文と同じ
+            タブごとにメッセージを変える。th:case="*" は default（どれにも当てはまらないとき）
+        -->
+        <div th:if="${#lists.isEmpty(recipes)}" class="empty card" th:switch="${tab}">
+            <span class="material-symbols-rounded empty__icon">menu_book</span>
+            <p th:case="'liked'">いいねしたレシピはまだありません</p>
+            <p th:case="'commented'">コメントしたレシピはまだありません</p>
+            <p th:case="*">投稿したレシピはまだありません</p>
+            <a th:if="${tab == 'posted'}" href="/recipes/new" class="btn btn--sm">
+                <span class="material-symbols-rounded">add</span>レシピを投稿する
+            </a>
+        </div>
+
+        <!-- ステップ3で作ったレシピカードをそのまま使い回す -->
+        <div class="recipe-grid">
+            <th:block th:each="recipe : ${recipes}">
+                <article th:replace="~{fragments/recipe-card :: card(${recipe}, ${likeCounts.get(recipe.id)})}"></article>
+            </th:block>
+        </div>
+    </main>
 </body>
 </html>

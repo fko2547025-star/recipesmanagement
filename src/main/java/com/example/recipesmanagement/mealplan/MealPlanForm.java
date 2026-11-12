@@ -1,7 +1,6 @@
 package com.example.recipesmanagement.mealplan;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,9 +18,7 @@ public class MealPlanForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate planDate;
 
-    // 時間。<input type="time"> から "19:00" の形で届くので、その形を pattern で指定する
-    @DateTimeFormat(pattern = "HH:mm")
-    private LocalTime planTime;
+    private String mealType;
 
     // 選んだレシピの id（選ばなければ null）
     private Long recipeId;
@@ -35,7 +32,7 @@ public class MealPlanForm {
     public static MealPlanForm from(MealPlan plan) {
         MealPlanForm form = new MealPlanForm();
         form.setPlanDate(plan.getPlanDate());
-        form.setPlanTime(plan.getPlanTime());
+        form.setMealType(plan.getMealType());
         form.setRecipeId(plan.getRecipe() != null ? plan.getRecipe().getId() : null);
         form.setMemo(plan.getMemo());
         return form;
@@ -49,6 +46,9 @@ public class MealPlanForm {
 
         if (planDate == null) {
             errors.add("日付を選んでください");
+        }
+        if (mealType == null || !MealPlan.MEAL_TYPES.contains(mealType)) {
+            errors.add("朝・昼・夜のどれかを選んでください");
         }
         // レシピもメモも無い献立は意味が無いので、どちらかを必須にする
         if (recipeId == null && (memo == null || memo.isBlank())) {
@@ -65,8 +65,8 @@ public class MealPlanForm {
     public LocalDate getPlanDate() { return planDate; }
     public void setPlanDate(LocalDate planDate) { this.planDate = planDate; }
 
-    public LocalTime getPlanTime() { return planTime; }
-    public void setPlanTime(LocalTime planTime) { this.planTime = planTime; }
+    public String getMealType() { return mealType; }
+    public void setMealType(String mealType) { this.mealType = mealType; }
 
     public Long getRecipeId() { return recipeId; }
     public void setRecipeId(Long recipeId) { this.recipeId = recipeId; }

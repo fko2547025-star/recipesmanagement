@@ -58,4 +58,6 @@ public interface LikeRepository extends JpaRepository<RecipeLike, Long> {
         return countLikesSince(LocalDateTime.of(1970, 1, 1, 0, 0), Pageable.unpaged()).stream()
                 .collect(Collectors.toMap(RecipeLikeCount::getRecipeId, RecipeLikeCount::getLikeCount));
     }
+
+    long countByRecipe_User(AppUser user);
 }

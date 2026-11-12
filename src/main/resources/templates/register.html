@@ -18,19 +18,44 @@
         <form th:action="@{/register}" method="post" class="auth-form">
             <label class="input-icon">
                 <span class="material-symbols-rounded">person</span>
-                <input type="text" name="username" placeholder="ユーザー名" maxlength="50" required autocomplete="username">
+                <input type="text" name="username" th:value="${username}" placeholder="ユーザーID" maxlength="50" required autocomplete="username">
             </label>
             <label class="input-icon">
                 <span class="material-symbols-rounded">lock</span>
                 <!-- new-password：ブラウザが新しいパスワードの提案を出せるようにする -->
-                <input type="password" name="password" placeholder="パスワード（4文字以上）" minlength="4" required
+                <input type="password" name="password" id="password" placeholder="パスワード（4文字以上）" minlength="4" required
                        autocomplete="new-password">
+            </label>
+            <label class="input-icon">
+                <span class="material-symbols-rounded">lock_reset</span>
+                <!-- 確認用。name を passwordConfirm にして、サーバーでも password と同じか確かめる -->
+                <input type="password" name="passwordConfirm" id="passwordConfirm" placeholder="パスワード（確認）"
+                    minlength="4" required autocomplete="new-password" autocapitalize="off" autocorrect="off">
             </label>
             <button type="submit" class="btn--block">登録する</button>
         </form>
 
         <a href="/login" class="auth-card__link">ログインはこちら</a>
     </main>
+    <script>
+        // 確認欄が、パスワードと同じかどうかを調べる
+        const password = document.getElementById('password');
+        const confirmInput = document.getElementById('passwordConfirm');
+
+        function checkMatch() {
+            // setCustomValidity：文字を入れると「この欄はエラー」になり、送信が止まって吹き出しでメッセージが出る
+            //                    空文字にすると「エラーなし」に戻る
+            if (confirmInput.value !== '' && confirmInput.value !== password.value) {
+                confirmInput.setCustomValidity('パスワードが一致しません');
+            } else {
+                confirmInput.setCustomValidity('');
+            }
+        }
+
+        // どちらかの欄に入力するたびにチェックする
+        password.addEventListener('input', checkMatch);
+        confirmInput.addEventListener('input', checkMatch);
+    </script>
 
 </body>
 </html>

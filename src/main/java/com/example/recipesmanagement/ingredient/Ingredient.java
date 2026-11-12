@@ -2,6 +2,9 @@ package com.example.recipesmanagement.ingredient;
 
 import java.time.LocalDate;
 import java.text.DecimalFormat;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
 
 import com.example.recipesmanagement.user.AppUser;
 
@@ -22,8 +25,28 @@ import jakarta.persistence.ManyToOne;
 @Table(name = "ingredients")
 public class Ingredient {
 
-        // 期限がこの日数以内なら「期限が近い」とする（在庫チェックなどでも共通で使う）
+    // 期限がこの日数以内なら「期限が近い」とする（在庫チェックなどでも共通で使う）
     public static final int EXPIRING_DAYS = 3;
+
+    /** カテゴリ（表示する順番）。一覧のチップ、フォームの選択肢、入力チェックで使い回す */
+    public static final List<String> CATEGORIES = List.of(
+            "肉", "魚介", "野菜", "果物", "きのこ", "卵・乳製品",
+            "豆腐・大豆製品", "米・パン・麺", "調味料", "飲み物", "冷凍食品", "その他");
+
+    /** カテゴリごとのアイコン（絵文字） */
+    public static final Map<String, String> CATEGORY_ICONS = Map.ofEntries(
+            Map.entry("肉", "🥩"),
+            Map.entry("魚介", "🐟"),
+            Map.entry("野菜", "🥕"),
+            Map.entry("果物", "🍎"),
+            Map.entry("きのこ", "🍄"),
+            Map.entry("卵・乳製品", "🥚"),
+            Map.entry("豆腐・大豆製品", "🫘"),
+            Map.entry("米・パン・麺", "🍞"),
+            Map.entry("調味料", "🧂"),
+            Map.entry("飲み物", "🥤"),
+            Map.entry("冷凍食品", "🧊"),
+            Map.entry("その他", "🛒"));
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -96,4 +119,18 @@ public class Ingredient {
 
     public AppUser getUser() { return user; }
     public void setUser(AppUser user) { this.user = user; }
+
+    /**
+     * 期限まであと何日か。今日が期限なら 0、期限を過ぎていればマイナス（例：2日過ぎ → -2）。
+     * 画面では ${item.daysLeft} で呼び出せる。
+     */
+    public long getDaysLeft() {
+        // ChronoUnit.DAYS.between(A, B)：A から B まで何日か（献立の getWeek でも使った）
+        return expiryDate == null ? 0 : ChronoUnit.DAYS.between(LocalDate.now(), expiryDate);
+    }
+
+    /** カテゴリのアイコン。表に無いカテゴリなら 🛒。画面では ${item.categoryIcon} */
+    public String getCategoryIcon() {
+        return CATEGORY_ICONS.getOrDefault(category, "🛒");
+    }
 }

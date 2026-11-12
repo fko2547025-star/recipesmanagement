@@ -4,56 +4,70 @@
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <h1 th:text="${planId == null} ? '献立を追加' : '献立を編集'">献立を追加</h1>
+    <main class="container container--narrow">
+        <a th:href="${planId == null} ? @{/meal-plans(date=${form.planDate})} : @{/meal-plans/{id}(id=${planId})}" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>献立に戻る
+        </a>
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">calendar_add_on</span>
+            <span th:text="${planId == null} ? '献立を追加' : '献立を編集'">献立を追加</span>
+        </h1>
 
-    <ul th:if="${errors != null}">
-        <li th:each="e : ${errors}" th:text="${e}" style="color: red">エラー</li>
-    </ul>
+        <div th:if="${errors != null}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span>
+            <ul class="alert__list">
+                <li th:each="e : ${errors}" th:text="${e}">エラー</li>
+            </ul>
+        </div>
 
-    <!-- 送信先：登録なら POST /meal-plans、編集なら POST /meal-plans/{id} -->
-    <form th:action="${planId == null} ? @{/meal-plans} : @{/meal-plans/{id}(id=${planId})}"
-          th:object="${form}" method="post">
+        <!-- 送信先：登録なら POST /meal-plans、編集なら POST /meal-plans/{id} -->
+        <form th:action="${planId == null} ? @{/meal-plans} : @{/meal-plans/{id}(id=${planId})}"
+              th:object="${form}" method="post" class="card">
 
-        <p>日付：<input type="date" th:field="*{planDate}" required></p>
+            <div class="form-field">
+                <label for="planDate">日付</label>
+                <input type="date" id="planDate" th:field="*{planDate}" required>
+            </div>
 
-        <p>
-            時間（任意）：
-            <!-- th:field を付けると id="planTime" が自動で付くので、下の JavaScript から使える -->
-            <input type="time" th:field="*{planTime}">
-            <!-- ワンタップで時間を入れるボタン（type="button" なので送信はしない） -->
-            <button type="button" onclick="setTime('07:00')">朝 7:00</button>
-            <button type="button" onclick="setTime('12:00')">昼 12:00</button>
-            <button type="button" onclick="setTime('19:00')">夜 19:00</button>
-            <button type="button" onclick="setTime('')">未定</button>
-        </p>
+            <div class="form-field">
+                <label>朝・昼・夜</label>
+                <!--
+                    ラジオボタンを、つながったボタンの見た目にする（segmented）。
+                    th:field="*{mealType}" をラジオに付けると、form.mealType と同じ value のものに自動でチェックが入る
+                -->
+                <div class="segmented">
+                    <label th:each="m : ${mealTypes}">
+                        <input type="radio" th:field="*{mealType}" th:value="${m}">
+                        <span>
+                            <span class="material-symbols-rounded" th:text="${mealIcons.get(m)}">wb_sunny</span>
+                            <span th:text="${m}">昼</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
 
-        <p>
-            レシピ（任意）：
-            <!-- value="" を選ぶと recipeId は null になる -->
-            <select th:field="*{recipeId}">
-                <option value="">（レシピを選ばない）</option>
-                <option th:each="r : ${recipes}" th:value="${r.id}" th:text="${r.title}">豚の生姜焼き</option>
-            </select>
-            <br>
-            <small>自分が投稿したレシピと、いいねしたレシピから選べます</small>
-        </p>
+            <div class="form-field">
+                <label for="recipeId">レシピ（任意）</label>
+                <!-- value="" を選ぶと recipeId は null になる -->
+                <select id="recipeId" th:field="*{recipeId}">
+                    <option value="">（レシピを選ばない）</option>
+                    <option th:each="r : ${recipes}" th:value="${r.id}"
+                            th:text="${r.categoryIcon} + ' ' + ${r.title}">豚の生姜焼き</option>
+                </select>
+                <small class="field-hint">自分が投稿したレシピと、いいねしたレシピから選べます</small>
+            </div>
 
-        <p>
-            メモ（任意）：
-            <input type="text" th:field="*{memo}" maxlength="100" placeholder="例：外食、カレーの残り">
-        </p>
-        <p><small>※レシピかメモのどちらかは入力してください</small></p>
+            <div class="form-field">
+                <label for="memo">メモ（任意）</label>
+                <input type="text" id="memo" th:field="*{memo}" maxlength="100" placeholder="例：外食、カレーの残り">
+                <small class="field-hint">レシピかメモのどちらかは入力してください</small>
+            </div>
 
-        <button type="submit" th:text="${planId == null} ? '追加する' : '更新する'">追加する</button>
-    </form>
-
-    <a href="/meal-plans">献立に戻る</a>
-
-    <script>
-        // 時間の入力欄に値を入れる（'' なら空にして「時間未定」）
-        function setTime(time) {
-            document.getElementById('planTime').value = time;
-        }
-    </script>
+            <div class="form-actions">
+                <button type="submit" class="btn--wide" th:text="${planId == null} ? '追加する' : '更新する'">追加する</button>
+                <a th:href="${planId == null} ? @{/meal-plans(date=${form.planDate})} : @{/meal-plans/{id}(id=${planId})}" class="btn btn--outline">キャンセル</a>
+            </div>
+        </form>
+    </main>
 </body>
 </html>
