@@ -137,6 +137,15 @@
                 <span class="material-symbols-rounded">add</span>手順を追加
             </button>
 
+            <!-- ===== メモ（任意） ===== -->
+            <h2 class="form-section-title">メモ（任意）</h2>
+            <div class="form-field">
+                <!-- th:field で name="memo"・id="memo"・今の値がまとめて入る -->
+                <textarea id="memo" th:field="*{memo}" rows="3" maxlength="1000"
+                        placeholder="例：豚肉に片栗粉をまぶすとタレがよく絡みます／作り置きは冷蔵で2日"></textarea>
+                <small class="field-hint">コツ・ポイント、アレンジ、保存方法など</small>
+            </div>
+
             <!-- ===== 送信・戻る ===== -->
             <div class="form-actions">
                 <button type="submit" class="btn--wide">

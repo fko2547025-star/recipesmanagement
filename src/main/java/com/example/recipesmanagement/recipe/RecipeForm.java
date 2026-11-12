@@ -18,6 +18,7 @@ public class RecipeForm {
     private String description;    // 説明（任意）
     private List<String> steps = new ArrayList<>();   // 作り方（行ごとの入力値）
     private Integer servings;      // 何人分
+    private String memo;           // メモ（任意）
 
     // 材料（行ごとの入力値）。分量は空欄や数字以外もありえるので String で受け取る
     private List<String> ingredientNames = new ArrayList<>();
@@ -35,7 +36,7 @@ public class RecipeForm {
         form.setDescription(recipe.getDescription());
         form.setSteps(new ArrayList<>(recipe.getStepList()));
         form.setServings(recipe.getServings());
-
+        form.setMemo(recipe.getMemo());
         for (RecipeIngredient ing : recipe.getIngredients()) {
             form.ingredientNames.add(ing.getName());
             form.ingredientQuantities.add(ing.getQuantityText());   // 200.0 ではなく 200
@@ -117,6 +118,11 @@ public class RecipeForm {
             errors.add("材料を1つ以上入力してください");
         }
 
+        // テーブルの VARCHAR(1000) に合わせる
+        if (memo != null && memo.length() > 1000) {
+            errors.add("メモは1000文字以内で入力してください");
+        }
+
         return errors;
     }
 
@@ -150,5 +156,8 @@ public class RecipeForm {
 
     public Integer getServings() { return servings; }
     public void setServings(Integer servings) { this.servings = servings; }
+
+    public String getMemo() { return memo; }
+    public void setMemo(String memo) { this.memo = memo; }
 
 }

@@ -4,101 +4,107 @@
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <h1 th:text="'買い物リスト（' + ${#temporals.format(monday, 'M/d')} + ' 〜 ' + ${#temporals.format(sunday, 'M/d')} + '）'">
-        買い物リスト（10/26 〜 11/1）
-    </h1>
+    <main class="container container--narrow">
+        <div class="page-head">
+            <h1 class="page-title">
+                <span class="material-symbols-rounded">shopping_cart</span>買い物リスト
+            </h1>
+            <a th:href="@{/meal-plans(date=${monday})}" class="btn btn--outline btn--sm">この週の献立を見る</a>
+        </div>
 
-    <p>
-        <a th:href="@{/meal-plans/shopping(date=${prevWeek})}">← 前の週</a> |
-        <a href="/meal-plans/shopping">今週</a> |
-        <a th:href="@{/meal-plans/shopping(date=${nextWeek})}">次の週 →</a> |
-        <a th:href="@{/meal-plans(date=${monday})}">この週の献立を見る</a>
-    </p>
+        <!-- 週の移動（献立の一覧と同じ形） -->
+        <div class="week-nav">
+            <a th:href="@{/meal-plans/shopping(date=${prevWeek})}" class="icon-btn" title="前の週">
+                <span class="material-symbols-rounded">chevron_left</span></a>
+            <strong th:text="${#temporals.format(monday, 'yyyy/M/d')} + ' 〜 ' + ${#temporals.format(sunday, 'M/d')}">2026/11/2 〜 11/8</strong>
+            <a th:href="@{/meal-plans/shopping(date=${nextWeek})}" class="icon-btn" title="次の週">
+                <span class="material-symbols-rounded">chevron_right</span></a>
+            <a href="/meal-plans/shopping" class="btn btn--outline btn--sm">今週</a>
+        </div>
 
-    <p th:if="${pastWeek}">過ぎた週なので、買い物リストはありません。</p>
+        <!-- 過ぎた週 -->
+        <div th:if="${pastWeek}" class="empty card">
+            <span class="material-symbols-rounded empty__icon">event_busy</span>
+            <p>過ぎた週なので、買い物リストはありません</p>
+        </div>
 
-    <th:block th:unless="${pastWeek}">
-        <p>
-            対象：今日以降の、まだ作っていない献立（<span th:text="${planCount}">3</span>件）
-        </p>
-        <p th:if="${planCount == 0}">対象の献立がありません。献立にレシピを登録すると、ここに材料がまとまります。</p>
+        <th:block th:unless="${pastWeek}">
+            <p class="text-muted">
+                対象：今日以降の、まだ作っていない献立（<span th:text="${planCount}">3</span>件）
+            </p>
 
-        <!-- ===== 買うもの ===== -->
-        <th:block th:if="${!#lists.isEmpty(toBuy)}">
-            <h2>買うもの（<span th:text="${#lists.size(toBuy)}">3</span>件）</h2>
-            <button type="button" onclick="copyList()">テキストでコピー</button>
+            <div th:if="${planCount == 0}" class="empty card">
+                <span class="material-symbols-rounded empty__icon">calendar_month</span>
+                <p>対象の献立がありません。献立にレシピを登録すると、ここに材料がまとまります。</p>
+            </div>
 
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>材料</th>
-                        <th>買う量</th>
-                        <th>在庫</th>
-                        <th>使う献立</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!--
-                        data-text：コピー用の文字（例：「玉ねぎ 1個」）を、行に持たせておく
-                        th:attr="data-text=..."：好きな属性に値を入れる書き方
-                    -->
-                    <tr th:each="item : ${toBuy}" th:attr="data-text=${item.check.name} + ' ' + ${item.buyText}">
-                        <!-- 買ったらチェック（画面だけで保存はしない）。チェックすると行に取り消し線 -->
-                        <td><input type="checkbox" onchange="this.closest('tr').style.textDecoration = this.checked ? 'line-through' : ''"></td>
-                        <td th:text="${item.check.name}">玉ねぎ</td>
-                        <td th:text="${item.buyText}">1個</td>
-                        <td th:text="${item.check.stockText}">-</td>
-                        <td th:text="${item.usedIn}">豚の生姜焼き（10/30）</td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- ===== 買うもの ===== -->
+            <section class="card section-card" th:if="${!#lists.isEmpty(toBuy)}">
+                <div class="section-head">
+                    <h2 class="section-title">
+                        <span class="material-symbols-rounded">shopping_basket</span>買うもの
+                        <small class="text-muted" th:text="${#lists.size(toBuy)} + '件'">3件</small>
+                    </h2>
+                    <button type="button" class="btn--outline btn--sm" onclick="copyList()">
+                        <span class="material-symbols-rounded">content_copy</span>テキストでコピー
+                    </button>
+                </div>
+
+                <ul class="check-list">
+                    <!-- data-text：コピー用の文字（例：玉ねぎ 1個）を、行に持たせておく -->
+                    <li th:each="item : ${toBuy}" th:attr="data-text=${item.check.name} + ' ' + ${item.buyText}">
+                        <!-- label で囲むと、文字を押してもチェックが切り替わる -->
+                        <label class="check-list__item">
+                            <!-- 買ったらチェック（画面だけで保存はしない）。取り消し線はCSSが付ける -->
+                            <input type="checkbox">
+                            <span th:text="${item.check.name}">玉ねぎ</span>
+                            <strong class="check-list__amount" th:text="${item.buyText}">1個</strong>
+                        </label>
+                        <small class="check-list__sub text-muted"
+                               th:text="'在庫：' + ${item.check.stockText} + ' ／ ' + ${item.usedIn}">在庫：- ／ 肉じゃが（11/5 夜）</small>
+                    </li>
+                </ul>
+            </section>
+
+            <div th:if="${planCount > 0 and #lists.isEmpty(toBuy)}" class="alert alert--success">
+                <span class="material-symbols-rounded">check_circle</span>買うものはありません。在庫で足りています。
+            </div>
+
+            <!-- ===== 量を確認（単位が違うため、足りるかわからないもの） ===== -->
+            <section class="card section-card" th:if="${!#lists.isEmpty(toCheck)}">
+                <h2 class="section-title">
+                    <span class="material-symbols-rounded">help</span>量を確認
+                </h2>
+                <p class="note">単位が違うため、足りるかわからないものです。冷蔵庫を見て確かめてください。</p>
+                <ul class="simple-list">
+                    <li th:each="item : ${toCheck}">
+                        <strong th:text="${item.check.name} + ' ' + ${item.check.neededText}">醤油 大さじ4</strong>
+                        <small class="text-muted" th:text="'在庫：' + ${item.check.stockText} + ' ／ ' + ${item.usedIn}">在庫：醤油 1本</small>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- ===== 在庫で足りるもの ===== -->
+            <!-- details / summary：クリックで開閉できる HTML の部品（JavaScript 不要） -->
+            <details class="card section-card" th:if="${!#lists.isEmpty(enough)}">
+                <summary class="section-title" th:text="'在庫で足りるもの（' + ${#lists.size(enough)} + '件）'">在庫で足りるもの（2件）</summary>
+                <ul class="simple-list">
+                    <li th:each="item : ${enough}">
+                        <span th:text="${item.check.name} + ' ' + ${item.check.neededText}">生姜 1かけ</span>
+                        <small class="text-muted" th:text="'在庫：' + ${item.check.stockText}">在庫：生姜 2かけ</small>
+                    </li>
+                </ul>
+            </details>
         </th:block>
-
-        <p th:if="${planCount > 0 and #lists.isEmpty(toBuy)}">買うものはありません。在庫で足りています。</p>
-
-        <!-- ===== 量を確認 ===== -->
-        <th:block th:if="${!#lists.isEmpty(toCheck)}">
-            <h2>量を確認（単位が違うため、足りるかわからないもの）</h2>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>材料</th>
-                        <th>必要</th>
-                        <th>在庫</th>
-                        <th>使う献立</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="item : ${toCheck}">
-                        <td th:text="${item.check.name}">醤油</td>
-                        <td th:text="${item.check.neededText}">大さじ4</td>
-                        <td th:text="${item.check.stockText}">醤油 1本</td>
-                        <td th:text="${item.usedIn}">豚の生姜焼き（10/30）</td>
-                    </tr>
-                </tbody>
-            </table>
-        </th:block>
-
-        <!-- ===== 在庫で足りるもの ===== -->
-        <!-- details / summary：クリックで開閉できる HTML の部品（JavaScript 不要） -->
-        <details th:if="${!#lists.isEmpty(enough)}">
-            <summary th:text="'在庫で足りるもの（' + ${#lists.size(enough)} + '件）'">在庫で足りるもの（2件）</summary>
-            <ul>
-                <li th:each="item : ${enough}"
-                    th:text="${item.check.name} + ' ' + ${item.check.neededText} + '（在庫：' + ${item.check.stockText} + '）'">
-                    生姜 1かけ（在庫：生姜 2かけ）
-                </li>
-            </ul>
-        </details>
-    </th:block>
+    </main>
 
     <script>
         // ===== 買うものをテキストでコピー =====
         // data-text を持つ行の文字を集めて、1行ずつ改行でつなげてコピーする
+        // （表の tr から、リストの li に変えたので、探す相手も li にしている）
         function copyList() {
-            const lines = Array.from(document.querySelectorAll('tr[data-text]'))
-                .map(tr => '・' + tr.dataset.text);
+            const lines = Array.from(document.querySelectorAll('li[data-text]'))
+                .map(li => '・' + li.dataset.text);
             navigator.clipboard.writeText(lines.join('\n'))
                 .then(() => alert('コピーしました'));
         }

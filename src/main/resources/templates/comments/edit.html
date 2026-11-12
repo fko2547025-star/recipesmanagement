@@ -4,20 +4,38 @@
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <h1>コメントを編集</h1>
-    <!-- どのレシピへのコメントか -->
-    <p>レシピ：<a th:href="@{/recipes/{id}(id=${comment.recipe.id})}" th:text="${comment.recipe.title}">豚の生姜焼き</a></p>
+    <main class="container container--narrow">
+        <!-- レシピ詳細のコメントの位置（#comments）に戻る -->
+        <a th:href="@{/recipes/{id}(id=${comment.recipe.id})} + '#comments'" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>レシピに戻る
+        </a>
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">edit_note</span>コメントを編集
+        </h1>
 
-    <p th:if="${error}" th:text="${error}" style="color: red">エラー</p>
+        <form th:action="@{/comments/{id}(id=${comment.id})}" method="post" class="card">
+            <!-- どのレシピへのコメントか -->
+            <p class="text-muted">
+                レシピ：<a th:href="@{/recipes/{id}(id=${comment.recipe.id})}" th:text="${comment.recipe.title}">豚の生姜焼き</a>
+            </p>
 
-    <form th:action="@{/comments/{id}(id=${comment.id})}" method="post">
-        <!-- textarea は value ではなく、タグの中身に値を入れる（th:text） -->
-        <textarea name="content" rows="4" cols="50" th:attr="maxlength=${maxLength}" required
-                  th:text="${content}"></textarea>
-        <br>
-        <button type="submit">更新する</button>
-    </form>
+            <!-- 入力チェックでエラーになったときだけ表示 -->
+            <div th:if="${error}" class="alert alert--error">
+                <span class="material-symbols-rounded">error</span><span th:text="${error}">エラー</span>
+            </div>
 
-    <a th:href="@{/recipes/{id}(id=${comment.recipe.id})} + '#comments'">編集をやめる</a>
+            <div class="form-field">
+                <label for="content">コメント</label>
+                <!-- textarea は value ではなく、タグの中身に値を入れる（th:text） -->
+                <textarea id="content" name="content" rows="4" th:attr="maxlength=${maxLength}" required
+                          th:text="${content}"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn--wide">更新する</button>
+                <a th:href="@{/recipes/{id}(id=${comment.recipe.id})} + '#comments'" class="btn btn--outline">やめる</a>
+            </div>
+        </form>
+    </main>
 </body>
 </html>

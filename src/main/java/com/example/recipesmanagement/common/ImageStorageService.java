@@ -9,9 +9,12 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * アップロードされた写真を保存するクラス。
@@ -21,6 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Service
 public class ImageStorageService {
+
+    // ログを出すための道具（System.out.println の仕事用の版）
+    private static final Logger log = LoggerFactory.getLogger(ImageStorageService.class);
 
     /**
      * 受け付ける画像の種類と、保存するときの拡張子。
@@ -88,7 +94,10 @@ public class ImageStorageService {
         try {
             Files.deleteIfExists(uploadDir.resolve(filename));
         } catch (IOException e) {
-            throw new UncheckedIOException("写真の削除に失敗しました", e);
+            // 古い写真を消せなくても、差し替え・削除の処理は続ける。
+            // ファイルが1枚残るだけで、表示や動作には影響しない
+            // （エクスプローラーのプレビューや、ほかのアプリがファイルを開いているときに起きる）
+            log.warn("写真を削除できませんでした（そのまま残します）：{}", e.getMessage());
         }
     }
 

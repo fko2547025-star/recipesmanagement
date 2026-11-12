@@ -145,6 +145,7 @@ public class RecipeService {
                 .filter(s -> !isBlank(s))
                 .map(String::trim)
                 .collect(Collectors.joining("\n")));
+        recipe.setMemo(blankToNull(form.getMemo()));
         recipe.setServings(form.getServings());
 
         // 材料は「全部外してから、入力された行を入れ直す」

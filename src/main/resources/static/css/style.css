@@ -2378,3 +2378,117 @@ body.auth-page > .auth-card {
 
     .form-row { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* 表がはみ出すときは、表だけ横にスクロールさせる（ページ全体は横にずれない） */
+.table-wrap {
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+.form-field textarea { width: 100%; }
+
+/* ===== 買い物リスト（チェックすると取り消し線） ===== */
+.check-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.check-list li {
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.check-list li:last-child { border-bottom: none; }
+
+/* チェックボックス・材料名・買う量を横に並べる。買う量は右端へ */
+.check-list__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.check-list__amount { margin-left: auto; }
+
+/* :has()：中のチェックボックスにチェックが入っている行だけに当てる */
+.check-list__item:has(input:checked) {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+/* 在庫・使う献立の小さな文字は、チェックボックスの幅だけ右にずらして名前とそろえる */
+.check-list__sub {
+    display: block;
+    margin-left: 28px;
+}
+
+/* 「在庫で足りるもの」の開閉の見出しは、押せるように */
+details > summary.section-title { cursor: pointer; }
+
+/* ===== レシピのメモ（付箋のような色で、作り方と区別する） ===== */
+.recipe-memo {
+    background: #fff8e6;
+    border-color: #f0dfb4;
+}
+
+.recipe-memo__text {
+    margin: 0;
+    white-space: pre-line;      /* 入力された改行をそのまま表示 */
+    overflow-wrap: anywhere;    /* 長いURLなどもはみ出さずに折り返す */
+}
+
+/* ===== プロフィール写真の拡大 ===== */
+/* ボタンの見た目を消して、写真だけに見せる */
+.avatar-zoom {
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    cursor: zoom-in;                 /* マウスが虫めがねの形になる */
+    transition: transform 0.15s;
+}
+
+.avatar-zoom:hover { transform: scale(1.04); }
+
+/* 拡大表示のダイアログ */
+.photo-dialog {
+    position: relative;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    max-width: min(90vw, 560px);     /* 画面の90%か560pxの、小さいほう */
+    overflow: visible;
+}
+
+/* ::backdrop：ダイアログの後ろ（画面全体）を暗くする部分 */
+.photo-dialog::backdrop {
+    background: rgba(40, 25, 15, 0.7);
+}
+
+.photo-dialog img {
+    display: block;
+    width: 100%;
+    max-height: 80vh;                /* 縦長の写真でも、画面からはみ出さない */
+    object-fit: contain;             /* 切り抜かずに、写真全体を表示する */
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-strong);
+}
+
+/* 右上の × ボタン */
+.photo-dialog__close {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--text);
+    box-shadow: var(--shadow);
+}

@@ -117,6 +117,13 @@
             </ol>
         </section>
 
+        <!-- ===== メモ（入力されているときだけ） ===== -->
+        <section class="card section-card recipe-memo" th:if="${recipe.memo}">
+            <h2 class="section-title"><span class="material-symbols-rounded">lightbulb</span>コツ・ポイント</h2>
+            <!-- recipe-memo__text：改行をそのまま表示する（CSS の pre-line） -->
+            <p class="recipe-memo__text" th:text="${recipe.memo}">豚肉に片栗粉をまぶすと…</p>
+        </section>
+
         <!-- ===== 在庫チェック（ログイン中だけ。stockCheck はログイン時だけ Controller から渡される） ===== -->
         <section class="card section-card" th:if="${stockCheck != null}">
             <h2 class="section-title">

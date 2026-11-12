@@ -17,8 +17,16 @@
         <!-- ===== プロフィール（左）と数字のまとめ（右） ===== -->
         <div class="mypage-top">
             <section class="card profile-card">
-                <!-- 7Aで作ったアバターの部品を、いちばん大きいサイズで使う -->
-                <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
+                <!-- 写真があるときだけ、押せるボタンにする（押すと下の dialog が開く） -->
+                <button th:if="${user.avatarPath != null}" type="button" class="avatar-zoom"
+                        onclick="document.getElementById('avatarDialog').showModal()" title="写真を拡大">
+                    <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
+                </button>
+                <!-- 写真が無いときは、今までどおり人のマークを表示するだけ -->
+                <!-- th:if と th:replace を同じタグに書くと th:replace が先に動いて条件が効かないので、th:block で囲む -->
+                <th:block th:if="${user.avatarPath == null}">
+                    <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
+                </th:block>
                 <p class="profile-card__name" th:text="${user.displayName}">はるお</p>
                 <p class="profile-card__id" th:text="'@' + ${user.username}">@1</p>
                 <a href="/mypage/profile" class="btn btn--outline btn--sm">
@@ -81,6 +89,20 @@
                 <article th:replace="~{fragments/recipe-card :: card(${recipe}, ${likeCounts.get(recipe.id)})}"></article>
             </th:block>
         </div>
+        <!--
+            写真の拡大表示。<dialog> は、開くまで画面に表示されない HTML の部品。
+            showModal() で開くと、画面の真ん中に表示されて、後ろが暗くなる。
+        -->
+        <dialog id="avatarDialog" class="photo-dialog" th:if="${user.avatarPath != null}"
+                onclick="if (event.target === this) this.close()">
+            <img th:src="@{/uploads/{file}(file=${user.avatarPath})}" th:alt="${user.displayName}">
+            <!-- method="dialog" のフォームのボタンを押すと、dialog が閉じる（JavaScript 不要） -->
+            <form method="dialog">
+                <button type="submit" class="photo-dialog__close" title="閉じる">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </form>
+        </dialog>        
     </main>
 </body>
 </html>

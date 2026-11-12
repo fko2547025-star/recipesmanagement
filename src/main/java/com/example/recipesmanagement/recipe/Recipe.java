@@ -75,6 +75,8 @@ public class Recipe {
     // 作り方（改行を含む文章）
     private String steps;
 
+    private String memo;
+
     // 何人分のレシピか（材料の分量は、この人数分で書かれている）
     private int servings = 2;
 
@@ -122,6 +124,9 @@ public class Recipe {
 
     public String getSteps() { return steps; }
     public void setSteps(String steps) { this.steps = steps; }
+    
+    public String getMemo() { return memo; }
+    public void setMemo(String memo) { this.memo = memo; }
 
     public int getServings() { return servings; }
     public void setServings(int servings) { this.servings = servings; }
