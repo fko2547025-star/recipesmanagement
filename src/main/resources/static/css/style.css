@@ -2798,11 +2798,6 @@ details > summary.section-title { cursor: pointer; }
     margin-bottom: 16px;
 }
 
-.stamp-nav {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
 
 /* 7日分を横に並べる */
 .stamp-week {
@@ -2882,63 +2877,6 @@ details > summary.section-title { cursor: pointer; }
     font-size: 0.9rem;
 }
 
-/* ===== ごほうび ===== */
-.rewards {
-    margin-top: 18px;
-    padding-top: 14px;
-    border-top: 1px dashed var(--border);
-}
-
-.rewards__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 10px;
-}
-
-.rewards__head strong {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.rewards__head .material-symbols-rounded { color: var(--primary); }
-
-.reward-list {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-}
-
-.reward {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: 10px 4px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    text-align: center;
-    filter: grayscale(1);          /* まだのごほうびは白黒に */
-    opacity: 0.6;
-}
-
-.reward.is-achieved {
-    background: #fff8e6;
-    border-color: #f0dfb4;
-    filter: none;
-    opacity: 1;
-}
-
-.reward__icon { font-size: 1.6rem; }
-.reward__name { font-size: 0.72rem; font-weight: 700; line-height: 1.3; }
-.reward__req { color: var(--text-muted); font-size: 0.68rem; }
 
 /* プロフィールの称号 */
 .reward-badge {
@@ -2950,17 +2888,291 @@ details > summary.section-title { cursor: pointer; }
     font-weight: 700;
 }
 
-/* ===== プロフィール写真の枠（ごほうびの特典） ===== */
-/* box-shadow を2重にして、白いすき間＋色の輪にする */
-.frame--bronze .avatar--xl { box-shadow: 0 0 0 4px #fff, 0 0 0 8px #c98a52; }
-.frame--silver .avatar--xl { box-shadow: 0 0 0 4px #fff, 0 0 0 8px #a9b1bb; }
-.frame--gold   .avatar--xl { box-shadow: 0 0 0 4px #fff, 0 0 0 8px #e5b72c, 0 0 18px rgba(229, 183, 44, 0.6); }
-.frame--rainbow .avatar--xl {
-    box-shadow: 0 0 0 4px #fff, 0 0 0 6px #e0533c, 0 0 0 8px #e5b72c, 0 0 0 10px #9cc46a, 0 0 0 12px #4a7fb5;
-}
 
 @media (max-width: 767px) {
     .stamp-week { gap: 4px; }
     .stamp-day__mark { font-size: 1.4rem; }
-    .reward-list { grid-template-columns: repeat(3, 1fr); }
+}
+
+
+/* ===== プロフィール編集：枠を選ぶ ===== */
+.frame-picker {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.frame-option { cursor: pointer; }
+
+/* 本物のラジオボタンは隠す（朝昼夜のボタンと同じやり方） */
+.frame-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.frame-option__box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 4px 10px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: #fff;
+}
+
+.frame-option__name { font-weight: 700; font-size: 0.85rem; }
+
+/* 選んでいる枠 */
+.frame-option input:checked + .frame-option__box {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* まだ使えない枠 */
+.frame-option.is-locked { cursor: not-allowed; }
+.frame-option.is-locked .frame-option__box { opacity: 0.45; filter: grayscale(1); }
+
+@media (max-width: 767px) {
+    .frame-picker { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ===== ランクの色（Apex のランクの色をイメージ） ===== */
+:root {
+    --rank-rookie:   #8a7966;
+    --rank-bronze:   #b0703f;
+    --rank-silver:   #aab4be;
+    --rank-gold:     #e1b13a;
+    --rank-platinum: #47b5b8;
+    --rank-diamond:  #3f8fe8;
+    --rank-master:   #9a55d6;
+    --rank-predator: #e0302f;
+}
+
+/*
+    ランクごとに「色」だけを変数で決めておき、枠・ラベル・バーはその変数を使う。
+    こうすると、ランクが8つあっても、色の指定は1ランク1行で済む
+*/
+.rank--rookie,   .frame--rookie   { --rank-color: var(--rank-rookie); }
+.rank--bronze,   .frame--bronze   { --rank-color: var(--rank-bronze); }
+.rank--silver,   .frame--silver   { --rank-color: var(--rank-silver); }
+.rank--gold,     .frame--gold     { --rank-color: var(--rank-gold); }
+.rank--platinum, .frame--platinum { --rank-color: var(--rank-platinum); }
+.rank--diamond,  .frame--diamond  { --rank-color: var(--rank-diamond); }
+.rank--master,   .frame--master   { --rank-color: var(--rank-master); }
+.rank--predator, .frame--predator { --rank-color: var(--rank-predator); }
+
+
+
+/* ===== 称号のラベル・料理レベルを、ランクの色にする ===== */
+.reward-badge[class*="rank--"] {
+    background: color-mix(in srgb, var(--rank-color) 15%, #fff);   /* ランクの色を薄くした背景 */
+    border: 1px solid var(--rank-color);
+    color: color-mix(in srgb, var(--rank-color) 70%, #000);        /* 少し濃くした文字 */
+}
+
+.level[class*="rank--"] .level__lv   { background: var(--rank-color); }
+.level[class*="rank--"] .level__fill { background: var(--rank-color); }
+
+/* 枠を選ぶ欄：9つになったので、入るだけ並べる */
+.frame-picker { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+
+/* プロフィール編集：今のランクの枠の案内 */
+.frame-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 6px 0 0;
+}
+
+/* ===== ランクの色から、明るい色・濃い色を作る ===== */
+/* --rank-color（ランクの色）に白・黒を混ぜて、グラデーション用の色を作る */
+[class*="rank--"],
+[class*="frame--"] {
+    --rank-light: color-mix(in srgb, var(--rank-color) 40%, #fff);
+    --rank-dark:  color-mix(in srgb, var(--rank-color) 65%, #000);
+}
+
+/* ===== アイコンの枠（金属の光沢のあるグラデーションの輪） ===== */
+/*
+    @property：CSS の変数に「角度」という型を教える。
+    型がわかると、アニメーションで 0deg → 360deg と滑らかに変化させられる（光が回る）
+*/
+@property --frame-angle {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+}
+
+/*
+    枠のしくみ：
+      border を透明にして、そこに背景のグラデーションを見せる。
+      padding-box（内側）はふつうの背景色、border-box（枠の部分）は金属っぽいグラデーション。
+      conic-gradient：中心からぐるっと一周する向きのグラデーション。明・暗を交互に置くと、金属の光沢に見える
+*/
+.avatar[class*="frame--"] {
+    --frame-width: 3px;
+    --frame-glow: 0px;
+    border: var(--frame-width) solid transparent;
+    background:
+        linear-gradient(#e7ddd2, #e7ddd2) padding-box,
+        conic-gradient(from var(--frame-angle),
+            var(--rank-light), var(--rank-color) 20%, var(--rank-dark) 35%,
+            var(--rank-color) 50%, var(--rank-light) 65%, var(--rank-dark) 85%, var(--rank-light)) border-box;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.12),                      /* 枠の外側の細い影（輪郭をくっきり） */
+        0 0 var(--frame-glow) var(--rank-color);            /* 光（プラチナ以上） */
+}
+
+/* アイコンの大きさに合わせて、枠の太さを変える */
+.avatar--sm[class*="frame--"] { --frame-width: 2px; }
+.avatar--md[class*="frame--"] { --frame-width: 3px; }
+.avatar--xl[class*="frame--"] { --frame-width: 6px; }
+
+/* 光る：プラチナ（Lv.5）から。上のランクほど強く */
+.avatar.frame--platinum { --frame-glow: 8px; }
+.avatar.frame--diamond  { --frame-glow: 12px; }
+.avatar.frame--master   { --frame-glow: 16px; }
+.avatar.frame--predator { --frame-glow: 20px; }
+.avatar--xl.frame--platinum { --frame-glow: 16px; }
+.avatar--xl.frame--diamond  { --frame-glow: 22px; }
+.avatar--xl.frame--master   { --frame-glow: 28px; }
+.avatar--xl.frame--predator { --frame-glow: 34px; }
+
+/* 光が輪の上を回る：ダイヤ（Lv.6）から。プレデターは速く */
+@keyframes frame-spin {
+    to { --frame-angle: 360deg; }
+}
+
+.avatar.frame--diamond,
+.avatar.frame--master   { animation: frame-spin 5s linear infinite; }
+.avatar.frame--predator { animation: frame-spin 2.5s linear infinite; }
+
+/* 動きを減らす設定にしている人には、アニメーションを止める（目が疲れる人への配慮） */
+@media (prefers-reduced-motion: reduce) {
+    .avatar[class*="frame--"] { animation: none; }
+}
+
+
+
+/* 称号のラベルの中のエンブレムと文字を、横に並べる */
+.reward-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 料理レベルの見出しのエンブレム */
+.level__icon {
+    display: inline-flex;
+    font-size: 0;      /* 前の絵文字用の大きさを打ち消す */
+}
+
+
+/* 料理レベルのカード：Lv.8 は参考画像のように金色の帯で目立たせる */
+.level.rank--predator {
+    background: linear-gradient(90deg, #fff1cf, #fffaf0 70%);
+    border: 1px solid #f0d58a;
+    box-shadow: 0 0 16px rgba(240, 199, 74, 0.35);
+}
+
+/* ===== ランクのエンブレム（画像） ===== */
+.rank-emblem {
+    flex-shrink: 0;
+    object-fit: contain;     /* 縦横の比率を保ったまま、枠に収める */
+}
+
+
+/* 称号のラベルの中のエンブレム：ラベルの高さに収める */
+.reward-badge .rank-emblem {
+    width: 22px;
+    height: 22px;
+}
+
+/* Lv.8 だけ、ラベルの縁から少しだけ大きく出す（上下に余白を取らずに、ラベルの高さは変えない） */
+.reward-badge .rank-emblem.rank--predator {
+    width: 26px;
+    height: 26px;
+    margin: -4px 0 -4px -4px;
+}
+
+/* ===== エンブレムの光（プラチナ＝Lv.5 から） ===== */
+/*
+    drop-shadow：画像の「形にそって」影や光を付ける（透明な部分には付かない）。
+    色はランクの色（--rank-color）を使うので、プラチナは青緑、ダイヤは青…と自動で変わる
+*/
+.rank-emblem.rank--platinum,
+.rank-emblem.rank--diamond,
+.rank-emblem.rank--master,
+.rank-emblem.rank--predator {
+    --glow-size: 6px;
+    filter: drop-shadow(0 0 var(--glow-size) var(--rank-color));
+    animation: emblem-glow 2.4s ease-in-out infinite;
+}
+
+/* 上のランクほど強く光る */
+.rank-emblem.rank--diamond  { --glow-size: 8px; }
+.rank-emblem.rank--master   { --glow-size: 10px; }
+.rank-emblem.rank--predator { --glow-size: 12px; animation-duration: 1.6s; }   /* プレデターは速く脈打つ */
+
+/* 光の強さを、ゆっくり大きく・小さくする */
+@keyframes emblem-glow {
+    0%, 100% { filter: drop-shadow(0 0 calc(var(--glow-size) * 0.5) var(--rank-color)); }
+    50%      { filter: drop-shadow(0 0 var(--glow-size) var(--rank-color))
+                       drop-shadow(0 0 calc(var(--glow-size) * 0.4) #fff); }
+}
+
+/* 称号のラベルの中は小さいので、光も控えめにする */
+.reward-badge .rank-emblem.rank--platinum,
+.reward-badge .rank-emblem.rank--diamond,
+.reward-badge .rank-emblem.rank--master,
+.reward-badge .rank-emblem.rank--predator {
+    --glow-size: 4px;
+}
+
+/* 動きを減らす設定の人には、光は付けたまま、脈打つ動きだけ止める */
+@media (prefers-reduced-motion: reduce) {
+    .rank-emblem { animation: none; }
+}
+
+/* ===== マイページのプロフィールのカード：称号と2つのボタンの大きさをそろえる ===== */
+/* 3つとも同じ幅・同じ高さにする（数字を変えるときは、ここだけ変えればよい） */
+.profile-card {
+    --profile-btn-width: 220px;
+    --profile-btn-height: 44px;
+}
+
+.profile-card .btn,
+.profile-card .reward-badge {
+    box-sizing: border-box;              /* 枠線の太さも含めて、幅と高さをそろえる */
+    width: var(--profile-btn-width);
+    height: var(--profile-btn-height);
+    padding: 0 16px;                     /* 高さは height で決めるので、上下の余白は 0 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: var(--radius-pill);
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+/* ボタンのアイコン */
+.profile-card .btn .material-symbols-rounded {
+    font-size: 1.25rem;
+}
+
+
+/* 称号の中のエンブレム：ラベルの高さに収まる大きさ */
+.profile-card .reward-badge .rank-emblem {
+    width: 30px;
+    height: 30px;
+}
+
+/* Lv.8 は羽と王冠がある分、少しだけ大きく。はみ出した分はマイナスの余白で打ち消して、高さは変えない */
+.profile-card .reward-badge .rank-emblem.rank--predator {
+    width: 36px;
+    height: 36px;
+    margin: -3px 0;
 }

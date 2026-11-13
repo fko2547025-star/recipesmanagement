@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
+import com.example.recipesmanagement.mypage.CookingRecordService;
 
 import com.example.recipesmanagement.like.LikeRepository;
 import com.example.recipesmanagement.recipe.RecipeRepository;
@@ -26,13 +27,16 @@ public class UserPageController {
     private final AppUserRepository userRepository;
     private final RecipeRepository recipeRepository;
     private final LikeRepository likeRepository;
+    private final CookingRecordService cookingRecordService;
 
     public UserPageController(AppUserRepository userRepository,
                               RecipeRepository recipeRepository,
-                              LikeRepository likeRepository) {
+                              LikeRepository likeRepository,
+                              CookingRecordService cookingRecordService) {
         this.userRepository = userRepository;
         this.recipeRepository = recipeRepository;
         this.likeRepository = likeRepository;
+        this.cookingRecordService = cookingRecordService;
     }
 
     /**
@@ -55,6 +59,7 @@ public class UserPageController {
         model.addAttribute("postCount", recipeRepository.countByUser(user));
         model.addAttribute("receivedLikeCount", likeRepository.countByRecipe_User(user));
         model.addAttribute("likeCounts", likeRepository.countAllByRecipe());
+        model.addAttribute("level", cookingRecordService.level(user));   // その人の料理レベル（称号）
         return "users/show";
     }
 }

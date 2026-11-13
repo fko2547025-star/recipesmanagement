@@ -3,13 +3,16 @@
 <body>
     <!--
         ユーザーのアイコン（丸い写真）。プロフィール写真が無ければ人のマークを出す。
+        その人の料理レベルのランクの色の枠を、自動で付ける（frame--gold など）。
+        ${@cookingRecordService.rankOf(user)}：@ を付けると、Spring の Bean のメソッドを画面から呼べる
         使い方：<span th:replace="~{fragments/avatar :: avatar(${recipe.user}, 'avatar--sm')}"></span>
-          1つ目の引数：ユーザー（AppUser）
-          2つ目の引数：大きさのクラス（avatar--sm / avatar--md / avatar--xl。'' ならふつうの大きさ）
     -->
-    <span th:fragment="avatar(user, size)" class="avatar" th:classappend="${size}">
+    <span th:fragment="avatar(user, size)" class="avatar"
+          th:classappend="${size} + (${user != null} ? ' frame--' + ${@cookingRecordService.rankOf(user)} : '')">
+        <!-- 写真があれば写真 -->
         <img th:if="${user != null and user.avatarPath != null}"
              th:src="@{/uploads/{file}(file=${user.avatarPath})}" alt="">
+        <!-- 写真が無ければ、人のマーク -->
         <span th:unless="${user != null and user.avatarPath != null}"
               class="material-symbols-rounded">person</span>
     </span>

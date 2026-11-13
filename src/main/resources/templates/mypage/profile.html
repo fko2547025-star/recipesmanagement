@@ -24,8 +24,7 @@
 
             <!-- ===== プロフィール写真 ===== -->
             <div class="profile-form__avatar">
-                <span class="avatar avatar--xl">
-                    <!-- 今の写真。無ければ隠しておき、写真を選んだらここに表示する -->
+                <span class="avatar avatar--xl" th:classappend="'frame--' + ${level.rank}">
                     <img id="avatarPreview" alt=""
                          th:src="${user.avatarPath != null} ? @{/uploads/{file}(file=${user.avatarPath})} : ''"
                          th:classappend="${user.avatarPath == null} ? 'is-hidden'">
@@ -33,7 +32,6 @@
                           th:classappend="${user.avatarPath != null} ? 'is-hidden'">person</span>
                 </span>
 
-                <!-- ボタンの形の label の中に、見えないファイル選択欄を入れている（label を押すと選択欄が開く） -->
                 <label class="btn btn--outline btn--sm">
                     <span class="material-symbols-rounded">photo_camera</span>写真を選ぶ
                     <input type="file" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif"
@@ -47,7 +45,6 @@
             <!-- ===== ニックネーム ===== -->
             <div class="form-field">
                 <label for="nickname">ニックネーム</label>
-                <!-- th:attr：好きな属性に値を入れる。最大文字数は Java の定数と同じにしておく -->
                 <input type="text" id="nickname" name="nickname" th:value="${nickname}"
                        th:attr="maxlength=${nicknameMax}" placeholder="例：はるお">
                 <small class="field-hint"
@@ -57,7 +54,7 @@
             </div>
 
             <div class="form-field">
-                <label>ユーザーID（ログイン用・変更できません）</label>
+                <label>ユーザー名（ログイン用・変更できません）</label>
                 <input type="text" th:value="${user.username}" disabled>
             </div>
 
@@ -65,6 +62,7 @@
                 <button type="submit" class="btn--wide">保存する</button>
                 <a href="/mypage" class="btn btn--outline">キャンセル</a>
             </div>
+
             <!-- パスワードの変更は別の画面で行う -->
             <p class="profile-form__password">
                 <a href="/mypage/password">
@@ -75,7 +73,7 @@
     </main>
 
     <script>
-        // 選んだ写真をその場で丸の中に表示する（まだ保存はしない）。レシピ投稿の previewPhoto と同じ仕組み
+        // 選んだ写真をその場で丸の中に表示する（まだ保存はしない）
         function previewAvatar(input) {
             const file = input.files[0];
             if (!file) {

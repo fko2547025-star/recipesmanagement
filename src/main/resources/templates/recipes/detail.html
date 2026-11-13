@@ -167,6 +167,8 @@
                 <a th:href="@{/users/{id}(id=${recipe.user.id})}" class="author-link">
                     <span th:replace="~{fragments/avatar :: avatar(${recipe.user}, 'avatar--md')}"></span>
                     <strong th:text="${recipe.user.displayName}">さくら</strong>
+                    <!-- 投稿者の称号（料理レベル） -->
+                    <span th:replace="~{fragments/rank :: badge(${authorLevel})}"></span>
                 </a>
 
                 <!-- 日時（投稿・更新を横に並べて、右の端に置く） -->

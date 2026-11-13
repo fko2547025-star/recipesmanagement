@@ -31,13 +31,10 @@ public interface MealPlanRepository extends JpaRepository<MealPlan, Long> {
     /** 「作った」献立の数（料理レベルのポイント用） */
     long countByUserAndCookedTrue(AppUser user);
 
-    /** 期間内の「作った」献立（スタンプカード用） */
-    List<MealPlan> findByUserAndCookedTrueAndPlanDateBetween(AppUser user, LocalDate from, LocalDate to);
-
     /**
-     * 「作った」献立がある日の数（同じ日に2つ作っても1日）。ごほうびの判定に使う。
-     * COUNT(DISTINCT 列)：重複を除いて数える
+     * 「作った」献立がある日付の一覧（同じ日は1つにまとめる）。
+     * 今週のスタンプと、目標を達成した週の数（ボーナスポイント）の計算に使う。
      */
-    @Query("SELECT COUNT(DISTINCT m.planDate) FROM MealPlan m WHERE m.user = :user AND m.cooked = true")
-    long countCookedDays(@Param("user") AppUser user);
+    @Query("SELECT DISTINCT m.planDate FROM MealPlan m WHERE m.user = :user AND m.cooked = true")
+    List<LocalDate> findCookedDates(@Param("user") AppUser user);
 }

@@ -24,6 +24,7 @@ import com.example.recipesmanagement.like.LikeRepository;
 import com.example.recipesmanagement.stock.StockCheckItem;
 import com.example.recipesmanagement.stock.StockCheckService;
 import com.example.recipesmanagement.stock.IngredientNameMatcher;
+import com.example.recipesmanagement.mypage.CookingRecordService;
 
 /**
  * レシピ関係の画面を担当するコントローラー。
@@ -50,19 +51,22 @@ public class RecipeController {
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
     private final StockCheckService stockCheckService;
+    private final CookingRecordService cookingRecordService;
 
     public RecipeController(RecipeRepository repository,
                             RecipeService recipeService,
                             AppUserRepository userRepository,
                             LikeRepository likeRepository,
                             CommentRepository commentRepository,
-                            StockCheckService stockCheckService) {
+                            StockCheckService stockCheckService,
+                            CookingRecordService cookingRecordService) {
         this.repository = repository;
         this.recipeService = recipeService;
         this.userRepository = userRepository;
         this.likeRepository = likeRepository;
         this.commentRepository = commentRepository;
         this.stockCheckService = stockCheckService;
+        this.cookingRecordService = cookingRecordService;
     }
 
     /**
@@ -163,6 +167,7 @@ public class RecipeController {
         model.addAttribute("likeCount", likeRepository.countByRecipe(recipe));
         model.addAttribute("liked", liked);
         model.addAttribute("comments", commentRepository.findByRecipeOrderByIdAsc(recipe));
+        model.addAttribute("authorLevel", cookingRecordService.level(recipe.getUser()));   // 投稿者の称号
         return "recipes/detail";
     }
 

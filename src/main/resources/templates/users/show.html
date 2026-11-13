@@ -15,6 +15,8 @@
                 <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
                 <p class="profile-card__name" th:text="${user.displayName}">じろう</p>
                 <p class="profile-card__id" th:text="'@' + ${user.username}">@jiro</p>
+                <!-- その人の称号（料理レベル） -->
+                <span th:replace="~{fragments/rank :: badge(${level})}"></span>
             </section>
 
             <section class="card stats-card">

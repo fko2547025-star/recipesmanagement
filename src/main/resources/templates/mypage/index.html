@@ -9,29 +9,28 @@
             <span class="material-symbols-rounded is-filled">person</span>マイページ
         </h1>
 
-        <!-- プロフィールを更新したあとのメッセージ（7Aで渡したフラッシュ属性） -->
+        <!-- プロフィール・パスワードを更新したあとのメッセージ（フラッシュ属性） -->
         <div th:if="${message}" class="alert alert--success">
             <span class="material-symbols-rounded">check_circle</span><span th:text="${message}">更新しました</span>
         </div>
 
-        <!-- ===== プロフィール（左）と数字のまとめ（右） ===== -->
+        <!-- ===== プロフィール（左）と数字のまとめ・料理レベル（右） ===== -->
         <div class="mypage-top">
-            <section class="card profile-card" th:classappend="${rewards.frame != null} ? 'frame--' + ${rewards.frame}">
-                <!-- 写真があるときだけ、押せるボタンにする（押すと下の dialog が開く） -->
+            <section class="card profile-card">
+                <!-- 写真があるときだけ、押せるボタンにする（押すと下の dialog で拡大） -->
                 <button th:if="${user.avatarPath != null}" type="button" class="avatar-zoom"
                         onclick="document.getElementById('avatarDialog').showModal()" title="写真を拡大">
                     <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
                 </button>
-                <!-- 写真が無いときは、今までどおり人のマークを表示するだけ -->
-                <!-- th:if と th:replace を同じタグに書くと th:replace が先に動いて条件が効かないので、th:block で囲む -->
+                <!-- th:if と th:replace を同じタグに書くと th:replace が先に動くので、th:block で囲む -->
                 <th:block th:if="${user.avatarPath == null}">
                     <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
                 </th:block>
+
                 <p class="profile-card__name" th:text="${user.displayName}">はるお</p>
                 <p class="profile-card__id" th:text="'@' + ${user.username}">@1</p>
-                <!-- いちばん最近もらったごほうびを、称号のように表示 -->
-                <span th:if="${rewards.latest != null}" class="reward-badge"
-                    th:text="${rewards.latest.icon} + ' ' + ${rewards.latest.name}">🍳 1週間の料理人</span><br>
+                <!-- 称号（エンブレム＋料理レベル） -->
+                <span th:replace="~{fragments/rank :: badge(${level})}"></span>
                 <a href="/mypage/profile" class="btn btn--outline btn--sm">
                     <span class="material-symbols-rounded">manage_accounts</span>プロフィール編集
                 </a>
@@ -59,50 +58,42 @@
                         <strong class="stat__value" th:text="${commentCount}">27</strong>
                     </div>
                 </div>
-                <!-- ===== 料理レベル ===== -->
-                <div class="level">
+
+                <!-- ===== 料理レベル（＝称号） ===== -->
+                <div class="level" th:classappend="'rank--' + ${level.rank}">
                     <div class="level__head">
-                        <span class="level__icon" th:text="${level.icon}">🍳</span>
+                        <span class="level__icon">
+                            <svg th:replace="~{fragments/rank :: emblem(${level}, 44)}"></svg>
+                        </span>
                         <span class="level__lv" th:text="'Lv.' + ${level.level}">Lv.2</span>
                         <strong class="level__title" th:text="${level.title}">家庭の料理人</strong>
                         <span class="level__points" th:text="${level.points} + 'pt'">56pt</span>
                     </div>
-                    <!-- バー：長さを % で指定する。th:style で、計算した値を style に入れる -->
                     <div class="level__bar">
                         <span class="level__fill" th:style="'width: ' + ${level.progressPercent} + '%'"></span>
                     </div>
                     <small class="level__next" th:if="${!level.max}"
-                        th:text="'次の「' + ${level.nextTitle} + '」まで あと ' + ${level.pointsToNext} + 'pt'">次の「頼れるシェフ」まで あと 24pt</small>
+                           th:text="'次の「' + ${level.nextTitle} + '」まで あと ' + ${level.pointsToNext} + 'pt'">次の「頼れるシェフ」まで あと 24pt</small>
                     <small class="level__next" th:if="${level.max}">最高レベルに到達しました！</small>
-                    <!-- ポイントのもらい方 -->
-                    <small class="level__hint">投稿 +10pt ／ いいねをもらう +5pt ／ 献立で「作った」 +3pt</small>
+                    <small class="level__hint">投稿 +10pt ／ いいねをもらう +5pt ／ 献立で「作った」 +3pt ／ 今週の目標達成 +5pt</small>
                 </div>
             </section>
         </div>
-        <!-- ===== 1週間の料理スタンプ ===== -->
-        <!-- id="stamp"：週を移動したあと、この位置までスクロールして戻ってくる -->
-        <section class="card stamp-card" id="stamp">
+
+        <!-- ===== 今週の料理スタンプ ===== -->
+        <section class="card stamp-card">
             <div class="stamp-card__head">
                 <h2 class="section-title">
-                    <span class="material-symbols-rounded">approval</span>料理スタンプ
+                    <span class="material-symbols-rounded">approval</span>今週の料理スタンプ
                 </h2>
-
-                <!-- 週の移動。今のタブは残したまま、週だけ変える -->
-                <div class="stamp-nav">
-                    <a th:href="@{/mypage(tab=${tab},week=${stampCard.prevWeek})} + '#stamp'" class="icon-btn" title="先週">
-                        <span class="material-symbols-rounded">chevron_left</span></a>
-                    <strong th:text="${#temporals.format(stampCard.weekStart, 'M/d')} + ' 〜 ' + ${#temporals.format(stampCard.weekEnd, 'M/d')}">11/9 〜 11/15</strong>
-                    <a th:href="@{/mypage(tab=${tab},week=${stampCard.nextWeek})} + '#stamp'" class="icon-btn" title="来週">
-                        <span class="material-symbols-rounded">chevron_right</span></a>
-                    <a th:unless="${stampCard.currentWeek}" th:href="@{/mypage(tab=${tab})} + '#stamp'"
-                    class="btn btn--outline btn--sm">今週</a>
-                </div>
+                <span class="text-muted"
+                      th:text="${#temporals.format(stampCard.weekStart, 'M/d')} + ' 〜 ' + ${#temporals.format(stampCard.weekEnd, 'M/d')}">11/9 〜 11/15</span>
             </div>
 
             <!-- 月〜日の7日分 -->
             <div class="stamp-week">
                 <div th:each="day : ${stampCard.days}" class="stamp-day"
-                    th:classappend="(${day.cooked} ? 'is-cooked ' : '') + (${day.today} ? 'is-today ' : '') + (${day.future} ? 'is-future' : '')">
+                     th:classappend="(${day.cooked} ? 'is-cooked ' : '') + (${day.today} ? 'is-today ' : '') + (${day.future} ? 'is-future' : '')">
                     <span class="stamp-day__dow" th:text="${#temporals.format(day.date, 'E')}">月</span>
                     <span class="stamp-day__circle">
                         <span th:if="${day.cooked}" class="stamp-day__mark">🍳</span>
@@ -112,41 +103,19 @@
                 </div>
             </div>
 
-            <!-- 1週間の目標 -->
+            <!-- 今週の目標 -->
             <div class="stamp-goal">
                 <div class="stamp-goal__text">
                     <span th:if="${!stampCard.goalAchieved}"
-                        th:text="'今週の目標：' + ${stampCard.goal} + '日作る（' + ${stampCard.cookedDays} + ' / ' + ${stampCard.goal} + '）'">今週の目標：5日作る（3 / 5）</span>
-                    <strong th:if="${stampCard.goalAchieved}" class="text-success">🎉 この週の目標達成！</strong>
+                          th:text="'今週の目標：' + ${stampCard.goal} + '日作る（' + ${stampCard.cookedDays} + ' / ' + ${stampCard.goal} + '）あと' + (${stampCard.goal} - ${stampCard.cookedDays}) + '日で +5pt'">今週の目標：5日作る（3 / 5）あと2日で +5pt</span>
+                    <strong th:if="${stampCard.goalAchieved}" class="text-success">🎉 今週の目標達成！ +5pt</strong>
                     <span class="text-muted" th:text="'連続 ' + ${stampCard.streak} + '日'">連続 5日</span>
                 </div>
                 <div class="level__bar">
                     <span class="level__fill" th:style="'width: ' + ${stampCard.goalPercent} + '%'"></span>
                 </div>
             </div>
-
-            <!-- ===== ごほうび ===== -->
-            <div class="rewards">
-                <div class="rewards__head">
-                    <strong>
-                        <span class="material-symbols-rounded">redeem</span>ごほうび
-                        <small class="text-muted" th:text="'（スタンプ合計 ' + ${rewards.totalStamps} + '個）'">（スタンプ合計 8個）</small>
-                    </strong>
-                    <small th:if="${rewards.next != null}"
-                        th:text="'次の「' + ${rewards.next.name} + '」まで あと ' + ${rewards.stampsToNext} + '個'">次の「台所の常連」まで あと 7個</small>
-                    <small th:if="${rewards.next == null}" class="text-success">すべてのごほうびを集めました！</small>
-                </div>
-
-                <!-- もらえたものは色付き、まだのものは灰色で必要な数を表示 -->
-                <ul class="reward-list">
-                    <li th:each="item : ${rewards.items}" class="reward" th:classappend="${item.achieved} ? 'is-achieved'"
-                        th:title="${item.reward.bonus}">
-                        <span class="reward__icon" th:text="${item.achieved} ? ${item.reward.icon} : '🔒'">🥄</span>
-                        <span class="reward__name" th:text="${item.reward.name}">はじめの一歩</span>
-                        <small class="reward__req" th:text="${item.reward.required} + '個'">3個</small>
-                    </li>
-                </ul>
-            </div>
+            <p class="note">献立で「作った」にした日に、スタンプが押されます。</p>
         </section>
 
         <!-- ===== 一覧の切り替え（データを変えないので、ただのリンク＝GET） ===== -->
@@ -162,10 +131,7 @@
             </a>
         </nav>
 
-        <!--
-            レシピが無いとき。th:switch / th:case：Java の switch 文と同じ
-            タブごとにメッセージを変える。th:case="*" は default（どれにも当てはまらないとき）
-        -->
+        <!-- レシピが無いとき。タブごとにメッセージを変える（th:switch / th:case） -->
         <div th:if="${#lists.isEmpty(recipes)}" class="empty card" th:switch="${tab}">
             <span class="material-symbols-rounded empty__icon">menu_book</span>
             <p th:case="'liked'">いいねしたレシピはまだありません</p>
@@ -176,26 +142,23 @@
             </a>
         </div>
 
-        <!-- ステップ3で作ったレシピカードをそのまま使い回す -->
+        <!-- レシピカードの部品を使い回す -->
         <div class="recipe-grid">
             <th:block th:each="recipe : ${recipes}">
                 <article th:replace="~{fragments/recipe-card :: card(${recipe}, ${likeCounts.get(recipe.id)})}"></article>
             </th:block>
         </div>
-        <!--
-            写真の拡大表示。<dialog> は、開くまで画面に表示されない HTML の部品。
-            showModal() で開くと、画面の真ん中に表示されて、後ろが暗くなる。
-        -->
+
+        <!-- 写真の拡大表示（写真があるときだけ） -->
         <dialog id="avatarDialog" class="photo-dialog" th:if="${user.avatarPath != null}"
                 onclick="if (event.target === this) this.close()">
             <img th:src="@{/uploads/{file}(file=${user.avatarPath})}" th:alt="${user.displayName}">
-            <!-- method="dialog" のフォームのボタンを押すと、dialog が閉じる（JavaScript 不要） -->
             <form method="dialog">
                 <button type="submit" class="photo-dialog__close" title="閉じる">
                     <span class="material-symbols-rounded">close</span>
                 </button>
             </form>
-        </dialog>        
+        </dialog>
     </main>
 </body>
 </html>

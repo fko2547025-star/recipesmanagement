@@ -41,4 +41,6 @@ public class AppUser {
     public String getDisplayName() {
         return (nickname != null && !nickname.isBlank()) ? nickname : username;
     }
+
+
 }

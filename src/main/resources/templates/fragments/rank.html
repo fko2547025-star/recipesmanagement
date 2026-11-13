@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!--
+        ランクのエンブレム（画像）。レベルの数字のファイル（rank-1.png 〜 rank-8.png）を表示する。
+        使い方：<svg th:replace="~{fragments/rank :: emblem(${level}, 56)}"></svg>
+        （呼び出す側のタグは何でもよい。th:replace でこの img に丸ごと入れ替わる）
+    -->
+    <img th:fragment="emblem(level, size)" class="rank-emblem" th:classappend="'rank--' + ${level.rank}"
+        th:src="@{/images/ranks/rank-{n}.png(n=${level.level})}"
+        th:attr="width=${size},height=${size}" th:alt="${level.title}">
+
+    <!--
+        称号のラベル（エンブレム＋「Lv.3 台所の常連」）。
+        使い方：<span th:replace="~{fragments/rank :: badge(${level})}"></span>
+    -->
+    <span th:fragment="badge(level)" class="reward-badge" th:classappend="'rank--' + ${level.rank}">
+        <svg th:replace="~{:: emblem(${level}, 24)}"></svg>
+        <span th:text="${level.label}">Lv.3 台所の常連</span>
+    </span>
+</body>
+</html>

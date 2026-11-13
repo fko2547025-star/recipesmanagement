@@ -12,7 +12,7 @@ import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
 
 /**
- * プロフィール（ニックネーム・写真）の変更を担当するクラス。
+ * プロフィール（ニックネーム・写真・アイコンの枠）の変更を担当するクラス。
  */
 @Service
 public class ProfileService {
@@ -28,9 +28,6 @@ public class ProfileService {
         this.imageStorageService = imageStorageService;
     }
 
-    /**
-     * 入力チェック。問題があればエラーメッセージのリストを返す（無ければ空のリスト）。
-     */
     public List<String> validate(String nickname, MultipartFile avatar) {
         List<String> errors = new ArrayList<>();
         if (nickname != null && nickname.trim().length() > NICKNAME_MAX) {
@@ -46,12 +43,12 @@ public class ProfileService {
      * プロフィールを更新する。
      *
      * @param username     ログイン中のユーザー名（自分のプロフィールしか変えられないようにする）
-     * @param nickname     新しいニックネーム。空なら null にして、ユーザー名を表示する状態に戻す
-     * @param avatar       新しい写真（選ばれていなければ空）
      * @param removeAvatar 「写真を削除する」にチェックがあれば true
+     * @param avatarFrame  選んだ枠の key（validate で確認済み）
      */
     @Transactional
-    public void update(String username, String nickname, MultipartFile avatar, boolean removeAvatar) {
+    public void update(String username, String nickname, MultipartFile avatar,
+                       boolean removeAvatar) {
         AppUser user = userRepository.findByUsername(username).orElseThrow();
 
         user.setNickname(nickname == null || nickname.isBlank() ? null : nickname.trim());
@@ -63,8 +60,7 @@ public class ProfileService {
             user.setAvatarPath(null);                               // 写真を外す
         }
 
-        // save() は書かなくてよい：@Transactional の中で取得した Entity は、
-        // 値を変えるとメソッドの終わりに自動で UPDATE される（RecipeService の update と同じ）
+        // save() 不要：変更検知で自動的に UPDATE される
 
         // 使われなくなった古い写真ファイルを削除する
         if (oldAvatar != null && !oldAvatar.equals(user.getAvatarPath())) {
