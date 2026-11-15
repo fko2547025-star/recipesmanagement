@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
@@ -35,23 +36,28 @@ public class CommentController {
     }
 
     /**
-     * コメントを投稿する。
+     * コメント（またはつくれぽ）を投稿する。
      *
-     * @param redirectAttributes リダイレクト先に値を渡すための入れ物
+     * @param image        name="image" の写真（選ばれていなければ空）
+     * @param cookedReport 「作りました」のチェック。チェックが無いと送られてこないので、無ければ false
      */
     @PostMapping("/recipes/{id:\\d+}/comments")
     public String create(@PathVariable Long id,
-                         @RequestParam String content,
-                         Principal principal,
-                         RedirectAttributes redirectAttributes) {
+                        @RequestParam String content,
+                        @RequestParam(value = "image", required = false) MultipartFile image,
+                        @RequestParam(defaultValue = "false") boolean cookedReport,
+                        Principal principal,
+                        RedirectAttributes redirectAttributes) {
 
-        String error = commentService.validate(content);
+        String error = commentService.validate(content, image);
         if (error != null) {
             // エラーメッセージと入力内容を、リダイレクト先の詳細画面に1回だけ渡す
+            // （写真はリダイレクトで持ち越せないので、もう一度選んでもらう）
             redirectAttributes.addFlashAttribute("commentError", error);
             redirectAttributes.addFlashAttribute("commentDraft", content);
+            redirectAttributes.addFlashAttribute("commentReport", cookedReport);
         } else {
-            commentService.create(id, content, currentUser(principal));
+            commentService.create(id, content, image, cookedReport, currentUser(principal));
         }
         return "redirect:/recipes/" + id + "#comments";
     }

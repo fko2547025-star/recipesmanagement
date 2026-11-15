@@ -147,7 +147,7 @@ public class MealPlanService {
     @Transactional(readOnly = true)
     public List<CookingLine> previewCooking(Long id, AppUser user) {
         MealPlan plan = findCookable(id, user);
-        return cookingService.plan(plan.getRecipe(), user);
+        return cookingService.plan(plan.getRecipe(), user, plan.getFactor());
     }
 
     /**
@@ -162,7 +162,7 @@ public class MealPlanService {
     public List<CookingLine> cook(Long id, AppUser user) {
         MealPlan plan = findCookable(id, user);
 
-        List<CookingLine> lines = cookingService.plan(plan.getRecipe(), user);
+        List<CookingLine> lines = cookingService.plan(plan.getRecipe(), user, plan.getFactor());
         for (CookingLine line : lines) {
             for (CookingLine.Deduction d : line.getDeductions()) {
                 d.apply();   // 在庫を減らす（変更検知で自動的に UPDATE）
@@ -198,7 +198,11 @@ public class MealPlanService {
             recipe = recipeRepository.findById(form.getRecipeId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
         }
+
         plan.setRecipe(recipe);
+
+        // 人数はレシピがあるときだけ使う（メモだけの献立には人数がいらない）
+        plan.setServings(recipe != null ? form.getServings() : null);
 
         String memo = form.getMemo();
         plan.setMemo(memo == null || memo.isBlank() ? null : memo.trim());

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('買ったものを在庫に追加')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container">
+        <a th:href="@{/meal-plans/shopping(date=${date})}" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>買い物リストに戻る
+        </a>
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">add_shopping_cart</span>買ったものを在庫に追加
+        </h1>
+        <p class="note">数量・カテゴリ・期限は自動で入れています。実際に買ったものに合わせて直してから追加してください。</p>
+
+        <div th:if="${errors != null}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span>
+            <ul class="alert__list">
+                <li th:each="e : ${errors}" th:text="${e}">エラー</li>
+            </ul>
+        </div>
+
+        <form th:action="@{/ingredients/bulk}" method="post" class="card">
+            <!-- 戻り先の週（エラーのときにまた使う） -->
+            <input type="hidden" name="date" th:value="${date}">
+
+            <!-- 見出しの行（PCだけ表示） -->
+            <div class="purchase-row purchase-row--head">
+                <span>食材名</span><span>数量</span><span>単位</span><span>カテゴリ</span><span>期限の種類</span><span>期限日</span><span></span>
+            </div>
+
+            <div id="purchase-rows">
+                <!-- st.index：何行目か。数量・単位などは同じ番号の値を表示する -->
+                <div class="purchase-row" th:each="name, st : ${form.names}">
+                    <input type="text" name="names" th:value="${name}" maxlength="100" required aria-label="食材名">
+                    <input type="number" name="quantities" th:value="${form.quantities[st.index]}" step="any" min="0" required aria-label="数量">
+                    <input type="text" name="units" th:value="${form.units[st.index]}" maxlength="20" required aria-label="単位">
+                    <select name="categories" aria-label="カテゴリ">
+                        <!-- categories・categoryIcons は Controller の @ModelAttribute から -->
+                        <option th:each="c : ${categories}" th:value="${c}"
+                                th:selected="${c == form.categories[st.index]}"
+                                th:text="${categoryIcons.get(c)} + ' ' + ${c}">🥩 肉</option>
+                    </select>
+                    <select name="expiryTypes" aria-label="期限の種類">
+                        <option value="賞味期限" th:selected="${form.expiryTypes[st.index] == '賞味期限'}">賞味期限</option>
+                        <option value="消費期限" th:selected="${form.expiryTypes[st.index] == '消費期限'}">消費期限</option>
+                    </select>
+                    <input type="date" name="expiryDates" th:value="${form.expiryDates[st.index]}" required aria-label="期限日">
+                    <!-- この行をやめる（追加しない） -->
+                    <button type="button" class="icon-btn icon-btn--danger" onclick="removeRow(this)" title="この食材は追加しない">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn--wide">
+                    <span class="material-symbols-rounded">kitchen</span>在庫に追加する
+                </button>
+                <a th:href="@{/meal-plans/shopping(date=${date})}" class="btn btn--outline">やめる</a>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        // 行を消す（最後の1行は消さない。追加をやめるときは「やめる」を押してもらう）
+        function removeRow(button) {
+            const rows = document.getElementById('purchase-rows');
+            if (rows.children.length > 1) {
+                button.closest('.purchase-row').remove();
+            }
+        }
+    </script>
+</body>
+</html>

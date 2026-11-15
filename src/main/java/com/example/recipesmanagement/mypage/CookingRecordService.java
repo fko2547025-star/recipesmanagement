@@ -10,11 +10,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.recipesmanagement.comment.CommentRepository;
 import com.example.recipesmanagement.like.LikeRepository;
 import com.example.recipesmanagement.mealplan.MealPlanRepository;
 import com.example.recipesmanagement.mealplan.MealPlanService;
 import com.example.recipesmanagement.recipe.RecipeRepository;
 import com.example.recipesmanagement.user.AppUser;
+import com.example.recipesmanagement.comment.CommentRepository;
 
 /**
  * 料理レベル（称号）と、今週の料理スタンプを計算するクラス。
@@ -27,17 +29,21 @@ public class CookingRecordService {
     public static final int POINT_LIKE = 5;           // 自分のレシピにいいねをもらった
     public static final int POINT_COOK = 3;           // 献立で「作った」にした
     public static final int POINT_WEEKLY_GOAL = 5;    // 1週間の目標を達成した（1週ごと）
+    public static final int POINT_REPORT = 5;
 
     private final RecipeRepository recipeRepository;
     private final LikeRepository likeRepository;
     private final MealPlanRepository mealPlanRepository;
+    private final CommentRepository commentRepository;
 
     public CookingRecordService(RecipeRepository recipeRepository,
                                 LikeRepository likeRepository,
-                                MealPlanRepository mealPlanRepository) {
+                                MealPlanRepository mealPlanRepository,
+                                CommentRepository commentRepository) {
         this.recipeRepository = recipeRepository;
         this.likeRepository = likeRepository;
         this.mealPlanRepository = mealPlanRepository;
+        this.commentRepository = commentRepository;
     }
 
     /**
@@ -49,6 +55,7 @@ public class CookingRecordService {
         long points = recipeRepository.countByUser(user) * POINT_POST
                 + likeRepository.countByRecipe_User(user) * POINT_LIKE
                 + mealPlanRepository.countByUserAndCookedTrue(user) * POINT_COOK
+                + commentRepository.countByUserAndCookedReportTrue(user) * POINT_REPORT
                 + countAchievedWeeks(cookedDates(user)) * POINT_WEEKLY_GOAL;
         return new CookingLevel((int) points);
     }

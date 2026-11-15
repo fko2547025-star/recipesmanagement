@@ -31,11 +31,10 @@ public class CookingService {
     /**
      * レシピの材料ごとに、減らす在庫を計算する。
      *
-     * 呼び出し元（MealPlanService）の @Transactional の中で呼ばれると、
-     * そのトランザクションに参加する（別のトランザクションにはならない）。
+     * @param factor 分量の倍率（作る人数 ÷ レシピの人数）。レシピどおりなら 1.0
      */
     @Transactional(readOnly = true)
-    public List<CookingLine> plan(Recipe recipe, AppUser user) {
+    public List<CookingLine> plan(Recipe recipe, AppUser user, double factor) {
         // 自分の在庫を期限が近い順に（数量0は除く）
         List<Ingredient> stock = ingredientRepository.findByUser(user, Sort.by("expiryDate")).stream()
                 .filter(i -> i.getQuantity() != null && i.getQuantity() > 0)
@@ -51,7 +50,7 @@ public class CookingService {
 
         List<CookingLine> lines = new ArrayList<>();
         for (RecipeIngredient need : recipe.getIngredients()) {
-            lines.add(planOne(need, stock, remaining));
+            lines.add(planOne(need, factor, stock, remaining));
         }
         return lines;
     }
@@ -59,9 +58,9 @@ public class CookingService {
     /**
      * 材料1つ分の計算。
      */
-    private CookingLine planOne(RecipeIngredient need, List<Ingredient> stock, Map<Long, Double> remaining) {
+    private CookingLine planOne(RecipeIngredient need, double factor, List<Ingredient> stock, Map<Long, Double> remaining) {
         String unitText = need.getUnit() != null ? need.getUnit() : "";
-        String neededText = need.getQuantityText() + unitText;
+        String neededText = need.getQuantityText(factor) + unitText;
         if (neededText.isEmpty()) {
             neededText = "-";
         }
@@ -90,7 +89,7 @@ public class CookingService {
         }
 
         // 期限が近い在庫から順に、必要な量になるまで減らす
-        double left = need.getQuantity();   // まだ減らす必要がある量
+        double left = need.getQuantity() * factor;   // まだ減らす必要がある量
         List<CookingLine.Deduction> deductions = new ArrayList<>();
 
         for (Ingredient s : sameUnit) {

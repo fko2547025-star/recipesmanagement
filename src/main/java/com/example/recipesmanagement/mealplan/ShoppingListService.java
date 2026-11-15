@@ -49,18 +49,21 @@ public class ShoppingListService {
         Map<String, Need> needs = new LinkedHashMap<>();
 
         for (MealPlan plan : plans) {
-            // 例：豚の生姜焼き（10/30）
+            double factor = plan.getFactor();   // この献立の倍率
+
+            // 例：豚の生姜焼き（10/30 夜・4人分）
             String label = plan.getRecipe().getTitle()
                 + "（" + plan.getPlanDate().getMonthValue() + "/" + plan.getPlanDate().getDayOfMonth()
-                + " " + plan.getMealType() + "）";
+                + " " + plan.getMealType() + "・" + plan.getServingsOrDefault() + "人分）";
 
             for (RecipeIngredient ri : plan.getRecipe().getIngredients()) {
                 String key = IngredientNameMatcher.normalize(ri.getName())
                         + "|" + IngredientNameMatcher.unitKey(ri.getUnit());
 
-                // computeIfAbsent：キーが無ければ新しく作って入れ、あればそれを返す
                 Need need = needs.computeIfAbsent(key, k -> new Need(ri.getName(), ri.getUnit()));
-                need.add(ri.getQuantity(), label);
+                // 量のある材料だけ倍率をかける（少々・適量は null のまま）
+                Double quantity = ri.getQuantity() != null ? ri.getQuantity() * factor : null;
+                need.add(quantity, label);
             }
         }
 

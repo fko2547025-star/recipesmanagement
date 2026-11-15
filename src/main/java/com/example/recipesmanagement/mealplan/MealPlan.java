@@ -60,6 +60,8 @@ public class MealPlan {
     // 作ったかどうか（「作った」で在庫を減らしたら true）
     private boolean cooked;
 
+    private Integer servings;
+
     // ===== getter / setter =====
 
     public Long getId() { return id; }
@@ -95,4 +97,34 @@ public class MealPlan {
 
     public boolean isCooked() { return cooked; }
     public void setCooked(boolean cooked) { this.cooked = cooked; }
+
+        public Integer getServings() { return servings; }
+    public void setServings(Integer servings) { this.servings = servings; }
+
+    /**
+     * 実際に作る人数。入力が無ければレシピの人数。
+     * レシピも人数も無ければ null（メモだけの献立など）
+     */
+    public Integer getServingsOrDefault() {
+        if (servings != null) {
+            return servings;
+        }
+        return recipe != null ? recipe.getServings() : null;
+    }
+
+    /**
+     * 材料にかける倍率（作る人数 ÷ レシピの人数）。
+     * 例：レシピ2人分を4人分作る → 2.0
+     * 人数の入力が無いときや、レシピの人数がわからないときは 1.0（レシピどおり）
+     */
+    public double getFactor() {
+        if (servings == null || recipe == null) {
+            return 1.0;
+        }
+        Integer base = recipe.getServings();
+        if (base == null || base <= 0) {
+            return 1.0;   // 0 で割らないように
+        }
+        return (double) servings / base;
+    }
 }

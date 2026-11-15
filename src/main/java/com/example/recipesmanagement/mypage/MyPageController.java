@@ -17,6 +17,7 @@ import com.example.recipesmanagement.recipe.Recipe;
 import com.example.recipesmanagement.recipe.RecipeRepository;
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
+import com.example.recipesmanagement.follow.FollowService;
 
 /**
  * マイページを担当するコントローラー。ログイン必須（SecurityConfig の anyRequest）。
@@ -42,6 +43,7 @@ public class MyPageController {
     private final ProfileService profileService;
     private final PasswordService passwordService;
     private final CookingRecordService cookingRecordService;
+    private final FollowService followService;
 
     public MyPageController(RecipeRepository recipeRepository,
                             AppUserRepository userRepository,
@@ -49,7 +51,8 @@ public class MyPageController {
                             CommentRepository commentRepository,
                             ProfileService profileService,
                             PasswordService passwordService,
-                            CookingRecordService cookingRecordService) {
+                            CookingRecordService cookingRecordService,
+                            FollowService followService) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
         this.likeRepository = likeRepository;
@@ -57,6 +60,7 @@ public class MyPageController {
         this.profileService = profileService;
         this.passwordService = passwordService;
         this.cookingRecordService = cookingRecordService;
+        this.followService = followService;
     }
 
     // ===== マイページ =====
@@ -93,6 +97,9 @@ public class MyPageController {
         // 料理レベル（称号）と、今週の料理スタンプ
         model.addAttribute("level", cookingRecordService.level(user));
         model.addAttribute("stampCard", cookingRecordService.stampCard(user));
+        // フォロワー・フォロー中の人数
+        model.addAttribute("followerCount", followService.followerCount(user));
+        model.addAttribute("followingCount", followService.followingCount(user));        
         return "mypage/index";
     }
 

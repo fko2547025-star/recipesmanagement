@@ -52,9 +52,19 @@
                 <select id="recipeId" th:field="*{recipeId}">
                     <option value="">（レシピを選ばない）</option>
                     <option th:each="r : ${recipes}" th:value="${r.id}"
+                            th:attr="data-servings=${r.servings}"
                             th:text="${r.categoryIcon} + ' ' + ${r.title}">豚の生姜焼き</option>
                 </select>
                 <small class="field-hint">自分が投稿したレシピと、いいねしたレシピから選べます</small>
+            </div>
+
+            <div class="form-field">
+                <label for="servings">何人分（任意）</label>
+                <div class="inline-field">
+                    <input type="number" id="servings" th:field="*{servings}" min="1" max="20" class="input-short">
+                    <span>人分</span>
+                </div>
+                <small class="field-hint" id="servingsHint">空欄なら、レシピに書いてある人数で作ります</small>
             </div>
 
             <div class="form-field">
@@ -69,5 +79,26 @@
             </div>
         </form>
     </main>
+    <script>
+        // レシピを選んだら、「空欄なら〇人分」の〇にそのレシピの人数を入れる
+        const recipeSelect = document.getElementById('recipeId');
+        const servingsInput = document.getElementById('servings');
+        const servingsHint = document.getElementById('servingsHint');
+
+        function updateServingsHint() {
+            // selectedOptions[0]：今選ばれている <option>。dataset.servings で data-servings の値が取れる
+            const base = recipeSelect.selectedOptions[0].dataset.servings;
+            if (base) {
+                servingsInput.placeholder = base;
+                servingsHint.textContent = '空欄なら、レシピどおり ' + base + '人分 で作ります';
+            } else {
+                servingsInput.placeholder = '';
+                servingsHint.textContent = 'レシピを選んだときだけ使います';
+            }
+        }
+
+        recipeSelect.addEventListener('change', updateServingsHint);
+        updateServingsHint();   // 画面を開いたときにも1回
+    </script>
 </body>
 </html>

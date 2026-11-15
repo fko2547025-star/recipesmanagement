@@ -29,6 +29,15 @@
 
                 <p class="profile-card__name" th:text="${user.displayName}">はるお</p>
                 <p class="profile-card__id" th:text="'@' + ${user.username}">@1</p>
+                <!-- フォロワー・フォロー中の人数（押すと一覧へ） -->
+                <p class="follow-counts">
+                    <a th:href="@{/users/{id}/followers(id=${user.id})}">
+                        <strong th:text="${followerCount}">12</strong>フォロワー
+                    </a>
+                    <a th:href="@{/users/{id}/following(id=${user.id})}">
+                        <strong th:text="${followingCount}">5</strong>フォロー中
+                    </a>
+                </p>                
                 <!-- 称号（エンブレム＋料理レベル） -->
                 <span th:replace="~{fragments/rank :: badge(${level})}"></span>
                 <a href="/mypage/profile" class="btn btn--outline btn--sm">
@@ -75,7 +84,7 @@
                     <small class="level__next" th:if="${!level.max}"
                            th:text="'次の「' + ${level.nextTitle} + '」まで あと ' + ${level.pointsToNext} + 'pt'">次の「頼れるシェフ」まで あと 24pt</small>
                     <small class="level__next" th:if="${level.max}">最高レベルに到達しました！</small>
-                    <small class="level__hint">投稿 +10pt ／ いいねをもらう +5pt ／ 献立で「作った」 +3pt ／ 今週の目標達成 +5pt</small>
+                    <small class="level__hint">投稿 +10pt ／ いいねをもらう +5pt ／ 献立で「作った」 +3pt ／ つくれぽ +5pt ／ 今週の目標達成 +5pt</small>
                 </div>
             </section>
         </div>

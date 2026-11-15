@@ -12,6 +12,7 @@ import com.example.recipesmanagement.mypage.CookingRecordService;
 
 import com.example.recipesmanagement.like.LikeRepository;
 import com.example.recipesmanagement.recipe.RecipeRepository;
+import com.example.recipesmanagement.follow.FollowService;
 
 /**
  * 投稿者のページ（ほかの人のプロフィールと、投稿したレシピの一覧）。
@@ -28,15 +29,18 @@ public class UserPageController {
     private final RecipeRepository recipeRepository;
     private final LikeRepository likeRepository;
     private final CookingRecordService cookingRecordService;
+    private final FollowService followService;
 
     public UserPageController(AppUserRepository userRepository,
                               RecipeRepository recipeRepository,
                               LikeRepository likeRepository,
-                              CookingRecordService cookingRecordService) {
+                              CookingRecordService cookingRecordService,
+                              FollowService followService) {
         this.userRepository = userRepository;
         this.recipeRepository = recipeRepository;
         this.likeRepository = likeRepository;
         this.cookingRecordService = cookingRecordService;
+        this.followService = followService;
     }
 
     /**
@@ -60,6 +64,14 @@ public class UserPageController {
         model.addAttribute("receivedLikeCount", likeRepository.countByRecipe_User(user));
         model.addAttribute("likeCounts", likeRepository.countAllByRecipe());
         model.addAttribute("level", cookingRecordService.level(user));   // その人の料理レベル（称号）
+        // ----- フォロー -----
+        // ログインしていなければ me は null（isFollowing は false を返す）
+        AppUser me = principal != null
+                ? userRepository.findByUsername(principal.getName()).orElse(null)
+                : null;
+        model.addAttribute("following", followService.isFollowing(me, user));   // 自分がこの人をフォロー中か
+        model.addAttribute("followerCount", followService.followerCount(user));
+        model.addAttribute("followingCount", followService.followingCount(user));
         return "users/show";
     }
 }

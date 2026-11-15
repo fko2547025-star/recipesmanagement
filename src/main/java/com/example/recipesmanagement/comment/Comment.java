@@ -50,6 +50,9 @@ public class Comment {
     @Column(insertable = false)
     private LocalDateTime updatedAt;
 
+    private String imagePath;
+    private boolean cookedReport;
+
     public Long getId() { return id; }
 
     public Recipe getRecipe() { return recipe; }
@@ -72,4 +75,10 @@ public class Comment {
     public boolean isEdited() {
         return updatedAt != null && !updatedAt.equals(createdAt);
     }
+
+    public String getImagePath() { return imagePath; }
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
+
+    public boolean isCookedReport() { return cookedReport; }
+    public void setCookedReport(boolean cookedReport) { this.cookedReport = cookedReport; }
 }

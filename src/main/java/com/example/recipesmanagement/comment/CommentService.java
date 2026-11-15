@@ -5,28 +5,34 @@ import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.recipesmanagement.common.ImageStorageService;
 import com.example.recipesmanagement.recipe.Recipe;
 import com.example.recipesmanagement.recipe.RecipeRepository;
 import com.example.recipesmanagement.user.AppUser;
 
 /**
- * コメントの投稿・編集・削除の処理をまとめたクラス。
+ * コメント（つくれぽを含む）の投稿・編集・削除の処理をまとめたクラス。
  */
 @Service
 public class CommentService {
 
     private final CommentRepository commentRepository;
     private final RecipeRepository recipeRepository;
+    private final ImageStorageService imageStorageService;
 
-    public CommentService(CommentRepository commentRepository, RecipeRepository recipeRepository) {
+    public CommentService(CommentRepository commentRepository,
+                          RecipeRepository recipeRepository,
+                          ImageStorageService imageStorageService) {
         this.commentRepository = commentRepository;
         this.recipeRepository = recipeRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     /**
-     * コメントの入力チェック。問題があればエラーメッセージ、無ければ null を返す。
+     * コメントの文章の入力チェック（編集でも使う）。問題があればエラーメッセージ、無ければ null。
      */
     public String validate(String content) {
         if (content == null || content.isBlank()) {
@@ -39,10 +45,27 @@ public class CommentService {
     }
 
     /**
-     * コメントを投稿する。
+     * 投稿のときの入力チェック（文章＋写真）。問題があればエラーメッセージ、無ければ null。
+     */
+    public String validate(String content, MultipartFile image) {
+        String error = validate(content);
+        if (error != null) {
+            return error;
+        }
+        if (hasFile(image) && !imageStorageService.isSupported(image)) {
+            return "写真は JPEG・PNG・WebP・GIF のいずれかを選んでください";
+        }
+        return null;
+    }
+
+    /**
+     * コメント（またはつくれぽ）を投稿する。
+     *
+     * @param image        写真（選ばれていなければ空）
+     * @param cookedReport 「作りました」にチェックがあれば true
      */
     @Transactional
-    public void create(Long recipeId, String content, AppUser user) {
+    public void create(Long recipeId, String content, MultipartFile image, boolean cookedReport, AppUser user) {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -50,6 +73,10 @@ public class CommentService {
         comment.setRecipe(recipe);
         comment.setUser(user);       // コメントした人はログイン中のユーザー
         comment.setContent(content.trim());
+        comment.setCookedReport(cookedReport);
+        if (hasFile(image)) {
+            comment.setImagePath(imageStorageService.store(image));   // レシピの写真と同じフォルダに保存
+        }
         commentRepository.save(comment);
     }
 
@@ -68,7 +95,7 @@ public class CommentService {
     }
 
     /**
-     * コメントを更新する。
+     * コメントの文章を更新する（写真と「作りました」はそのまま）。
      *
      * @return コメントしたレシピの id（更新後に詳細画面へ戻るため）
      */
@@ -82,7 +109,7 @@ public class CommentService {
     }
 
     /**
-     * コメントを削除する。
+     * コメントを削除する（写真があれば、写真のファイルも消す）。
      *
      * @return コメントしたレシピの id
      */
@@ -90,7 +117,15 @@ public class CommentService {
     public Long delete(Long commentId, AppUser user) {
         Comment comment = findOwned(commentId, user);
         Long recipeId = comment.getRecipe().getId();
+        String image = comment.getImagePath();
         commentRepository.delete(comment);
+        if (image != null) {
+            imageStorageService.delete(image);
+        }
         return recipeId;
+    }
+
+    private boolean hasFile(MultipartFile file) {
+        return file != null && !file.isEmpty();
     }
 }

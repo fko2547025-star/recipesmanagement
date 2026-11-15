@@ -26,6 +26,8 @@ public class MealPlanForm {
     // メモ
     private String memo;
 
+    private Integer servings;
+
     /**
      * 既存の献立の内容を詰めたフォームを作る（編集画面用）。
      */
@@ -35,6 +37,7 @@ public class MealPlanForm {
         form.setMealType(plan.getMealType());
         form.setRecipeId(plan.getRecipe() != null ? plan.getRecipe().getId() : null);
         form.setMemo(plan.getMemo());
+        form.setServings(plan.getServings());
         return form;
     }
 
@@ -57,6 +60,9 @@ public class MealPlanForm {
         if (memo != null && memo.trim().length() > 100) {
             errors.add("メモは100文字以内で入力してください");
         }
+        if (servings != null && (servings < 1 || servings > 20)) {
+            errors.add("人数は1〜20人分で入力してください");
+        }
         return errors;
     }
 
@@ -73,4 +79,7 @@ public class MealPlanForm {
 
     public String getMemo() { return memo; }
     public void setMemo(String memo) { this.memo = memo; }
+
+    public Integer getServings() { return servings; }
+    public void setServings(Integer servings) { this.servings = servings; }
 }

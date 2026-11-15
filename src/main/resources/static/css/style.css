@@ -1,21 +1,33 @@
 /* ==================================================
    Recipi 共通スタイル（カフェ風デザイン）
 
-   構成
-   1. 色・文字などの基本設定（CSS変数）
-   2. 全体（body・見出し・リンク）
-   3. ボタン
-   4. 入力欄
-   5. 表
-   6. カード・チップ・お知らせなどの部品
-   7. ヘッダー（スマホでは画面下のメニュー）
-   8. ログイン・新規登録画面
-   9. スマホ用の調整
+   目次（Ctrl + F で「== 番号.」を検索すると、その章に飛べる）
+   == 1.  基本設定（色・文字・大きさの変数）
+   == 2.  全体（body・見出し・リンク・アイコン）
+   == 3.  ページの枠（入れ物・ページの見出し・戻るリンク）
+   == 4.  ボタン
+   == 5.  入力欄・フォームの部品
+   == 6.  表
+   == 7.  小さな部品（カード・チップ・ラベル・お知らせ・タブ・アバター）
+   == 8.  ヘッダー（スマホでは画面下のメニュー）
+   == 9.  ログイン・新規登録
+   == 10. ホーム（ヒーロー・検索・カテゴリ・並び順）
+   == 11. レシピカード
+   == 12. ランキング
+   == 13. レシピ詳細（材料・作り方・メモ・投稿者・つくれぽ・コメント）
+   == 14. レシピ投稿フォーム
+   == 15. マイページ・プロフィール
+   == 16. 料理ランク（レベル・今週の目標・称号・枠・エンブレム）
+   == 17. 献立
+   == 18. 食材管理（一覧・作れるレシピ・在庫に追加）
+   == 19. 買い物リスト
+
+   スマホ用の調整（画面の幅が 768px 未満）は、それぞれの章の最後に書いている
    ================================================== */
 
 
 /* ==================================================
-   1. 基本設定
+   == 1. 基本設定
    --名前 は CSS変数。色を変えたいときはここだけ直せば、全画面に反映される
    ================================================== */
 :root {
@@ -46,6 +58,16 @@
     --success: #5a8a47;         /* 完了 */
     --success-bg: #e9f2e2;
 
+    /* 料理ランクの色（Apex のランクの色をイメージ） */
+    --rank-rookie:   #8a7966;
+    --rank-bronze:   #b0703f;
+    --rank-silver:   #aab4be;
+    --rank-gold:     #e1b13a;
+    --rank-platinum: #47b5b8;
+    --rank-diamond:  #3f8fe8;
+    --rank-master:   #9a55d6;
+    --rank-predator: #e0302f;
+
     /* 形 */
     --radius: 14px;
     --radius-sm: 8px;
@@ -62,7 +84,7 @@
 
 
 /* ==================================================
-   2. 全体
+   == 2. 全体
    ================================================== */
 
 /* 余白の計算に枠線も含める（幅の指定どおりの大きさになる） */
@@ -78,43 +100,6 @@ body {
     font-size: 15px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
-}
-
-/*
-   ページの中身の幅をそろえる。
-   作り直す前の画面は <main> で囲んでいないので、
-   ヘッダー以外の「body の直下の要素」を中央寄せにしている
-*/
-body > :not(.site-header):not(script):not(.hero):not(main) {
-    max-width: 1080px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 16px;
-    padding-right: 16px;
-}
-
-/* body 直下の表は、内側の余白を付けず、左右16pxずつ空けた幅にする
-   （:not(.site-header) を付けているのは、上のルールより優先させるため） */
-body > table:not(.site-header) {
-    padding: 0;
-    width: calc(100% - 32px);
-    max-width: calc(1080px - 32px);
-}
-
-/* body 直下のリンク（「＋ 食材を登録」など）は、1行の大きさにして左端をそろえる */
-body > a:not(.site-header) {
-    display: block;
-    width: fit-content;
-    max-width: none;
-    margin-left: max(16px, calc((100% - 1080px) / 2 + 16px));
-    padding: 0;
-}
-
-/* 作り直した画面は <main class="container"> で囲む */
-.container {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 24px 16px 48px;
 }
 
 h1, h2, h3 {
@@ -171,9 +156,179 @@ small {
     user-select: none;
 }
 
+/* アイコンを塗りつぶしの形にする（Material Symbols の機能） */
+.material-symbols-rounded.is-filled { font-variation-settings: "FILL" 1; }
+
+/* class="is-hidden" を付けると隠れる（JavaScriptで付けたり外したりする） */
+.is-hidden { display: none !important; }
+
+/* 画面には見えないが、存在はしている（クリックやファイル選択は動く） */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* ----- 文字の色 ----- */
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-success { color: var(--success); }
+.text-muted { color: var(--text-muted); }
+
+@media (max-width: 767px) {
+    body {
+        font-size: 14px;
+        /* 画面下のメニューに中身が隠れないよう、下に余白を空ける */
+        padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    }
+
+    h1 {
+        font-size: 1.35rem;
+    }
+}
+
 
 /* ==================================================
-   3. ボタン
+   == 3. ページの枠
+   ================================================== */
+
+/* ページの中身の入れ物（画面は <main class="container"> で囲む） */
+.container {
+    max-width: 1080px;
+    margin: 0 auto;              /* 左右の余白を自動にして、中央に置く */
+    padding: 0 16px 48px;
+}
+
+/* 読み物の画面は少しせまく */
+.container--narrow { max-width: 760px; }
+
+/* 献立は7列並べるので、ほかの画面より広く */
+.container--wide { max-width: 1200px; }
+
+/*
+   <main> で囲んでいない画面のための予備：
+   ヘッダー以外の「body の直下の要素」を中央寄せにする
+*/
+body > :not(.site-header):not(script):not(.hero):not(main) {
+    max-width: 1080px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+/* body 直下の表は、内側の余白を付けず、左右16pxずつ空けた幅にする
+   （:not(.site-header) を付けているのは、上のルールより優先させるため） */
+body > table:not(.site-header) {
+    padding: 0;
+    width: calc(100% - 32px);
+    max-width: calc(1080px - 32px);
+}
+
+/* body 直下のリンクは、1行の大きさにして左端をそろえる */
+body > a:not(.site-header) {
+    display: block;
+    width: fit-content;
+    max-width: none;
+    margin-left: max(16px, calc((100% - 1080px) / 2 + 16px));
+    padding: 0;
+}
+
+/* ページの見出し（アイコン＋文字） */
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 24px 0 16px;
+    font-size: 1.5rem;
+}
+
+.page-title .material-symbols-rounded { font-size: 1.6rem; }
+
+/* 見出しの帯（左に戻るリンクや見出し、右にボタン） */
+.page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 20px 0 16px;
+}
+
+/* ボタンが2つ以上並ぶ見出し */
+.page-head__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+/* 見出しの行（左にタイトル、右にリンク） */
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;   /* 左右の端に分ける */
+    gap: 12px;
+    margin: 28px 0 12px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--primary-dark);
+}
+
+.section-title .material-symbols-rounded { color: var(--primary); }
+
+/* 見出しが長いとき（長い検索語など）は、見出しの方を「…」で切って同じ行に収める */
+.section-head .section-title {
+    min-width: 0;
+}
+
+.section-head .section-title > span:not(.material-symbols-rounded) {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* 開閉できる見出し（<details>）は、押せるように */
+details > summary.section-title { cursor: pointer; }
+
+.section-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* カードどうしの間隔 */
+.section-card { margin: 20px 0; }
+
+/* 補足の文字 */
+.note {
+    margin: 8px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+
+/* ==================================================
+   == 4. ボタン
    <button> はすべてこの見た目になる。リンクをボタンに見せたいときは class="btn"
    ================================================== */
 button,
@@ -251,10 +406,13 @@ button:disabled {
     color: var(--primary-dark);
 }
 
+/* 大きさの違い */
 .btn--sm {
     padding: 4px 12px;
     font-size: 0.82rem;
 }
+
+.btn--wide { min-width: 200px; padding: 12px 28px; font-size: 1rem; }
 
 /* 横幅いっぱいのボタン */
 .btn--block {
@@ -263,9 +421,29 @@ button:disabled {
     font-size: 1rem;
 }
 
+/* 「＋ 材料を追加」など */
+.btn--add { margin: 10px 0 4px; }
+
+/* アイコンだけの丸いボタン（削除など） */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.icon-btn:hover { background: var(--primary-light); color: var(--primary-dark); }
+.icon-btn--danger:hover { background: var(--danger-bg); color: var(--danger); }
+
 
 /* ==================================================
-   4. 入力欄
+   == 5. 入力欄・フォームの部品
    ================================================== */
 input[type="text"],
 input[type="password"],
@@ -313,7 +491,7 @@ input[type="checkbox"] {
     vertical-align: -3px;
 }
 
-/* 入力欄＋説明のまとまり */
+/* ----- 入力欄＋説明のまとまり ----- */
 .form-field {
     margin-bottom: 18px;
 }
@@ -326,16 +504,118 @@ input[type="checkbox"] {
     color: var(--primary-dark);
 }
 
+/* .form-field の中の入力欄は横いっぱい */
 .form-field input[type="text"],
 .form-field input[type="password"],
 .form-field input[type="search"],
-.form-field select {
+.form-field input[type="date"],
+.form-field input[type="number"],
+.form-field select,
+.form-field textarea {
     width: 100%;
+}
+
+/* 短い入力欄（何人分など）。上の「横いっぱい」より後に書いて、こちらを優先させる */
+.form-field input.input-short { width: 90px; }
+
+/* 入力欄の下の小さな説明 */
+.field-hint {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* 入力欄と文字を横に並べる（[ 2 ] 人分 など） */
+.inline-field { display: flex; align-items: center; gap: 8px; }
+
+/* 入力欄を2つ横に並べる */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* 「材料」「作り方」などの見出し：下に線を引いて区切る */
+.form-section-title {
+    margin: 28px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.05rem;
+}
+
+/* 保存・キャンセルのボタンを中央に並べる */
+.form-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+/* チェックボックス＋文字 */
+.check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+/* エラーの一覧 */
+.alert__list { margin: 0; padding-left: 1.2em; }
+
+/* ----- セグメント（ラジオボタンを、つながったボタンの見た目にする） ----- */
+.segmented {
+    display: inline-flex;
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+}
+
+.segmented label {
+    margin: 0;
+    cursor: pointer;
+}
+
+/* 本物の丸いラジオボタンは隠す（クリックは label が受け取るので、隠しても選べる） */
+.segmented input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.segmented label > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 20px;
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-weight: 700;
+    transition: background 0.15s, color 0.15s;
+}
+
+/* チェックされたラジオの「すぐ後ろ」の span を茶色にする（+ は「すぐ隣の要素」という意味） */
+.segmented input[type="radio"]:checked + span {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* キーボードで選んでいるときも、どこにいるかわかるように */
+.segmented input[type="radio"]:focus-visible + span {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+    .form-row { grid-template-columns: 1fr; gap: 0; }
 }
 
 
 /* ==================================================
-   5. 表
+   == 6. 表
    HTML に border="1" が付いていても、ここで上書きして角丸のカード風にする
    ================================================== */
 table {
@@ -395,9 +675,29 @@ td img {
     aspect-ratio: 4 / 3;
 }
 
+/* 表がはみ出すときは、表だけ横にスクロールさせる（ページ全体は横にずれない） */
+.table-wrap {
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+@media (max-width: 767px) {
+    /* 表は横にスクロールできるようにする（はみ出して画面が崩れないように） */
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    th,
+    td {
+        padding: 8px;
+        white-space: nowrap;
+    }
+}
+
 
 /* ==================================================
-   6. 部品
+   == 7. 小さな部品
    ================================================== */
 
 /* ----- カード（白っぽい面に角丸と影） ----- */
@@ -426,6 +726,54 @@ td img {
     background: var(--primary);
     border-color: var(--primary);
     color: #fff;
+}
+
+.chip--soft {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+}
+
+.chip--success {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e6f0de;
+    border-color: #e6f0de;
+    color: var(--success);
+}
+
+/* チップを折り返して並べる */
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+}
+
+/* ----- ラベル（何人分・カテゴリ・足りない材料） ----- */
+/* 丸いラベル：うすいベージュの背景に、アイコンと文字を横並び */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px 3px 8px;
+    border-radius: var(--radius-pill);
+    background: #f3e6d6;
+    color: var(--primary-dark);
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.tag .material-symbols-rounded {
+    font-size: 1rem;
+    font-variation-settings: "FILL" 1;   /* アイコンを塗りつぶしの形にする */
+}
+
+/* オレンジのラベル（足りない材料） */
+.tag--warn {
+    background: #fdebd5;
+    color: var(--warning);
 }
 
 /* ----- お知らせ（エラー・完了など） ----- */
@@ -459,12 +807,6 @@ td img {
     color: var(--primary-dark);
 }
 
-/* ----- 文字の色 ----- */
-.text-danger { color: var(--danger); }
-.text-warning { color: var(--warning); }
-.text-success { color: var(--success); }
-.text-muted { color: var(--text-muted); }
-
 /* ----- 何も無いときの表示 ----- */
 .empty {
     padding: 32px 16px;
@@ -472,7 +814,19 @@ td img {
     color: var(--text-muted);
 }
 
-/* ----- タブ（ランキングの期間・マイページなど） ----- */
+.empty.card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.empty__icon {
+    font-size: 3rem;
+    opacity: 0.6;
+}
+
+/* ----- タブ（ランキングの期間など） ----- */
 .tabs {
     display: flex;
     gap: 4px;
@@ -499,9 +853,113 @@ td img {
     color: #fff;
 }
 
+/* ----- 点線区切りのリスト ----- */
+.simple-list {
+    list-style: none;
+    margin: 0 0 8px;
+    padding: 0;
+}
+
+.simple-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.simple-list li:last-child { border-bottom: none; }
+
+/* ----- 写真が無いときの絵文字 ----- */
+.photo-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #f3e3d1, #ead6bf);
+    font-size: 2.6rem;
+}
+
+/* ----- 小さな投稿者名・いいね数（アイコン＋文字） ----- */
+.mini-user,
+.like-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.mini-user .material-symbols-rounded,
+.like-mini .material-symbols-rounded {
+    font-size: 1.05rem;
+}
+
+.like-mini { color: #d0604a; }
+
+/* いいね数（ランキングなど） */
+.like-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #c0533a;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ----- アバター（丸いプロフィール写真） ----- */
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;              /* 横に並べたとき、つぶれないようにする */
+    overflow: hidden;            /* 丸からはみ出た写真を隠す */
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f6e7d6;
+    color: var(--primary);
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar .material-symbols-rounded {
+    font-size: 1.5rem;
+    vertical-align: 0;
+    font-variation-settings: "FILL" 1;
+}
+
+/* 大きさの違い */
+.avatar--sm { width: 24px; height: 24px; }
+.avatar--sm .material-symbols-rounded { font-size: 1rem; }
+
+.avatar--md { width: 48px; height: 48px; }
+.avatar--md .material-symbols-rounded { font-size: 2rem; }
+
+.avatar--xl {
+    width: 112px;
+    height: 112px;
+    background: #e7ddd2;
+    color: #a8968a;
+}
+.avatar--xl .material-symbols-rounded { font-size: 4.5rem; }
+
+@media (max-width: 767px) {
+    .tag {
+        padding: 2px 8px 2px 6px;
+        font-size: 0.72rem;
+    }
+    .tag .material-symbols-rounded { font-size: 0.9rem; }
+}
+
 
 /* ==================================================
-   7. ヘッダー
+   == 8. ヘッダー
    ================================================== */
 .site-header {
     position: sticky;            /* スクロールしても上に残る */
@@ -552,6 +1010,11 @@ td img {
     margin-left: auto;           /* ロゴ以外を右に寄せる */
 }
 
+/* バッジを、メニューの文字の右上に重ねるための基準 */
+.site-nav a {
+    position: relative;
+}
+
 .site-nav__link {
     display: inline-flex;
     align-items: center;
@@ -575,6 +1038,26 @@ td img {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
     font-weight: 700;
+}
+
+/* 期限が近い食材の数のバッジ */
+.nav-badge {
+    position: absolute;
+    top: 2px;
+    right: -6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;               /* 1桁でも丸く、2桁以上は横に伸びる */
+    height: 18px;
+    padding: 0 5px;
+    border: 2px solid var(--primary-dark);   /* ヘッダーの色で縁取りして、浮いて見えるように */
+    border-radius: var(--radius-pill);
+    background: #e0533c;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
 }
 
 /* ----- 右側（投稿ボタン・ユーザー） ----- */
@@ -609,22 +1092,8 @@ td img {
     display: none;
 }
 
-.avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #f6e7d6;
-    color: var(--primary);
-}
-
-.avatar .material-symbols-rounded {
-    font-size: 1.5rem;
-    vertical-align: 0;
-    font-variation-settings: "FILL" 1;
-}
+/* ヘッダーのアバターは白い縁取り */
+.user-menu .avatar { border: 2px solid rgba(255, 255, 255, 0.7); }
 
 .user-menu__panel {
     position: absolute;
@@ -669,9 +1138,70 @@ td img {
     color: var(--primary-dark);
 }
 
+@media (max-width: 767px) {
+    /* ----- メニューを画面の下に移動 ----- */
+    .site-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+        justify-content: space-around;
+        gap: 0;
+        height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+        padding-bottom: env(safe-area-inset-bottom);   /* iPhone の画面下の余白 */
+        margin: 0;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 10px rgba(92, 53, 30, 0.08);
+    }
+
+    /* アイコンを上、文字を下に */
+    .site-nav__link {
+        flex: 1;
+        flex-direction: column;
+        gap: 0;
+        padding: 6px 0;
+        border-radius: 0;
+        color: var(--text-muted);
+        font-size: 0.68rem;
+    }
+
+    .site-nav__link .material-symbols-rounded {
+        font-size: 1.6rem;
+        vertical-align: 0;
+    }
+
+    .site-nav__link:hover {
+        background: none;
+        color: var(--primary);
+    }
+
+    .site-nav__link.is-active {
+        background: none;
+        color: var(--primary);
+    }
+
+    .site-nav__link.is-active .material-symbols-rounded {
+        font-variation-settings: "FILL" 1;
+    }
+
+    /* バッジは、画面の下のメニューのアイコンの右上に出す */
+    .nav-badge {
+        top: 0;
+        right: calc(50% - 22px);   /* 真ん中のアイコンの、少し右 */
+        border-color: var(--surface);
+    }
+
+    /* ヘッダーは ロゴ | 右側 だけ */
+    .site-header__actions {
+        margin-left: auto;
+    }
+}
+
 
 /* ==================================================
-   8. ログイン・新規登録
+   == 9. ログイン・新規登録
    ================================================== */
 .auth-page {
     display: flex;
@@ -757,86 +1287,7 @@ body.auth-page > .auth-card {
     font-size: 0.88rem;
 }
 
-
-/* ==================================================
-   9. スマホ（画面の幅が 768px 未満）
-   ================================================== */
 @media (max-width: 767px) {
-
-    body {
-        font-size: 14px;
-        /* 画面下のメニューに中身が隠れないよう、下に余白を空ける */
-        padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
-    }
-
-    h1 {
-        font-size: 1.35rem;
-    }
-
-    /* ----- メニューを画面の下に移動 ----- */
-    .site-nav {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 100;
-        justify-content: space-around;
-        gap: 0;
-        height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
-        padding-bottom: env(safe-area-inset-bottom);   /* iPhone の画面下の余白 */
-        margin: 0;
-        background: var(--surface);
-        border-top: 1px solid var(--border);
-        box-shadow: 0 -2px 10px rgba(92, 53, 30, 0.08);
-    }
-
-    /* アイコンを上、文字を下に */
-    .site-nav__link {
-        flex: 1;
-        flex-direction: column;
-        gap: 0;
-        padding: 6px 0;
-        border-radius: 0;
-        color: var(--text-muted);
-        font-size: 0.68rem;
-    }
-
-    .site-nav__link .material-symbols-rounded {
-        font-size: 1.6rem;
-        vertical-align: 0;
-    }
-
-    .site-nav__link:hover {
-        background: none;
-        color: var(--primary);
-    }
-
-    .site-nav__link.is-active {
-        background: none;
-        color: var(--primary);
-    }
-
-    .site-nav__link.is-active .material-symbols-rounded {
-        font-variation-settings: "FILL" 1;
-    }
-
-    /* ヘッダーは ロゴ | 右側 だけ */
-    .site-header__actions {
-        margin-left: auto;
-    }
-
-    /* 表は横にスクロールできるようにする（はみ出して画面が崩れないように） */
-    table {
-        display: block;
-        overflow-x: auto;
-    }
-
-    th,
-    td {
-        padding: 8px;
-        white-space: nowrap;
-    }
-
     .auth-card {
         padding: 28px 20px 20px;
     }
@@ -846,7 +1297,13 @@ body.auth-page > .auth-card {
         padding-right: 20px;
     }
 }
-/* ===== ホーム：ヒーロー（写真の背景＋検索欄） ===== */
+
+
+/* ==================================================
+   == 10. ホーム
+   ================================================== */
+
+/* ----- ヒーロー（写真の背景＋検索欄） ----- */
 .hero {
     /* 背景は3枚重ね。上に書いたものほど手前に来る
        1枚目：左側をクリーム色で隠すグラデーション（文字を読みやすくする）
@@ -888,7 +1345,7 @@ body.auth-page > .auth-card {
     font-size: 0.95rem;
 }
 
-/* 検索バー：白い丸い入れ物の中に、アイコン・入力欄・ボタンを横に並べる */
+/* ----- 検索バー：白い丸い入れ物の中に、アイコン・入力欄・ボタンを横に並べる ----- */
 .search-bar {
     display: flex;            /* 中身を横並びにする */
     align-items: center;      /* 縦の位置を真ん中にそろえる */
@@ -919,49 +1376,7 @@ body.auth-page > .auth-card {
     white-space: nowrap;      /* 「検索」が縦に折り返さないように */
 }
 
-/* スマホ：写真を全体に薄く敷いて、文字を小さめにする */
-@media (max-width: 767px) {
-    .hero {
-        background:
-            linear-gradient(rgba(247, 239, 228, 0.82), rgba(247, 239, 228, 0.82)),
-            url("../images/hero.jpg") center / cover no-repeat,
-            var(--bg);
-    }
-    .hero__inner { padding: 28px 16px 24px; }
-    .hero__title { font-size: 1.7rem; }
-    .search-bar button { padding: 8px 16px; }
-}
-
-/* ===== 見出しの行（左にタイトル、右にリンク） ===== */
-.section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;   /* 左右の端に分ける */
-    gap: 12px;
-    margin: 28px 0 12px;
-}
-
-.section-title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    font-size: 1.15rem;
-    color: var(--primary-dark);
-}
-
-.section-title .material-symbols-rounded { color: var(--primary); }
-
-.section-link {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.88rem;
-    font-weight: 700;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-/* ===== カテゴリのカード ===== */
+/* ----- カテゴリのカード ----- */
 /* grid：カードを格子状に並べる。
    auto-fill + minmax(96px, 1fr)：1枚96px以上で、入るだけ横に並べて幅を均等に広げる */
 .category-cards {
@@ -1012,12 +1427,41 @@ body.auth-page > .auth-card {
     box-shadow: 0 0 0 2px var(--primary);
 }
 
-/* スマホ：カードを横1列にして、指で横にスクロールできるようにする */
+/* ----- レシピ一覧の並び順（新着順・人気順） ----- */
+.sort-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;              /* 見出しが長くても、プルダウンは縮ませない */
+    color: var(--text-muted);
+}
+
+.sort-select select {
+    padding: 6px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+}
+
 @media (max-width: 767px) {
+    /* 写真を全体に薄く敷いて、文字を小さめにする */
+    .hero {
+        background:
+            linear-gradient(rgba(247, 239, 228, 0.82), rgba(247, 239, 228, 0.82)),
+            url("../images/hero.jpg") center / cover no-repeat,
+            var(--bg);
+    }
+    .hero__inner { padding: 28px 16px 24px; }
+    .hero__title { font-size: 1.7rem; }
+    .search-bar button { padding: 8px 16px; }
+
+    /* カテゴリのカードを横1列にして、指で横にスクロールできるようにする */
     .category-cards {
         display: flex;
         overflow-x: auto;
-        padding-bottom: 6px;
+        /* overflow を付けると、はみ出した部分（選んだカードの枠・浮く動き）が切れるので、
+           内側に余白を空けてその場所を作る。左右はマイナスの margin で戻して、位置をそろえる */
+        padding: 4px 4px 10px;
+        margin: 0 -4px;
     }
     .category-card { flex: 0 0 84px; }   /* 縮ませず、幅84pxに固定する */
     .category-card__icon {
@@ -1027,7 +1471,11 @@ body.auth-page > .auth-card {
     }
 }
 
-/* ===== レシピカードの並び ===== */
+
+/* ==================================================
+   == 11. レシピカード
+   ================================================== */
+
 /* 1枚220px以上で、入るだけ横に並べる（PCなら4列くらい） */
 .recipe-grid {
     display: grid;
@@ -1070,17 +1518,6 @@ body.auth-page > .auth-card {
     display: block;
 }
 
-/* 写真が無いときの絵文字 */
-.photo-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #f3e3d1, #ead6bf);
-    font-size: 2.6rem;
-}
-
 /* position: absolute：写真の枠（relative）を基準に、左上から10pxの位置に置く */
 .recipe-card__chip {
     position: absolute;
@@ -1104,53 +1541,6 @@ body.auth-page > .auth-card {
     overflow: hidden;
 }
 
-/* 投稿者（左）といいね数（右） */
-.recipe-card__meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-}
-
-.mini-user,
-.like-mini {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-}
-
-.mini-user .material-symbols-rounded,
-.like-mini .material-symbols-rounded {
-    font-size: 1.05rem;
-}
-
-.like-mini { color: #d0604a; }
-
-/* 何も無いときの表示 */
-.empty.card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.empty__icon {
-    font-size: 3rem;
-    opacity: 0.6;
-}
-
-/* スマホ：2列に固定する */
-@media (max-width: 767px) {
-    .recipe-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-    }
-    .recipe-card__body { padding: 10px; }
-    .recipe-card__title { font-size: 0.9rem; }
-}
-
 /* カードの一言：長い説明は2行で「…」にして、カードの高さがバラバラにならないようにする */
 .recipe-card__desc {
     margin: 0 0 10px;
@@ -1164,39 +1554,66 @@ body.auth-page > .auth-card {
     overflow: hidden;
 }
 
-/* スマホは画面がせまいので、1行にする */
+/* 何人分・カテゴリのラベル */
+.recipe-card__tags {
+    display: flex;
+    flex-wrap: wrap;            /* 入りきらなければ次の行へ */
+    gap: 6px;
+    margin: 0 0 10px;
+}
+
+/* 下の段：投稿者（左）といいね数（右） */
+.recipe-card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* 下の段はリンクの外に出したので、余白をここで付ける */
+.recipe-card .recipe-card__meta {
+    padding: 0 14px 12px;
+}
+
+/* 投稿者名のリンク：普段は灰色、マウスを乗せると下線 */
+.recipe-card a.mini-user {
+    color: var(--text-muted);
+    text-decoration: none;
+    min-width: 0;
+}
+
+.recipe-card a.mini-user:hover { text-decoration: underline; }
+
+/* 名前が長いときは「…」 */
+.recipe-card a.mini-user > span:last-child {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* スマホ：2列に固定し、文字を小さく、一言は1行に */
 @media (max-width: 767px) {
+    .recipe-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .recipe-card__body { padding: 10px; }
+    .recipe-card__title { font-size: 0.9rem; }
     .recipe-card__desc {
         font-size: 0.78rem;
         -webkit-line-clamp: 1;
         line-clamp: 1;
     }
-}
-/* ===== ページの中身の入れ物（作り直した画面は <main class="container"> で囲む） ===== */
-.container {
-    max-width: 1080px;
-    margin: 0 auto;              /* 左右の余白を自動にして、中央に置く */
-    padding: 0 16px 48px;
+    .recipe-card .recipe-card__meta { padding: 0 10px 10px; }
 }
 
-/* 読み物の画面は少しせまく */
-.container--narrow { max-width: 760px; }
 
-/* ページの見出し（アイコン＋文字） */
-.page-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 24px 0 16px;
-    font-size: 1.5rem;
-}
+/* ==================================================
+   == 12. ランキング
+   ================================================== */
 
-.page-title .material-symbols-rounded { font-size: 1.6rem; }
-
-/* アイコンを塗りつぶしの形にする（Material Symbols の機能） */
-.material-symbols-rounded.is-filled { font-variation-settings: "FILL" 1; }
-
-/* ===== ランキング ===== */
 /* 期間のタブを3等分して、中央に置く */
 .tabs--wide {
     display: grid;
@@ -1297,17 +1714,6 @@ body.auth-page > .auth-card {
     text-overflow: ellipsis;
 }
 
-/* いいね数 */
-.like-count {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: #c0533a;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-/* スマホ：列を少しせまく */
 @media (max-width: 767px) {
     .ranking-item {
         grid-template-columns: 40px 72px minmax(0, 1fr) auto;
@@ -1316,45 +1722,11 @@ body.auth-page > .auth-card {
     }
 }
 
-/* ===== 共通：見出しの帯・戻るリンク・ラベル・補足・カードの間隔 ===== */
-.page-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 20px 0 16px;
-}
 
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--text-muted);
-    font-weight: 700;
-    text-decoration: none;
-}
+/* ==================================================
+   == 13. レシピ詳細
+   ================================================== */
 
-.chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 8px 0;
-}
-
-.chip--soft {
-    background: var(--primary-light);
-    border-color: var(--primary-light);
-}
-
-.note {
-    margin: 8px 0;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-}
-
-.section-card { margin: 20px 0; }
-
-/* ===== レシピ詳細 ===== */
 /* 写真（左）と情報（右）を同じ幅の2列に */
 .recipe-detail {
     display: grid;
@@ -1394,7 +1766,35 @@ body.auth-page > .auth-card {
     white-space: pre-line;
 }
 
-/* 材料 */
+/* ----- 投稿者：写真＋名前（左）、投稿・更新の日時（右の端） ----- */
+.author-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;   /* 左右の端に分ける */
+    flex-wrap: wrap;                  /* せまい画面では日時が下の行に回る */
+    gap: 8px 16px;
+}
+
+.author-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.author-link:hover strong { text-decoration: underline; }
+
+/* 投稿・更新を横に並べる。文字の大きさはふつう、色は少し薄く */
+.author-row__dates {
+    display: flex;
+    flex-wrap: wrap;               /* せまい画面では、更新が下の行に回る */
+    justify-content: flex-end;     /* 右に寄せる */
+    gap: 4px 16px;                 /* 投稿と更新の間をあける */
+    color: var(--text-muted);
+}
+
+/* ----- 材料 ----- */
 .ingredients-box { margin: 16px 0; }
 
 .ingredients-box__head {
@@ -1454,7 +1854,7 @@ body.auth-page > .auth-card {
 
 .stepper__btn:hover { background: var(--primary-light); }
 
-/* いいね・献立に追加を横に2つ並べる */
+/* ----- いいね・献立に追加を横に2つ並べる ----- */
 .recipe-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1470,7 +1870,7 @@ body.auth-page > .auth-card {
     margin-top: 12px;
 }
 
-/* ===== 作り方：丸い番号付きのリスト ===== */
+/* ----- 作り方：丸い番号付きのリスト ----- */
 .steps {
     list-style: none;          /* ol のもとの「1.」は消して、自分で丸い番号を描く */
     counter-reset: step;       /* 「step」という数える変数を 0 にする */
@@ -1505,21 +1905,93 @@ body.auth-page > .auth-card {
     font-size: 0.9rem;
 }
 
-/* スマホ：写真を上、情報を下の1列にする */
-@media (max-width: 767px) {
-    .recipe-detail {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    .recipe-detail__photo { position: static; }   /* スマホでは写真を止めない */
-    .recipe-detail__title { font-size: 1.4rem; }
+/* ----- メモ（付箋のような色で、作り方と区別する） ----- */
+.recipe-memo {
+    background: #fff8e6;
+    border-color: #f0dfb4;
 }
 
-/* コメント1件ずつを点線で区切る */
+.recipe-memo__text {
+    margin: 0;
+    white-space: pre-line;      /* 入力された改行をそのまま表示 */
+    overflow-wrap: anywhere;    /* 長いURLなどもはみ出さずに折り返す */
+}
+
+/* ----- つくれぽ ----- */
+/* 見出しの横の「〇人が作りました」 */
+.report-count {
+    margin-left: 4px;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: #fff3e2;
+    color: #c0533a;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* 写真付きのつくれぽを横に並べる（入りきらなければ横にスクロール） */
+.report-gallery {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
+}
+
+.report-card {
+    flex: 0 0 160px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--text);
+    text-decoration: none;
+    scroll-snap-align: start;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.report-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-strong); }
+
+.report-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+.report-card__user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+/* ----- コメント ----- */
+/* 1件ずつを点線で区切る */
 .comment {
     padding: 12px 0;
     border-bottom: 1px dashed var(--border);
 }
+
+.comment__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+}
+
+.comment__user {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.comment__user:hover strong { text-decoration: underline; }
+.comment__action { font-size: 0.85rem; }
 
 /* pre-line：入力された改行をそのまま表示。anywhere：長い英数字でもはみ出さずに折り返す */
 .comment__text {
@@ -1528,7 +2000,35 @@ body.auth-page > .auth-card {
     overflow-wrap: anywhere;
 }
 
-/* 入力欄は横いっぱい、ボタンは右寄せ */
+/* コメントの写真 */
+.comment__photo {
+    display: block;
+    width: 100%;
+    max-width: 280px;
+    margin-top: 8px;
+    border-radius: var(--radius-sm);
+}
+
+/* つくれぽのコメントは、うすいオレンジの背景で目立たせる */
+.comment.is-report {
+    margin: 4px -12px;
+    padding: 12px;
+    border-bottom: none;
+    border-radius: var(--radius);
+    background: #fff8ee;
+}
+
+/* 「作りました」のラベル */
+.report-badge {
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    background: #fde3c8;
+    color: #b8562f;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* 投稿フォーム：入力欄は横いっぱい、ボタンは右寄せ */
 .comment-form {
     display: flex;
     flex-direction: column;
@@ -1539,104 +2039,40 @@ body.auth-page > .auth-card {
 
 .comment-form textarea { width: 100%; }
 
-/* ===== カードのラベル（何人分・カテゴリ） ===== */
-.recipe-card__tags {
+/* 「作りました」と「写真を付ける」 */
+.comment-form__options {
     display: flex;
-    flex-wrap: wrap;            /* 入りきらなければ次の行へ */
-    gap: 6px;
-    margin: 0 0 10px;
-}
-
-/* 丸いラベル：うすいベージュの背景に、アイコンと文字を横並び */
-.tag {
-    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 10px 3px 8px;
-    border-radius: var(--radius-pill);
-    background: #f3e6d6;
-    color: var(--primary-dark);
-    font-size: 0.78rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.tag .material-symbols-rounded {
-    font-size: 1rem;
-    font-variation-settings: "FILL" 1;   /* アイコンを塗りつぶしの形にする */
-}
-
-/* スマホ：ラベルを少し小さく */
-@media (max-width: 767px) {
-    .tag {
-        padding: 2px 8px 2px 6px;
-        font-size: 0.72rem;
-    }
-    .tag .material-symbols-rounded { font-size: 0.9rem; }
-}
-
-/* ===== フォームの共通部品 ===== */
-.alert__list { margin: 0; padding-left: 1.2em; }
-
-.field-hint {
-    display: block;
-    margin-top: 4px;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-}
-
-.inline-field { display: flex; align-items: center; gap: 8px; }
-.form-field input.input-short { width: 90px; }
-
-/* 「材料」「作り方」の見出し：下に線を引いて区切る */
-.form-section-title {
-    margin: 28px 0 10px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-    font-size: 1.05rem;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: center;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 28px;
+    gap: 10px;
+    width: 100%;
 }
 
-.btn--wide { min-width: 200px; padding: 12px 28px; font-size: 1rem; }
-.btn--add { margin: 10px 0 4px; }
+.report-check { margin-top: 0; font-weight: 700; }
 
-.check {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 8px;
-    font-size: 0.9rem;
-    cursor: pointer;
+/* 選んだ写真の小さなプレビュー */
+.comment-form__preview {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
 }
 
-/* class="is-hidden" を付けると隠れる（JavaScriptで付けたり外したりする） */
-.is-hidden { display: none !important; }
-
-/* アイコンだけの丸いボタン（削除など） */
-.icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--text-muted);
+/* スマホ：写真を上、情報を下の1列にする */
+@media (max-width: 767px) {
+    .recipe-detail {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .recipe-detail__photo { position: static; }   /* スマホでは写真を止めない */
+    .recipe-detail__title { font-size: 1.4rem; }
 }
 
-.icon-btn:hover { background: var(--primary-light); color: var(--primary-dark); }
-.icon-btn--danger:hover { background: var(--danger-bg); color: var(--danger); }
 
-/* ===== レシピ投稿フォーム ===== */
+/* ==================================================
+   == 14. レシピ投稿フォーム
+   ================================================== */
+
 /* 上の段：写真 280px ＋ 残り全部 */
 .recipe-form__top {
     display: grid;
@@ -1644,7 +2080,7 @@ body.auth-page > .auth-card {
     gap: 24px;
 }
 
-/* 写真の選択枠（点線の四角） */
+/* ----- 写真の選択枠（点線の四角） ----- */
 .photo-drop {
     position: relative;          /* 中の透明な input を、この枠に重ねるため */
     display: flex;
@@ -1688,7 +2124,7 @@ body.auth-page > .auth-card {
     cursor: pointer;
 }
 
-/* 材料の行：名前（残り全部）・分量 90px・単位 90px・削除 36px */
+/* ----- 材料の行：名前（残り全部）・分量 90px・単位 90px・削除 36px ----- */
 .ingredient-rows { display: flex; flex-direction: column; gap: 8px; }
 
 .ingredient-row {
@@ -1700,7 +2136,7 @@ body.auth-page > .auth-card {
 
 .ingredient-row input { width: 100%; }
 
-/* 作り方の行：丸い番号・入力欄・削除。番号はステップ5と同じCSSカウンター */
+/* ----- 作り方の行：丸い番号・入力欄・削除。番号はレシピ詳細と同じCSSカウンター ----- */
 .step-rows {
     list-style: none;
     counter-reset: step;
@@ -1747,56 +2183,11 @@ body.auth-page > .auth-card {
     }
 }
 
-/* ===== アバター（丸いプロフィール写真） ===== */
-.avatar {
-    flex-shrink: 0;              /* 横に並べたとき、つぶれないようにする */
-    overflow: hidden;            /* 丸からはみ出た写真を隠す */
-}
 
-.avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+/* ==================================================
+   == 15. マイページ・プロフィール
+   ================================================== */
 
-/* 大きさの違い */
-.avatar--sm { width: 24px; height: 24px; }
-.avatar--sm .material-symbols-rounded { font-size: 1rem; }
-
-.avatar--md { width: 48px; height: 48px; }
-.avatar--md .material-symbols-rounded { font-size: 2rem; }
-
-.avatar--xl {
-    width: 112px;
-    height: 112px;
-    background: #e7ddd2;
-    color: #a8968a;
-}
-.avatar--xl .material-symbols-rounded { font-size: 4.5rem; }
-
-/* ヘッダーのアバターは白い縁取り */
-.user-menu .avatar { border: 2px solid rgba(255, 255, 255, 0.7); }
-
-/* プロフィール編集：写真とボタンを縦に並べて中央に */
-.profile-form__avatar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-/* 画面には見えないが、存在はしている（クリックやファイル選択は動く） */
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-}
-
-/* ===== マイページ ===== */
 /* プロフィール 260px ＋ 数字のまとめ（残り全部） */
 .mypage-top {
     display: grid;
@@ -1804,17 +2195,97 @@ body.auth-page > .auth-card {
     gap: 20px;
 }
 
+/* ----- プロフィールのカード ----- */
 .profile-card {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 6px;
     text-align: center;
+    /* 称号と2つのボタンを同じ幅・同じ高さにする（数字を変えるときは、ここだけ変えればよい） */
+    --profile-btn-width: 220px;
+    --profile-btn-height: 44px;
 }
 
 .profile-card__name { margin: 6px 0 0; font-size: 1.15rem; font-weight: 700; }
 .profile-card__id { margin: 0 0 6px; color: var(--text-muted); font-size: 0.82rem; }
 
+.profile-card .btn,
+.profile-card .reward-badge {
+    box-sizing: border-box;              /* 枠線の太さも含めて、幅と高さをそろえる */
+    width: var(--profile-btn-width);
+    height: var(--profile-btn-height);
+    padding: 0 16px;                     /* 高さは height で決めるので、上下の余白は 0 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: var(--radius-pill);
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+/* ボタンのアイコン */
+.profile-card .btn .material-symbols-rounded {
+    font-size: 1.25rem;
+}
+
+/* ----- アイコンを押すと写真を拡大 ----- */
+/* ボタンの見た目を消して、写真だけに見せる */
+.avatar-zoom {
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    cursor: zoom-in;                 /* マウスが虫めがねの形になる */
+    transition: transform 0.15s;
+}
+
+.avatar-zoom:hover { transform: scale(1.04); }
+
+/* 拡大表示のダイアログ */
+.photo-dialog {
+    position: relative;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    max-width: min(90vw, 560px);     /* 画面の90%か560pxの、小さいほう */
+    overflow: visible;
+}
+
+/* ::backdrop：ダイアログの後ろ（画面全体）を暗くする部分 */
+.photo-dialog::backdrop {
+    background: rgba(40, 25, 15, 0.7);
+}
+
+.photo-dialog img {
+    display: block;
+    width: 100%;
+    max-height: 80vh;                /* 縦長の写真でも、画面からはみ出さない */
+    object-fit: contain;             /* 切り抜かずに、写真全体を表示する */
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-strong);
+}
+
+/* 右上の × ボタン */
+.photo-dialog__close {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--text);
+    box-shadow: var(--shadow);
+}
+
+/* ----- 数字のまとめ（投稿・いいね・コメント） ----- */
 .stats-card__title { margin: 0 0 14px; font-size: 1.05rem; }
 
 /* 3つの数字を、縦線で区切って横に並べる */
@@ -1825,6 +2296,9 @@ body.auth-page > .auth-card {
     border-radius: var(--radius);
     background: #fff;
 }
+
+/* 数字が2つのとき（投稿者のページ） */
+.stats--2 { grid-template-columns: repeat(2, 1fr); }
 
 .stat {
     display: flex;
@@ -1840,7 +2314,7 @@ body.auth-page > .auth-card {
 .stat__label { color: var(--text-muted); font-size: 0.82rem; }
 .stat__value { font-size: 1.8rem; line-height: 1.2; }
 
-/* 一覧の切り替え（ボタンの形のタブを3つ並べる） */
+/* ----- 一覧の切り替え（ボタンの形のタブを3つ並べる） ----- */
 .mypage-tabs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1876,6 +2350,31 @@ body.auth-page > .auth-card {
 
 .mypage-tab.is-active .material-symbols-rounded { color: #fff; }
 
+/* ----- プロフィール編集 ----- */
+/* 写真とボタンを縦に並べて中央に */
+.profile-form__avatar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* 下の「パスワードを変更する」 */
+.profile-form__password {
+    margin: 20px 0 0;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    text-align: center;
+}
+
+.profile-form__password a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 700;
+}
+
 /* スマホ：プロフィールと数字を縦に、タブも縦に並べる */
 @media (max-width: 767px) {
     .mypage-top { grid-template-columns: 1fr; }
@@ -1884,62 +2383,370 @@ body.auth-page > .auth-card {
     .stat__value { font-size: 1.4rem; }
 }
 
-/* ===== セグメント（ラジオボタンを、つながったボタンの見た目にする） ===== */
-.segmented {
+
+/* ==================================================
+   == 16. 料理ランク
+   ================================================== */
+
+/* ----- ランクの色 -----
+    ランクごとに「色」だけを変数で決めておき、枠・ラベル・バーはその変数を使う。
+    こうすると、ランクが8つあっても、色の指定は1ランク1行で済む（色そのものは 1. 基本設定）
+*/
+.rank--rookie,   .frame--rookie   { --rank-color: var(--rank-rookie); }
+.rank--bronze,   .frame--bronze   { --rank-color: var(--rank-bronze); }
+.rank--silver,   .frame--silver   { --rank-color: var(--rank-silver); }
+.rank--gold,     .frame--gold     { --rank-color: var(--rank-gold); }
+.rank--platinum, .frame--platinum { --rank-color: var(--rank-platinum); }
+.rank--diamond,  .frame--diamond  { --rank-color: var(--rank-diamond); }
+.rank--master,   .frame--master   { --rank-color: var(--rank-master); }
+.rank--predator, .frame--predator { --rank-color: var(--rank-predator); }
+
+/* ランクの色（--rank-color）に白・黒を混ぜて、グラデーション用の明るい色・濃い色を作る */
+[class*="rank--"],
+[class*="frame--"] {
+    --rank-light: color-mix(in srgb, var(--rank-color) 40%, #fff);
+    --rank-dark:  color-mix(in srgb, var(--rank-color) 65%, #000);
+}
+
+/* ----- 料理レベルのカード ----- */
+.level {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    background: #fff;
+}
+
+/* Lv.8 は金色の帯で目立たせる */
+.level.rank--predator {
+    background: linear-gradient(90deg, #fff1cf, #fffaf0 70%);
+    border: 1px solid #f0d58a;
+    box-shadow: 0 0 16px rgba(240, 199, 74, 0.35);
+}
+
+.level__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 見出しのエンブレム */
+.level__icon {
     display: inline-flex;
-    padding: 4px;
+    font-size: 0;
+}
+
+/* 「Lv.2」の丸いラベル */
+.level__lv {
+    padding: 1px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.level__title { font-size: 1.1rem; }
+
+.level__points {
+    margin-left: auto;              /* ポイントだけ右端へ */
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+/* バーの外枠（灰色）と中身 */
+.level__bar {
+    height: 10px;
+    margin: 10px 0 6px;
+    overflow: hidden;
     border-radius: var(--radius-pill);
     background: var(--surface-2);
 }
 
-.segmented label {
-    margin: 0;
-    cursor: pointer;
-}
-
-/* 本物の丸いラジオボタンは隠す（クリックは label が受け取るので、隠しても選べる） */
-.segmented input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.segmented label > span {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 20px;
+.level__fill {
+    display: block;
+    height: 100%;
     border-radius: var(--radius-pill);
-    color: var(--text-muted);
+    background: linear-gradient(90deg, #9cc46a, #e5b72c);
+    transition: width 0.6s;
+}
+
+/* ランクが付いているときは、Lv のラベルとバーをランクの色にする */
+.level[class*="rank--"] .level__lv   { background: var(--rank-color); }
+.level[class*="rank--"] .level__fill { background: var(--rank-color); }
+
+.level__next {
+    display: block;
+    color: var(--primary-dark);
     font-weight: 700;
-    transition: background 0.15s, color 0.15s;
 }
 
-/* チェックされたラジオの「すぐ後ろ」の span を茶色にする（+ は「すぐ隣の要素」という意味） */
-.segmented input[type="radio"]:checked + span {
-    background: var(--primary);
-    color: #fff;
+.level__hint {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
 }
 
-/* キーボードで選んでいるときも、どこにいるかわかるように */
-.segmented input[type="radio"]:focus-visible + span {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
+/* ----- 今週の目標（スタンプ1週間分） ----- */
+.stamp-card { margin-top: 20px; }
+
+.stamp-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
-/* 献立は7列並べるので、ほかの画面より広く */
-.container--wide { max-width: 1200px; }
+.stamp-card__stats {
+    display: flex;
+    gap: 16px;
+    color: var(--text-muted);
+}
 
-.chip--success {
+.stamp-card__stats strong {
+    color: var(--primary-dark);
+    font-size: 1.3rem;
+}
+
+/* 7日分を横に並べる */
+.stamp-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+.stamp-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.stamp-day__dow {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* スタンプの丸 */
+.stamp-day__circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 72px;
+    aspect-ratio: 1 / 1;
+    border: 2px dashed var(--border);
+    border-radius: 50%;
+    background: #fff;
+}
+
+.stamp-day__date {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.stamp-day__label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+/* 作った日：ハンコを押したように */
+.stamp-day.is-cooked .stamp-day__circle {
+    border: 3px solid #e07b4f;
+    background: #fff3e2;
+    animation: stamp-in 0.35s ease-out;      /* ポンと押されたように見せる */
+}
+
+.stamp-day__mark {
+    font-size: 2rem;
+    transform: rotate(-12deg);
+}
+
+/* 今日 */
+.stamp-day.is-today .stamp-day__circle { box-shadow: 0 0 0 3px #cfe3b0; }
+.stamp-day.is-today .stamp-day__label { color: var(--success); font-weight: 700; }
+
+/* まだ来ていない日は薄く */
+.stamp-day.is-future { opacity: 0.5; }
+
+/* 大きく出てから元の大きさに戻る（ハンコを押した感じ） */
+@keyframes stamp-in {
+    from { transform: scale(1.4); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+/* 1週間の目標のバー */
+.stamp-goal { margin-top: 16px; }
+
+.stamp-goal__text {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+/* ----- 称号のラベル（エンブレム＋称号） ----- */
+.reward-badge {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: #e6f0de;
-    border-color: #e6f0de;
-    color: var(--success);
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: #fff8e6;
+    color: var(--primary-dark);
+    font-size: 0.78rem;
+    font-weight: 700;
 }
 
-/* ===== 献立：週の移動 ===== */
+/* ランクの色にする */
+.reward-badge[class*="rank--"] {
+    background: color-mix(in srgb, var(--rank-color) 15%, #fff);   /* ランクの色を薄くした背景 */
+    border: 1px solid var(--rank-color);
+    color: color-mix(in srgb, var(--rank-color) 70%, #000);        /* 少し濃くした文字 */
+}
+
+/* ----- アイコンの枠（金属の光沢のあるグラデーションの輪） ----- */
+/*
+    @property：CSS の変数に「角度」という型を教える。
+    型がわかると、アニメーションで 0deg → 360deg と滑らかに変化させられる（光が回る）
+*/
+@property --frame-angle {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+}
+
+/*
+    枠のしくみ：
+      border を透明にして、そこに背景のグラデーションを見せる。
+      padding-box（内側）はふつうの背景色、border-box（枠の部分）は金属っぽいグラデーション。
+      conic-gradient：中心からぐるっと一周する向きのグラデーション。明・暗を交互に置くと、金属の光沢に見える
+*/
+.avatar[class*="frame--"] {
+    --frame-width: 3px;
+    --frame-glow: 0px;
+    border: var(--frame-width) solid transparent;
+    background:
+        linear-gradient(#e7ddd2, #e7ddd2) padding-box,
+        conic-gradient(from var(--frame-angle),
+            var(--rank-light), var(--rank-color) 20%, var(--rank-dark) 35%,
+            var(--rank-color) 50%, var(--rank-light) 65%, var(--rank-dark) 85%, var(--rank-light)) border-box;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.12),                      /* 枠の外側の細い影（輪郭をくっきり） */
+        0 0 var(--frame-glow) var(--rank-color);            /* 光（プラチナ以上） */
+}
+
+/* アイコンの大きさに合わせて、枠の太さを変える */
+.avatar--sm[class*="frame--"] { --frame-width: 2px; }
+.avatar--md[class*="frame--"] { --frame-width: 3px; }
+.avatar--xl[class*="frame--"] { --frame-width: 6px; }
+
+/* 光る：プラチナ（Lv.5）から。上のランクほど強く */
+.avatar.frame--platinum { --frame-glow: 8px; }
+.avatar.frame--diamond  { --frame-glow: 12px; }
+.avatar.frame--master   { --frame-glow: 16px; }
+.avatar.frame--predator { --frame-glow: 20px; }
+.avatar--xl.frame--platinum { --frame-glow: 16px; }
+.avatar--xl.frame--diamond  { --frame-glow: 22px; }
+.avatar--xl.frame--master   { --frame-glow: 28px; }
+.avatar--xl.frame--predator { --frame-glow: 34px; }
+
+/* 光が輪の上を回る：ダイヤ（Lv.6）から。プレデターは速く */
+@keyframes frame-spin {
+    to { --frame-angle: 360deg; }
+}
+
+.avatar.frame--diamond,
+.avatar.frame--master   { animation: frame-spin 5s linear infinite; }
+.avatar.frame--predator { animation: frame-spin 2.5s linear infinite; }
+
+/* ----- ランクのエンブレム（画像） ----- */
+.rank-emblem {
+    flex-shrink: 0;
+    object-fit: contain;     /* 縦横の比率を保ったまま、枠に収める */
+}
+
+/* 称号のラベルの中のエンブレム：ラベルの高さに収める */
+.reward-badge .rank-emblem {
+    width: 22px;
+    height: 22px;
+}
+
+/* Lv.8 だけ、ラベルの縁から少しだけ大きく出す（上下に余白を取らずに、ラベルの高さは変えない） */
+.reward-badge .rank-emblem.rank--predator {
+    width: 26px;
+    height: 26px;
+    margin: -4px 0 -4px -4px;
+}
+
+/* マイページのプロフィールのカードでは、ラベルが大きいのでエンブレムも大きく
+   （上の2つより後に書いて、こちらを優先させる） */
+.profile-card .reward-badge .rank-emblem {
+    width: 30px;
+    height: 30px;
+}
+
+/* Lv.8 は羽と王冠がある分、少しだけ大きく。はみ出した分はマイナスの余白で打ち消して、高さは変えない */
+.profile-card .reward-badge .rank-emblem.rank--predator {
+    width: 36px;
+    height: 36px;
+    margin: -3px 0;
+}
+
+/* ----- エンブレムの光（プラチナ＝Lv.5 から） -----
+    drop-shadow：画像の「形にそって」影や光を付ける（透明な部分には付かない）。
+    色はランクの色（--rank-color）を使うので、プラチナは青緑、ダイヤは青…と自動で変わる
+*/
+.rank-emblem.rank--platinum,
+.rank-emblem.rank--diamond,
+.rank-emblem.rank--master,
+.rank-emblem.rank--predator {
+    --glow-size: 6px;
+    filter: drop-shadow(0 0 var(--glow-size) var(--rank-color));
+    animation: emblem-glow 2.4s ease-in-out infinite;
+}
+
+/* 上のランクほど強く光る */
+.rank-emblem.rank--diamond  { --glow-size: 8px; }
+.rank-emblem.rank--master   { --glow-size: 10px; }
+.rank-emblem.rank--predator { --glow-size: 12px; animation-duration: 1.6s; }   /* プレデターは速く脈打つ */
+
+/* 称号のラベルの中は小さいので、光も控えめにする */
+.reward-badge .rank-emblem.rank--platinum,
+.reward-badge .rank-emblem.rank--diamond,
+.reward-badge .rank-emblem.rank--master,
+.reward-badge .rank-emblem.rank--predator {
+    --glow-size: 4px;
+}
+
+/* 光の強さを、ゆっくり大きく・小さくする */
+@keyframes emblem-glow {
+    0%, 100% { filter: drop-shadow(0 0 calc(var(--glow-size) * 0.5) var(--rank-color)); }
+    50%      { filter: drop-shadow(0 0 var(--glow-size) var(--rank-color))
+                       drop-shadow(0 0 calc(var(--glow-size) * 0.4) #fff); }
+}
+
+/* 動きを減らす設定にしている人には、アニメーションを止める（目が疲れる人への配慮）
+   エンブレムの光は付けたまま、脈打つ動きだけ止める */
+@media (prefers-reduced-motion: reduce) {
+    .avatar[class*="frame--"] { animation: none; }
+    .rank-emblem { animation: none; }
+}
+
+@media (max-width: 767px) {
+    .stamp-week { gap: 4px; }
+    .stamp-day__mark { font-size: 1.4rem; }
+}
+
+
+/* ==================================================
+   == 17. 献立
+   ================================================== */
+
+/* ----- 週の移動 ----- */
 .week-nav {
     display: flex;
     align-items: center;
@@ -1950,7 +2757,7 @@ body.auth-page > .auth-card {
 
 .week-nav__shopping { margin-left: auto; }   /* 買い物リストだけ右端へ */
 
-/* ===== 7日分の列（せまい画面では横にスクロール） ===== */
+/* ----- 7日分の列（せまい画面では横にスクロール） ----- */
 .week {
     display: grid;
     grid-template-columns: repeat(7, minmax(140px, 1fr));
@@ -1988,7 +2795,7 @@ body.auth-page > .auth-card {
 .day__date { display: block; font-size: 1.05rem; }
 .day__dow { font-size: 0.85rem; }
 
-/* ===== 朝・昼・夜の枠 ===== */
+/* ----- 朝・昼・夜の枠 ----- */
 .slot {
     padding: 8px;
     border-bottom: 1px dashed var(--border);
@@ -2028,7 +2835,7 @@ body.auth-page > .auth-card {
 .slot__add:hover { background: var(--primary-light); color: var(--primary-dark); }
 .slot__add .material-symbols-rounded { font-size: 1.1rem; }
 
-/* ===== 献立1つ（名前 → 写真 → 作った） ===== */
+/* ----- 献立1つ（名前 → 写真 → 作った） ----- */
 .plan {
     display: flex;
     flex-direction: column;
@@ -2092,7 +2899,7 @@ body.auth-page > .auth-card {
 /* 作った献立の写真は少し薄く */
 .plan.is-cooked .plan__photo { opacity: 0.6; }
 
-/* ===== 献立の詳細 ===== */
+/* ----- 献立の詳細 ----- */
 .plan-detail {
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
@@ -2137,43 +2944,18 @@ body.auth-page > .auth-card {
     border-top: 1px dashed var(--border);
 }
 
-/* ===== スマホ ===== */
 @media (max-width: 767px) {
     .week { grid-template-columns: repeat(7, 46%); }   /* 画面に約2日分ずつ見える */
     .week-nav__shopping { margin-left: 0; }
     .plan-detail { grid-template-columns: 1fr; }
 }
 
-/* ===== 共通：点線区切りのリスト・横並びの入力欄 ===== */
-.simple-list {
-    list-style: none;
-    margin: 0 0 8px;
-    padding: 0;
-}
 
-.simple-list li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 4px 12px;
-    padding: 10px 0;
-    border-bottom: 1px dashed var(--border);
-}
+/* ==================================================
+   == 18. 食材管理
+   ================================================== */
 
-.simple-list li:last-child { border-bottom: none; }
-
-/* 入力欄を2つ横に並べる */
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-.form-field input[type="date"],
-.form-field input[type="number"] { width: 100%; }
-
-/* ===== 食材管理：期限のお知らせ ===== */
+/* ----- 期限のお知らせ ----- */
 .banner { align-items: center; }
 
 /* 「すべて見る」を右端に */
@@ -2186,7 +2968,7 @@ body.auth-page > .auth-card {
     white-space: nowrap;
 }
 
-/* ===== カテゴリのチップと並び順 ===== */
+/* ----- カテゴリのチップと並び順 ----- */
 .filters {
     display: flex;
     align-items: center;
@@ -2217,7 +2999,7 @@ body.auth-page > .auth-card {
     color: var(--text-muted);
 }
 
-/* ===== 食材の一覧 ===== */
+/* ----- 食材の一覧 ----- */
 .stock-list {
     list-style: none;
     margin: 0;
@@ -2311,7 +3093,7 @@ body.auth-page > .auth-card {
     font-size: 0.88rem;
 }
 
-/* ===== 期限が近い食材を使えるレシピ ===== */
+/* ----- 期限が近い食材を使えるレシピ ----- */
 .suggest-list {
     list-style: none;
     display: grid;
@@ -2348,7 +3130,105 @@ body.auth-page > .auth-card {
 .suggest__photo .photo-placeholder { font-size: 1.3rem; }
 .suggest small { display: block; }
 
-/* ===== スマホ ===== */
+/* ----- 在庫で作れるレシピ ----- */
+.cookable-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+/* 1件：写真（左）＋ 料理名・そろっている数・足りない材料（右） */
+.cookable {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 14px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    color: var(--text);
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.cookable:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-strong);
+}
+
+.cookable__photo {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+}
+
+.cookable__photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cookable__photo .photo-placeholder { font-size: 2rem; }
+
+.cookable__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.cookable__title { font-size: 1.02rem; }
+
+.cookable__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--success);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.cookable__count .material-symbols-rounded { font-size: 1.05rem; }
+
+.cookable__missing {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.cookable__missing-label {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+}
+
+/* ----- 買ったものを在庫に追加（確認画面） ----- */
+.purchase-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+/* 1行：食材名｜数量｜単位｜カテゴリ｜期限の種類｜期限日｜× */
+.purchase-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) 80px 70px minmax(0, 1.3fr) 110px 150px 36px;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.purchase-row input,
+.purchase-row select { width: 100%; }
+
+/* 見出しの行 */
+.purchase-row--head {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+}
+
 @media (max-width: 767px) {
     /* チップと並び順を縦に並べる */
     .filters {
@@ -2376,18 +3256,33 @@ body.auth-page > .auth-card {
     .qty { grid-area: qty; }
     .stock-item__expiry { grid-area: expiry; text-align: right; }
 
-    .form-row { grid-template-columns: 1fr; gap: 0; }
+    /* 作れるレシピは1列に */
+    .cookable-grid { grid-template-columns: 1fr; }
+    .cookable { grid-template-columns: 90px minmax(0, 1fr); }
+
+    /* 在庫に追加：1行目に食材名と×、2行目に数量・単位、3行目にカテゴリ、4行目に期限 */
+    .purchase-row--head { display: none; }
+    .purchase-row {
+        grid-template-columns: 1fr 1fr 36px;
+        grid-template-areas:
+            "name name close"
+            "qty  unit unit"
+            "cat  cat  cat"
+            "type date date";
+    }
+    .purchase-row > :nth-child(1) { grid-area: name; }
+    .purchase-row > :nth-child(2) { grid-area: qty; }
+    .purchase-row > :nth-child(3) { grid-area: unit; }
+    .purchase-row > :nth-child(4) { grid-area: cat; }
+    .purchase-row > :nth-child(5) { grid-area: type; }
+    .purchase-row > :nth-child(6) { grid-area: date; }
+    .purchase-row > :nth-child(7) { grid-area: close; }
 }
 
-/* 表がはみ出すときは、表だけ横にスクロールさせる（ページ全体は横にずれない） */
-.table-wrap {
-    overflow-x: auto;
-    margin: 12px 0;
-}
 
-.form-field textarea { width: 100%; }
-
-/* ===== 買い物リスト（チェックすると取り消し線） ===== */
+/* ==================================================
+   == 19. 買い物リスト（チェックすると取り消し線）
+   ================================================== */
 .check-list {
     list-style: none;
     margin: 0;
@@ -2423,756 +3318,122 @@ body.auth-page > .auth-card {
     margin-left: 28px;
 }
 
-/* 「在庫で足りるもの」の開閉の見出しは、押せるように */
-details > summary.section-title { cursor: pointer; }
-
-/* ===== レシピのメモ（付箋のような色で、作り方と区別する） ===== */
-.recipe-memo {
-    background: #fff8e6;
-    border-color: #f0dfb4;
-}
-
-.recipe-memo__text {
-    margin: 0;
-    white-space: pre-line;      /* 入力された改行をそのまま表示 */
-    overflow-wrap: anywhere;    /* 長いURLなどもはみ出さずに折り返す */
-}
-
-/* ===== プロフィール写真の拡大 ===== */
-/* ボタンの見た目を消して、写真だけに見せる */
-.avatar-zoom {
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: none;
-    cursor: zoom-in;                 /* マウスが虫めがねの形になる */
-    transition: transform 0.15s;
-}
-
-.avatar-zoom:hover { transform: scale(1.04); }
-
-/* 拡大表示のダイアログ */
-.photo-dialog {
-    position: relative;
-    padding: 0;
-    border: none;
-    border-radius: var(--radius);
-    background: transparent;
-    max-width: min(90vw, 560px);     /* 画面の90%か560pxの、小さいほう */
-    overflow: visible;
-}
-
-/* ::backdrop：ダイアログの後ろ（画面全体）を暗くする部分 */
-.photo-dialog::backdrop {
-    background: rgba(40, 25, 15, 0.7);
-}
-
-.photo-dialog img {
-    display: block;
-    width: 100%;
-    max-height: 80vh;                /* 縦長の写真でも、画面からはみ出さない */
-    object-fit: contain;             /* 切り抜かずに、写真全体を表示する */
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-strong);
-}
-
-/* 右上の × ボタン */
-.photo-dialog__close {
-    position: absolute;
-    top: -14px;
-    right: -14px;
+/* ----- おまかせ献立 ----- */
+.auto-filter {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border-radius: 50%;
-    background: #fff;
-    color: var(--text);
-    box-shadow: var(--shadow);
-}
-/* ===== レシピ一覧の並び順 ===== */
-.sort-select {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;              /* 見出しが長くても、プルダウンは縮ませない */
-    color: var(--text-muted);
-}
-
-.sort-select select {
-    padding: 6px 10px;
-    border-radius: var(--radius-pill);
-    font-weight: 700;
-}
-
-/* 見出しが長いとき（長い検索語など）は、見出しの方を「…」で切って同じ行に収める */
-.section-head .section-title {
-    min-width: 0;
-}
-
-.section-head .section-title > span:not(.material-symbols-rounded) {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-/* 数字のまとめが2つのとき（投稿者のページ） */
-.stats--2 { grid-template-columns: repeat(2, 1fr); }
-
-/* カードの下の段（投稿者・いいね数）。リンクの外に出したので、余白をここで付ける */
-.recipe-card .recipe-card__meta {
-    padding: 0 14px 12px;
-}
-
-/* 投稿者名のリンク：普段は灰色、マウスを乗せると下線 */
-.recipe-card a.mini-user {
-    color: var(--text-muted);
-    text-decoration: none;
-    min-width: 0;
-}
-
-.recipe-card a.mini-user:hover { text-decoration: underline; }
-
-/* 名前が長いときは「…」 */
-.recipe-card a.mini-user > span:last-child {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-@media (max-width: 767px) {
-    .recipe-card .recipe-card__meta { padding: 0 10px 10px; }
-}
-
-/* レシピ詳細の投稿者（写真＋名前のリンク） */
-.author-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text);
-    text-decoration: none;
-}
-
-.author-link:hover strong { text-decoration: underline; }
-
-/* レシピ詳細の投稿者：名前は左、日時は右の端 */
-.author-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;   /* 左右の端に分ける */
-    flex-wrap: wrap;                  /* せまい画面では日時が下の行に回る */
+    flex-wrap: wrap;
     gap: 8px 16px;
 }
 
-/* 投稿・更新を横に並べる。文字の大きさはふつう、色は少し薄く */
-.author-row__dates {
+.auto-filter .form-label { margin: 0; }
+.auto-filter__types { display: flex; gap: 14px; }
+.auto-filter__types .check { margin-top: 0; }
+
+.auto-list {
+    list-style: none;
     display: flex;
-    flex-wrap: wrap;               /* せまい画面では、更新が下の行に回る */
-    justify-content: flex-end;     /* 右に寄せる */
-    gap: 4px 16px;                 /* 投稿と更新の間をあける */
-    color: var(--text-muted);
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
 }
 
-
-/* プロフィール編集の下の「パスワードを変更する」 */
-.profile-form__password {
-    margin: 20px 0 0;
-    padding-top: 16px;
-    border-top: 1px dashed var(--border);
-    text-align: center;
-}
-
-.profile-form__password a {
-    display: inline-flex;
+/* 1行：チェック｜日付と枠｜写真｜料理名と理由 */
+.auto-plan {
+    display: grid;
+    grid-template-columns: 24px 90px 96px minmax(0, 1fr);
     align-items: center;
-    gap: 4px;
-    font-weight: 700;
-}
-
-/* ===== ヘッダーのバッジ（期限が近い食材の数） ===== */
-/* バッジを、メニューの文字の右上に重ねるための基準 */
-.site-nav a {
-    position: relative;
-}
-
-.nav-badge {
-    position: absolute;
-    top: 2px;
-    right: -6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;               /* 1桁でも丸く、2桁以上は横に伸びる */
-    height: 18px;
-    padding: 0 5px;
-    border: 2px solid var(--primary-dark);   /* ヘッダーの色で縁取りして、浮いて見えるように */
-    border-radius: var(--radius-pill);
-    background: #e0533c;
-    color: #fff;
-    font-size: 0.68rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-/* スマホ：画面の下のメニューでは、アイコンの右上に出す */
-@media (max-width: 767px) {
-    .nav-badge {
-        top: 0;
-        right: calc(50% - 22px);   /* 真ん中のアイコンの、少し右 */
-        border-color: var(--surface);
-    }
-}
-
-/* ===== 料理レベル ===== */
-.level {
-    margin-top: 14px;
-    padding: 14px 16px;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     background: #fff;
+    cursor: pointer;
+    transition: opacity 0.15s;
 }
 
-.level__head {
+/* チェックを外した提案は薄くする（:has で「中のチェックが外れている行」を選ぶ） */
+.auto-plan:has(input:not(:checked)) { opacity: 0.45; }
+
+.auto-plan__when {
     display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.level__icon { font-size: 1.8rem; }
-
-/* 「Lv.2」の丸いラベル */
-.level__lv {
-    padding: 1px 10px;
-    border-radius: var(--radius-pill);
-    background: var(--primary);
-    color: #fff;
+    flex-direction: column;
+    color: var(--primary-dark);
     font-weight: 700;
-    font-size: 0.8rem;
+    line-height: 1.3;
 }
 
-.level__title { font-size: 1.1rem; }
+.auto-plan__when small { display: flex; align-items: center; gap: 2px; }
+.auto-plan__when .material-symbols-rounded { color: var(--warning); font-size: 1.05rem; }
 
-.level__points {
-    margin-left: auto;              /* ポイントだけ右端へ */
-    color: var(--text-muted);
-    font-weight: 700;
-}
-
-/* バーの外枠（灰色）と中身（緑〜金のグラデーション） */
-.level__bar {
-    height: 10px;
-    margin: 10px 0 6px;
+.auto-plan__photo {
+    display: block;
     overflow: hidden;
-    border-radius: var(--radius-pill);
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-sm);
     background: var(--surface-2);
 }
 
-.level__fill {
-    display: block;
-    height: 100%;
-    border-radius: var(--radius-pill);
-    background: linear-gradient(90deg, #9cc46a, #e5b72c);
-    transition: width 0.6s;
-}
+.auto-plan__photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.auto-plan__photo .photo-placeholder { font-size: 1.8rem; }
 
-.level__next {
-    display: block;
-    color: var(--primary-dark);
-    font-weight: 700;
-}
-
-.level__hint {
-    display: block;
-    margin-top: 4px;
-    color: var(--text-muted);
-    font-size: 0.72rem;
-}
-
-/* ===== 料理スタンプカード ===== */
-.stamp-card { margin-top: 20px; }
-
-.stamp-card__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.stamp-card__stats {
-    display: flex;
-    gap: 16px;
-    color: var(--text-muted);
-}
-
-.stamp-card__stats strong {
-    color: var(--primary-dark);
-    font-size: 1.3rem;
-}
-
-/* 7列のマス目 */
-.stamp-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-    margin-bottom: 6px;
-}
-
-.stamp-grid--head span {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-align: center;
-}
-
-.stamp-grid--head .is-sat { color: #4a7fb5; }
-.stamp-grid--head .is-sun { color: #c0533a; }
-
-/* 1マス：正方形 */
-.stamp {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    aspect-ratio: 1 / 1;
-    max-height: 56px;
-    border: 1px dashed var(--border);
-    border-radius: 50%;
-    background: #fff;
-}
-
-.stamp.is-blank {
-    border: none;
-    background: transparent;
-}
-
-.stamp__date {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-}
-
-/* 作った日：スタンプを大きく押して、日にちは右下に小さく */
-.stamp.is-cooked {
-    border: 2px solid #e8a35c;
-    background: #fff3e2;
-}
-
-.stamp__mark {
-    font-size: 1.4rem;
-    transform: rotate(-12deg);      /* 少し傾けて、手で押したスタンプらしく */
-}
-
-.stamp.is-cooked .stamp__date {
-    position: absolute;
-    right: 2px;
-    bottom: 0;
-    font-size: 0.65rem;
-}
-
-/* 今日のマスは緑の枠 */
-.stamp.is-today {
-    border: 2px solid #9cc46a;
-}
-
-.stamp.is-today .stamp__date {
-    color: var(--success);
-    font-weight: 700;
-}
-
-@media (max-width: 767px) {
-    .stamp-grid { gap: 4px; }
-    .stamp__mark { font-size: 1.1rem; }
-}
-
-/* ===== 料理スタンプ（1週間） ===== */
-.stamp-card { margin-top: 20px; }
-
-.stamp-card__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-
-/* 7日分を横に並べる */
-.stamp-week {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
-}
-
-.stamp-day {
+.auto-plan__body {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 4px;
+    min-width: 0;
 }
 
-.stamp-day__dow {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 700;
+.auto-plan .chips { margin: 0; }
+.auto-plan .tag { white-space: normal; }   /* 材料が多いときは折り返す */
+
+/* 緑のラベル（期限が近い食材を使える） */
+.tag--good {
+    background: var(--success-bg);
+    color: var(--success);
 }
 
-/* スタンプの丸 */
-.stamp-day__circle {
+/* スマホ：1行目に日付、2行目に写真と料理名 */
+@media (max-width: 767px) {
+    .auto-plan {
+        grid-template-columns: 24px 80px minmax(0, 1fr);
+        grid-template-areas:
+            "check when  when"
+            "check photo body";
+        gap: 6px 10px;
+    }
+    .auto-plan > input       { grid-area: check; }
+    .auto-plan__when         { grid-area: when; flex-direction: row; gap: 8px; }
+    .auto-plan__photo        { grid-area: photo; }
+    .auto-plan__body         { grid-area: body; }
+}
+
+/* ----- フォロワー一覧 ----- */
+.follow-tabs { margin: 0 0 16px; }
+.follow-tabs strong { margin-left: 4px; }
+
+/* フォロワー・フォロー中の人数（プロフィールのカード） */
+.follow-counts {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 72px;
-    aspect-ratio: 1 / 1;
-    border: 2px dashed var(--border);
-    border-radius: 50%;
-    background: #fff;
+    gap: 16px;
+    margin: 0 0 6px;
+    font-size: 0.85rem;
 }
 
-.stamp-day__date {
+.follow-counts a {
     color: var(--text-muted);
+    text-decoration: none;
+}
+
+.follow-counts a:hover { color: var(--primary-dark); }
+
+.follow-counts strong {
+    margin-right: 3px;
+    color: var(--text);
     font-size: 1rem;
 }
 
-.stamp-day__label {
-    color: var(--text-muted);
-    font-size: 0.72rem;
-}
-
-/* 作った日：ハンコを押したように */
-.stamp-day.is-cooked .stamp-day__circle {
-    border: 3px solid #e07b4f;
-    background: #fff3e2;
-    animation: stamp-in 0.35s ease-out;      /* ポンと押されたように見せる */
-}
-
-.stamp-day__mark {
-    font-size: 2rem;
-    transform: rotate(-12deg);
-}
-
-/* 今日 */
-.stamp-day.is-today .stamp-day__circle { box-shadow: 0 0 0 3px #cfe3b0; }
-.stamp-day.is-today .stamp-day__label { color: var(--success); font-weight: 700; }
-
-/* まだ来ていない日は薄く */
-.stamp-day.is-future { opacity: 0.5; }
-
-/* 大きく出てから元の大きさに戻る（ハンコを押した感じ） */
-@keyframes stamp-in {
-    from { transform: scale(1.4); opacity: 0; }
-    to   { transform: scale(1);   opacity: 1; }
-}
-
-/* 1週間の目標 */
-.stamp-goal { margin-top: 16px; }
-
-.stamp-goal__text {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 0.9rem;
-}
-
-
-/* プロフィールの称号 */
-.reward-badge {
-    padding: 2px 10px;
-    border-radius: var(--radius-pill);
-    background: #fff8e6;
-    color: var(--primary-dark);
-    font-size: 0.78rem;
-    font-weight: 700;
-}
-
-
-@media (max-width: 767px) {
-    .stamp-week { gap: 4px; }
-    .stamp-day__mark { font-size: 1.4rem; }
-}
-
-
-/* ===== プロフィール編集：枠を選ぶ ===== */
-.frame-picker {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-}
-
-.frame-option { cursor: pointer; }
-
-/* 本物のラジオボタンは隠す（朝昼夜のボタンと同じやり方） */
-.frame-option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.frame-option__box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 4px 10px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    background: #fff;
-}
-
-.frame-option__name { font-weight: 700; font-size: 0.85rem; }
-
-/* 選んでいる枠 */
-.frame-option input:checked + .frame-option__box {
-    border-color: var(--primary);
-    background: var(--primary-light);
-}
-
-/* まだ使えない枠 */
-.frame-option.is-locked { cursor: not-allowed; }
-.frame-option.is-locked .frame-option__box { opacity: 0.45; filter: grayscale(1); }
-
-@media (max-width: 767px) {
-    .frame-picker { grid-template-columns: repeat(3, 1fr); }
-}
-
-/* ===== ランクの色（Apex のランクの色をイメージ） ===== */
-:root {
-    --rank-rookie:   #8a7966;
-    --rank-bronze:   #b0703f;
-    --rank-silver:   #aab4be;
-    --rank-gold:     #e1b13a;
-    --rank-platinum: #47b5b8;
-    --rank-diamond:  #3f8fe8;
-    --rank-master:   #9a55d6;
-    --rank-predator: #e0302f;
-}
-
-/*
-    ランクごとに「色」だけを変数で決めておき、枠・ラベル・バーはその変数を使う。
-    こうすると、ランクが8つあっても、色の指定は1ランク1行で済む
-*/
-.rank--rookie,   .frame--rookie   { --rank-color: var(--rank-rookie); }
-.rank--bronze,   .frame--bronze   { --rank-color: var(--rank-bronze); }
-.rank--silver,   .frame--silver   { --rank-color: var(--rank-silver); }
-.rank--gold,     .frame--gold     { --rank-color: var(--rank-gold); }
-.rank--platinum, .frame--platinum { --rank-color: var(--rank-platinum); }
-.rank--diamond,  .frame--diamond  { --rank-color: var(--rank-diamond); }
-.rank--master,   .frame--master   { --rank-color: var(--rank-master); }
-.rank--predator, .frame--predator { --rank-color: var(--rank-predator); }
-
-
-
-/* ===== 称号のラベル・料理レベルを、ランクの色にする ===== */
-.reward-badge[class*="rank--"] {
-    background: color-mix(in srgb, var(--rank-color) 15%, #fff);   /* ランクの色を薄くした背景 */
-    border: 1px solid var(--rank-color);
-    color: color-mix(in srgb, var(--rank-color) 70%, #000);        /* 少し濃くした文字 */
-}
-
-.level[class*="rank--"] .level__lv   { background: var(--rank-color); }
-.level[class*="rank--"] .level__fill { background: var(--rank-color); }
-
-/* 枠を選ぶ欄：9つになったので、入るだけ並べる */
-.frame-picker { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
-
-/* プロフィール編集：今のランクの枠の案内 */
-.frame-info {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin: 6px 0 0;
-}
-
-/* ===== ランクの色から、明るい色・濃い色を作る ===== */
-/* --rank-color（ランクの色）に白・黒を混ぜて、グラデーション用の色を作る */
-[class*="rank--"],
-[class*="frame--"] {
-    --rank-light: color-mix(in srgb, var(--rank-color) 40%, #fff);
-    --rank-dark:  color-mix(in srgb, var(--rank-color) 65%, #000);
-}
-
-/* ===== アイコンの枠（金属の光沢のあるグラデーションの輪） ===== */
-/*
-    @property：CSS の変数に「角度」という型を教える。
-    型がわかると、アニメーションで 0deg → 360deg と滑らかに変化させられる（光が回る）
-*/
-@property --frame-angle {
-    syntax: "<angle>";
-    inherits: false;
-    initial-value: 0deg;
-}
-
-/*
-    枠のしくみ：
-      border を透明にして、そこに背景のグラデーションを見せる。
-      padding-box（内側）はふつうの背景色、border-box（枠の部分）は金属っぽいグラデーション。
-      conic-gradient：中心からぐるっと一周する向きのグラデーション。明・暗を交互に置くと、金属の光沢に見える
-*/
-.avatar[class*="frame--"] {
-    --frame-width: 3px;
-    --frame-glow: 0px;
-    border: var(--frame-width) solid transparent;
-    background:
-        linear-gradient(#e7ddd2, #e7ddd2) padding-box,
-        conic-gradient(from var(--frame-angle),
-            var(--rank-light), var(--rank-color) 20%, var(--rank-dark) 35%,
-            var(--rank-color) 50%, var(--rank-light) 65%, var(--rank-dark) 85%, var(--rank-light)) border-box;
-    box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.12),                      /* 枠の外側の細い影（輪郭をくっきり） */
-        0 0 var(--frame-glow) var(--rank-color);            /* 光（プラチナ以上） */
-}
-
-/* アイコンの大きさに合わせて、枠の太さを変える */
-.avatar--sm[class*="frame--"] { --frame-width: 2px; }
-.avatar--md[class*="frame--"] { --frame-width: 3px; }
-.avatar--xl[class*="frame--"] { --frame-width: 6px; }
-
-/* 光る：プラチナ（Lv.5）から。上のランクほど強く */
-.avatar.frame--platinum { --frame-glow: 8px; }
-.avatar.frame--diamond  { --frame-glow: 12px; }
-.avatar.frame--master   { --frame-glow: 16px; }
-.avatar.frame--predator { --frame-glow: 20px; }
-.avatar--xl.frame--platinum { --frame-glow: 16px; }
-.avatar--xl.frame--diamond  { --frame-glow: 22px; }
-.avatar--xl.frame--master   { --frame-glow: 28px; }
-.avatar--xl.frame--predator { --frame-glow: 34px; }
-
-/* 光が輪の上を回る：ダイヤ（Lv.6）から。プレデターは速く */
-@keyframes frame-spin {
-    to { --frame-angle: 360deg; }
-}
-
-.avatar.frame--diamond,
-.avatar.frame--master   { animation: frame-spin 5s linear infinite; }
-.avatar.frame--predator { animation: frame-spin 2.5s linear infinite; }
-
-/* 動きを減らす設定にしている人には、アニメーションを止める（目が疲れる人への配慮） */
-@media (prefers-reduced-motion: reduce) {
-    .avatar[class*="frame--"] { animation: none; }
-}
-
-
-
-/* 称号のラベルの中のエンブレムと文字を、横に並べる */
-.reward-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-/* 料理レベルの見出しのエンブレム */
-.level__icon {
-    display: inline-flex;
-    font-size: 0;      /* 前の絵文字用の大きさを打ち消す */
-}
-
-
-/* 料理レベルのカード：Lv.8 は参考画像のように金色の帯で目立たせる */
-.level.rank--predator {
-    background: linear-gradient(90deg, #fff1cf, #fffaf0 70%);
-    border: 1px solid #f0d58a;
-    box-shadow: 0 0 16px rgba(240, 199, 74, 0.35);
-}
-
-/* ===== ランクのエンブレム（画像） ===== */
-.rank-emblem {
-    flex-shrink: 0;
-    object-fit: contain;     /* 縦横の比率を保ったまま、枠に収める */
-}
-
-
-/* 称号のラベルの中のエンブレム：ラベルの高さに収める */
-.reward-badge .rank-emblem {
-    width: 22px;
-    height: 22px;
-}
-
-/* Lv.8 だけ、ラベルの縁から少しだけ大きく出す（上下に余白を取らずに、ラベルの高さは変えない） */
-.reward-badge .rank-emblem.rank--predator {
-    width: 26px;
-    height: 26px;
-    margin: -4px 0 -4px -4px;
-}
-
-/* ===== エンブレムの光（プラチナ＝Lv.5 から） ===== */
-/*
-    drop-shadow：画像の「形にそって」影や光を付ける（透明な部分には付かない）。
-    色はランクの色（--rank-color）を使うので、プラチナは青緑、ダイヤは青…と自動で変わる
-*/
-.rank-emblem.rank--platinum,
-.rank-emblem.rank--diamond,
-.rank-emblem.rank--master,
-.rank-emblem.rank--predator {
-    --glow-size: 6px;
-    filter: drop-shadow(0 0 var(--glow-size) var(--rank-color));
-    animation: emblem-glow 2.4s ease-in-out infinite;
-}
-
-/* 上のランクほど強く光る */
-.rank-emblem.rank--diamond  { --glow-size: 8px; }
-.rank-emblem.rank--master   { --glow-size: 10px; }
-.rank-emblem.rank--predator { --glow-size: 12px; animation-duration: 1.6s; }   /* プレデターは速く脈打つ */
-
-/* 光の強さを、ゆっくり大きく・小さくする */
-@keyframes emblem-glow {
-    0%, 100% { filter: drop-shadow(0 0 calc(var(--glow-size) * 0.5) var(--rank-color)); }
-    50%      { filter: drop-shadow(0 0 var(--glow-size) var(--rank-color))
-                       drop-shadow(0 0 calc(var(--glow-size) * 0.4) #fff); }
-}
-
-/* 称号のラベルの中は小さいので、光も控えめにする */
-.reward-badge .rank-emblem.rank--platinum,
-.reward-badge .rank-emblem.rank--diamond,
-.reward-badge .rank-emblem.rank--master,
-.reward-badge .rank-emblem.rank--predator {
-    --glow-size: 4px;
-}
-
-/* 動きを減らす設定の人には、光は付けたまま、脈打つ動きだけ止める */
-@media (prefers-reduced-motion: reduce) {
-    .rank-emblem { animation: none; }
-}
-
-/* ===== マイページのプロフィールのカード：称号と2つのボタンの大きさをそろえる ===== */
-/* 3つとも同じ幅・同じ高さにする（数字を変えるときは、ここだけ変えればよい） */
-.profile-card {
-    --profile-btn-width: 220px;
-    --profile-btn-height: 44px;
-}
-
-.profile-card .btn,
-.profile-card .reward-badge {
-    box-sizing: border-box;              /* 枠線の太さも含めて、幅と高さをそろえる */
-    width: var(--profile-btn-width);
-    height: var(--profile-btn-height);
-    padding: 0 16px;                     /* 高さは height で決めるので、上下の余白は 0 */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border-radius: var(--radius-pill);
-    font-size: 0.95rem;
-    line-height: 1;
-}
-
-/* ボタンのアイコン */
-.profile-card .btn .material-symbols-rounded {
-    font-size: 1.25rem;
-}
-
-
-/* 称号の中のエンブレム：ラベルの高さに収まる大きさ */
-.profile-card .reward-badge .rank-emblem {
-    width: 30px;
-    height: 30px;
-}
-
-/* Lv.8 は羽と王冠がある分、少しだけ大きく。はみ出した分はマイナスの余白で打ち消して、高さは変えない */
-.profile-card .reward-badge .rank-emblem.rank--predator {
-    width: 36px;
-    height: 36px;
-    margin: -3px 0;
-}
+/* レシピ一覧の すべて／フォロー中 */
+.feed-tabs { margin: 28px 0 0; }
+.feed-tabs + .section-head { margin-top: 12px; }   /* タブのすぐ下の見出しは、間をつめる */

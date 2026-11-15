@@ -30,7 +30,8 @@
 
                 <!-- レシピとメモの両方があるときは、メモも表示する -->
                 <p th:if="${plan.recipe != null and plan.memo != null}" class="note" th:text="'メモ：' + ${plan.memo}">メモ</p>
-
+                <span th:if="${plan.recipe != null}" class="chip chip--soft"
+                      th:text="${plan.servingsOrDefault} + '人分'">4人分</span>
                 <span th:if="${plan.cooked}" class="chip chip--success">
                     <span class="material-symbols-rounded">check_circle</span>作った
                 </span>

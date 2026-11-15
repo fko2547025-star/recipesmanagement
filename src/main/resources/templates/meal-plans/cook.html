@@ -14,6 +14,8 @@
         <p class="plan-detail__when">
             <span class="material-symbols-rounded" th:text="${plan.mealIcon}">dark_mode</span>
             <span th:text="${#temporals.format(plan.planDate, 'yyyy/M/d(E)')} + ' ' + ${plan.mealType}">2026/11/4(水) 夜</span>
+            <span th:text="${#temporals.format(plan.planDate, 'yyyy/M/d(E)')} + ' ' + ${plan.mealType}
+                           + '・' + ${plan.servingsOrDefault} + '人分'">2026/11/4(水) 夜・4人分</span>        
         </p>
 
         <section class="card section-card">

@@ -85,7 +85,8 @@
                             <span th:text="${liked} ? 'いいね・保存済み' : 'いいねして保存する'">いいねして保存する</span>
                         </button>
                     </form>
-                    <a th:href="@{/meal-plans/new(recipeId=${recipe.id})}" class="btn btn--outline btn--block">
+                    <!-- 材料の欄で選んでいる人数を、そのまま献立の登録画面に渡す -->
+                    <a th:href="@{/meal-plans/new(recipeId=${recipe.id},servings=${servings})}" class="btn btn--outline btn--block">
                         <span class="material-symbols-rounded">calendar_add_on</span>献立に追加
                     </a>
                 </div>
@@ -180,6 +181,25 @@
             </div>
         </section>
 
+        <!-- ===== つくれぽ（作った人がいるときだけ） ===== -->
+        <section class="card section-card" id="reports" th:if="${reportUserCount > 0}">
+            <h2 class="section-title">
+                <span class="material-symbols-rounded">soup_kitchen</span>つくれぽ
+                <small class="report-count" th:text="${reportUserCount} + '人が作りました'">3人が作りました</small>
+            </h2>
+
+            <!-- 写真付きのつくれぽを、横に並べる（スマホでは横にスクロール） -->
+            <div class="report-gallery" th:if="${!#lists.isEmpty(reports)}">
+                <a th:each="r : ${reports}" th:href="'#comment-' + ${r.id}" class="report-card">
+                    <img th:src="@{/uploads/{file}(file=${r.imagePath})}" th:alt="${r.user.displayName} + 'さんのつくれぽ'" loading="lazy">
+                    <span class="report-card__user">
+                        <span th:replace="~{fragments/avatar :: avatar(${r.user}, 'avatar--sm')}"></span>
+                        <span th:text="${r.user.displayName}">はなこ</span>
+                    </span>
+                </a>
+            </div>
+        </section>
+
         <!-- ===== コメント ===== -->
         <section class="card section-card" id="comments">
             <h2 class="section-title">
@@ -189,36 +209,89 @@
 
             <p th:if="${#lists.isEmpty(comments)}" class="text-muted">まだコメントはありません</p>
 
-            <div th:each="c : ${comments}" class="comment">
-                <strong th:text="${c.user.username}">hanako</strong>
-                <small class="text-muted" th:text="${#temporals.format(c.createdAt, 'yyyy/MM/dd HH:mm')}">2026/10/23 12:40</small>
-                <small class="text-muted" th:if="${c.edited}">（編集済み）</small>
+            <!-- id="comment-〇"：上のつくれぽの写真を押したとき、このコメントまでスクロールする -->
+            <div th:each="c : ${comments}" class="comment" th:id="'comment-' + ${c.id}"
+                 th:classappend="${c.cookedReport} ? 'is-report'">
+                <div class="comment__head">
+                    <a th:href="@{/users/{id}(id=${c.user.id})}" class="comment__user">
+                        <span th:replace="~{fragments/avatar :: avatar(${c.user}, 'avatar--sm')}"></span>
+                        <strong th:text="${c.user.displayName}">はなこ</strong>
+                    </a>
+                    <span th:if="${c.cookedReport}" class="report-badge">🍳 作りました</span>
+                    <small class="text-muted" th:text="${#temporals.format(c.createdAt, 'yyyy/MM/dd HH:mm')}">2026/10/23 12:40</small>
+                    <small class="text-muted" th:if="${c.edited}">（編集済み）</small>
 
-                <!-- 自分のコメントだけ：編集・削除 -->
-                <th:block th:if="${loginUsername != null and loginUsername == c.user.username}">
-                    <a th:href="@{/comments/{id}/edit(id=${c.id})}">編集</a>
-                    <form th:action="@{/comments/{id}/delete(id=${c.id})}" method="post" style="display:inline"
-                          onsubmit="return confirm('このコメントを削除しますか？');">
-                        <button type="submit" class="btn--danger btn--sm">削除</button>
-                    </form>
-                </th:block>
+                    <!-- 自分のコメントだけ：編集・削除 -->
+                    <th:block th:if="${loginUsername != null and loginUsername == c.user.username}">
+                        <a th:href="@{/comments/{id}/edit(id=${c.id})}" class="comment__action">編集</a>
+                        <form th:action="@{/comments/{id}/delete(id=${c.id})}" method="post" style="display:inline"
+                              onsubmit="return confirm('このコメントを削除しますか？');">
+                            <button type="submit" class="btn--danger btn--sm">削除</button>
+                        </form>
+                    </th:block>
+                </div>
 
                 <!-- 他の人が書いた文章なので、必ず th:text で表示する -->
                 <div class="comment__text" th:text="${c.content}">作ってみました！</div>
+                <!-- 写真（あるときだけ） -->
+                <img th:if="${c.imagePath}" th:src="@{/uploads/{file}(file=${c.imagePath})}"
+                     class="comment__photo" alt="" loading="lazy">
             </div>
 
-            <!-- コメント投稿フォーム（ログイン中だけ） -->
-            <form th:if="${loginUsername != null}" class="comment-form"
+            <!-- ===== コメント・つくれぽの投稿（ログイン中だけ） ===== -->
+            <!-- 写真を送るので multipart/form-data -->
+            <form th:if="${loginUsername != null}" class="comment-form" enctype="multipart/form-data"
                   th:action="@{/recipes/{id}/comments(id=${recipe.id})}" method="post">
                 <!-- 入力チェックでエラーになったときだけ表示（フラッシュ属性） -->
                 <p th:if="${commentError}" th:text="${commentError}" class="text-danger">コメントを入力してください</p>
+                <small th:if="${commentError}" class="field-hint text-danger">※写真を選んでいた場合は、もう一度選んでください</small>
+
                 <!-- エラーで戻ったときは、入力していた内容を入れておく -->
                 <textarea name="content" rows="3" maxlength="500" required
-                          placeholder="コメントを入力" th:text="${commentDraft}"></textarea>
-                <button type="submit">コメントする</button>
+                          placeholder="コメントを入力（作ったら感想やアレンジも教えてください）" th:text="${commentDraft}"></textarea>
+
+                <div class="comment-form__options">
+                    <!-- つくれぽにする（チェックすると cookedReport=true が送られる） -->
+                    <label class="check report-check">
+                        <input type="checkbox" name="cookedReport" value="true" th:checked="${commentReport}">
+                        🍳 作りました！（つくれぽ）
+                    </label>
+
+                    <!-- 写真：ボタンの形の label の中に、見えないファイル選択欄を入れる（プロフィール編集と同じ） -->
+                    <label class="btn btn--outline btn--sm">
+                        <span class="material-symbols-rounded">photo_camera</span>写真を付ける
+                        <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"
+                               class="visually-hidden" onchange="previewCommentPhoto(this)">
+                    </label>
+                    <!-- 選んだ写真の見本 -->
+                    <img id="commentPhotoPreview" class="comment-form__preview is-hidden" alt="">
+                </div>
+
+                <button type="submit">投稿する</button>
             </form>
         </section>
 
     </main>
+    <script>
+        // 選んだ写真を、投稿ボタンの上に小さく表示する（＋5MBのチェック）
+        function previewCommentPhoto(input) {
+            const file = input.files[0];
+            const img = document.getElementById('commentPhotoPreview');
+            if (!file) {
+                img.classList.add('is-hidden');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('写真は5MB以下のものを選んでください');
+                input.value = '';
+                img.classList.add('is-hidden');
+                return;
+            }
+            img.src = URL.createObjectURL(file);
+            img.classList.remove('is-hidden');
+            // 写真を付けたら、「作りました」にもチェックを入れておく（外すこともできる）
+            document.querySelector('input[name="cookedReport"]').checked = true;
+        }
+    </script>
 </body>
 </html>

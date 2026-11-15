@@ -26,6 +26,12 @@
             </div>
         </div>
 
+        <!-- おまかせ献立を追加したとき -->
+        <div th:if="${suggestMessage}" class="alert alert--success">
+            <span class="material-symbols-rounded">check_circle</span>
+            <span th:text="${suggestMessage}">3件の献立を追加しました</span>
+        </div>
+
         <!-- ===== 週の移動 ===== -->
         <div class="week-nav">
             <a th:href="@{/meal-plans(date=${prevWeek})}" class="icon-btn" title="前の週">
@@ -36,6 +42,9 @@
             <a href="/meal-plans" class="btn btn--outline btn--sm">今週</a>
             <a th:href="@{/meal-plans/shopping(date=${monday})}" class="btn btn--outline btn--sm week-nav__shopping">
                 <span class="material-symbols-rounded">shopping_cart</span>この週の買い物リスト
+            </a>
+            <a th:href="@{/meal-plans/suggest(date=${monday})}" class="btn btn--outline btn--sm">
+                <span class="material-symbols-rounded">auto_awesome</span>おまかせ
             </a>
         </div>
 

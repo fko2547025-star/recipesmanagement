@@ -23,4 +23,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     Optional<Comment> findWithDetailsById(Long id);
 
     long countByUser(AppUser user);
+
+    // その人が投稿したつくれぽの数（料理レベルのポイント用）
+    long countByUserAndCookedReportTrue(AppUser user);
 }

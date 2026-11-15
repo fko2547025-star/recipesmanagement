@@ -37,13 +37,16 @@ import com.example.recipesmanagement.stock.CookingLine;
 public class MealPlanController {
 
     private final MealPlanService mealPlanService;
+    private final MealPlanSuggestService suggestService;
     private final ShoppingListService shoppingListService;
     private final AppUserRepository userRepository;
 
     public MealPlanController(MealPlanService mealPlanService,
+                              MealPlanSuggestService suggestService,
                               ShoppingListService shoppingListService,
                               AppUserRepository userRepository) {
         this.mealPlanService = mealPlanService;
+        this.suggestService = suggestService;
         this.shoppingListService = shoppingListService;
         this.userRepository = userRepository;
     }
@@ -93,14 +96,15 @@ public class MealPlanController {
     public String newForm(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                         @RequestParam(required = false) String mealType,
                         @RequestParam(required = false) Long recipeId,
+                        @RequestParam(required = false) Integer servings,   // ← 追加
                         Principal principal,
                         Model model) {
 
         MealPlanForm form = new MealPlanForm();
         form.setPlanDate(date != null ? date : LocalDate.now());
-        // 朝昼夜の指定が無い（または変な値の）ときは「夜」を選んでおく
         form.setMealType(mealType != null && MealPlan.MEAL_TYPES.contains(mealType) ? mealType : "夜");
         form.setRecipeId(recipeId);
+        form.setServings(servings);   // ← 追加（変な値なら、保存するときの validate で弾く）
         return showForm(form, null, currentUser(principal), model);
     }
 
@@ -253,5 +257,52 @@ public class MealPlanController {
         model.addAttribute("nextWeek", monday.plusWeeks(1));
         model.addAttribute("pastWeek", monday.plusDays(6).isBefore(today));   // 過ぎた週か
         return "meal-plans/shopping";
+    }
+
+        // ===== おまかせ献立 =====
+
+    /**
+     * おまかせ献立の提案画面（まだ保存しない）。
+     *
+     * @param date      この日を含む週。指定が無ければ今週
+     * @param mealTypes 埋める枠。指定が無ければ「夜」だけ
+     */
+    @GetMapping("/suggest")
+    public String suggest(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                          @RequestParam(required = false) List<String> mealTypes,
+                          Principal principal,
+                          Model model) {
+
+        AppUser user = currentUser(principal);
+        LocalDate monday = MealPlanService.weekStart(date != null ? date : LocalDate.now());
+
+        // 指定が無ければ「夜」。朝昼夜以外の変な値は捨てる
+        List<String> types = (mealTypes == null)
+                ? List.of("夜")
+                : mealTypes.stream().filter(MealPlan.MEAL_TYPES::contains).toList();
+
+        model.addAttribute("suggestions", suggestService.suggest(user, monday, types));
+        model.addAttribute("selectedTypes", types);
+        model.addAttribute("mealTypes", MealPlan.MEAL_TYPES);
+        model.addAttribute("monday", monday);
+        model.addAttribute("sunday", monday.plusDays(6));
+        return "meal-plans/suggest";
+    }
+
+    /**
+     * チェックした提案を、まとめて献立に追加する。
+     * 何もチェックしていないと picked は送られてこない（null）ので required = false
+     */
+    @PostMapping("/suggest")
+    public String saveSuggestions(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                  @RequestParam(required = false) List<String> picked,
+                                  Principal principal,
+                                  RedirectAttributes redirectAttributes) {
+
+        int count = (picked == null) ? 0 : suggestService.save(currentUser(principal), picked);
+
+        redirectAttributes.addFlashAttribute("suggestMessage",
+                count > 0 ? count + "件の献立を追加しました" : "追加した献立はありません");
+        return "redirect:/meal-plans?date=" + date;
     }
 }

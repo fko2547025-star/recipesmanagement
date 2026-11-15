@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${owner.displayName} + (${mode == 'followers'} ? 'さんのフォロワー' : 'さんのフォロー中'))}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container container--narrow">
+        <a th:href="@{/users/{id}(id=${owner.id})}" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>
+            <span th:text="${owner.displayName} + 'さんのページに戻る'">はなこさんのページに戻る</span>
+        </a>
+
+        <h1 class="page-title">
+            <span th:replace="~{fragments/avatar :: avatar(${owner}, 'avatar--md')}"></span>
+            <span th:text="${owner.displayName}">はなこ</span>
+        </h1>
+
+        <!-- フォロワー／フォロー中の切り替え -->
+        <nav class="tabs follow-tabs">
+            <a th:href="@{/users/{id}/followers(id=${owner.id})}" th:classappend="${mode == 'followers'} ? 'is-active'">
+                フォロワー <strong th:text="${followerCount}">12</strong>
+            </a>
+            <a th:href="@{/users/{id}/following(id=${owner.id})}" th:classappend="${mode == 'following'} ? 'is-active'">
+                フォロー中 <strong th:text="${followingCount}">5</strong>
+            </a>
+        </nav>
+
+        <section class="card">
+            <p th:if="${#lists.isEmpty(users)}" class="empty"
+               th:text="${mode == 'followers'} ? 'まだフォロワーはいません' : 'まだ誰もフォローしていません'">まだフォロワーはいません</p>
+
+            <ul th:unless="${#lists.isEmpty(users)}" class="simple-list">
+                <li th:each="u : ${users}">
+                    <!-- 押すとその人のページへ（自分なら、UserPageController がマイページに移す） -->
+                    <a th:href="@{/users/{id}(id=${u.id})}" class="author-link">
+                        <span th:replace="~{fragments/avatar :: avatar(${u}, 'avatar--md')}"></span>
+                        <strong th:text="${u.displayName}">さくら</strong>
+                    </a>
+                </li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

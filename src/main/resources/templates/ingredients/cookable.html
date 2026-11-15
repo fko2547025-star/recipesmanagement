@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('在庫で作れるレシピ')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container">
+        <a href="/ingredients" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>食材管理に戻る
+        </a>
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">soup_kitchen</span>在庫で作れるレシピ
+        </h1>
+        <p class="note">食材管理の在庫と、レシピの材料を照らし合わせた結果です。少々・適量の材料は数えていません。</p>
+
+        <!-- 候補が1つも無いとき -->
+        <div th:if="${#lists.isEmpty(ready) and #lists.isEmpty(almost)}" class="empty card">
+            <span class="material-symbols-rounded empty__icon">kitchen</span>
+            <p>今の在庫で作れそうなレシピは見つかりませんでした</p>
+            <a href="/ingredients/new" class="btn btn--sm"><span class="material-symbols-rounded">add</span>食材を追加</a>
+        </div>
+
+        <!-- ===== 今すぐ作れる ===== -->
+        <section th:if="${!#lists.isEmpty(ready)}">
+            <div class="section-head">
+                <h2 class="section-title">
+                    <span class="material-symbols-rounded">check_circle</span>今すぐ作れる
+                    <small class="text-muted" th:text="${#lists.size(ready)} + '件'">3件</small>
+                </h2>
+            </div>
+            <div class="cookable-grid">
+                <!-- 1件分は下の almost と同じ形なので、このファイルの中の部品にして使い回す -->
+                <th:block th:each="c : ${ready}">
+                    <a th:replace="~{:: cookableCard(${c})}"></a>
+                </th:block>
+            </div>
+        </section>
+
+        <!-- ===== あと少しで作れる ===== -->
+        <section th:if="${!#lists.isEmpty(almost)}">
+            <div class="section-head">
+                <h2 class="section-title">
+                    <span class="material-symbols-rounded">shopping_basket</span>あと1〜2品で作れる
+                    <small class="text-muted" th:text="${#lists.size(almost)} + '件'">5件</small>
+                </h2>
+            </div>
+            <div class="cookable-grid">
+                <th:block th:each="c : ${almost}">
+                    <a th:replace="~{:: cookableCard(${c})}"></a>
+                </th:block>
+            </div>
+        </section>
+    </main>
+
+    <!--
+        1件分の部品（このファイルの中だけで使う）。
+        ~{:: cookableCard(...)} の「::」の前を空にすると、「このファイルの中の部品」という意味になる。
+        th:if="false" で囲んでいるので、部品の元そのものは画面に出ない
+    -->
+    <th:block th:if="false">
+        <a th:fragment="cookableCard(c)" th:href="@{/recipes/{id}(id=${c.recipe.id})}" class="cookable">
+            <span class="cookable__photo">
+                <img th:if="${c.recipe.imagePath}" th:src="@{/uploads/{file}(file=${c.recipe.imagePath})}"
+                     th:alt="${c.recipe.title}" loading="lazy">
+                <span th:unless="${c.recipe.imagePath}" class="photo-placeholder"
+                      th:text="${c.recipe.categoryIcon}">🍽️</span>
+            </span>
+            <span class="cookable__body">
+                <strong class="cookable__title" th:text="${c.recipe.title}">親子丼</strong>
+                <!-- そろっている数 / 判定に使った数 -->
+                <span class="cookable__count">
+                    <span class="material-symbols-rounded">kitchen</span>
+                    <span th:text="'材料 ' + ${c.haveCount} + ' / ' + ${c.totalCount} + ' そろっています'">材料 5 / 6 そろっています</span>
+                </span>
+                <!-- 足りない材料（あるときだけ） -->
+                <span th:if="${!c.ready}" class="cookable__missing">
+                    <span class="cookable__missing-label">足りない：</span>
+                    <span th:each="name : ${c.missingNames}" class="tag tag--warn" th:text="${name}">玉ねぎ</span>
+                </span>
+            </span>
+        </a>
+    </th:block>
+</body>
+</html>

@@ -121,4 +121,12 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
 
     // SELECT COUNT(*) FROM recipes WHERE user_id = ?
     long countByUser(AppUser user);
+
+    /**
+    * 全部のレシピを、材料と投稿者もまとめて取り出す（在庫で作れるレシピを探すため）。
+    * @EntityGraph：attributePaths に書いた関連も、JOIN して1回の SQL で一緒に取り出す
+    */
+    @EntityGraph(attributePaths = {"ingredients", "user"})
+    @Query("SELECT DISTINCT r FROM Recipe r ORDER BY r.id DESC")
+    List<Recipe> findAllWithIngredients();
 }       

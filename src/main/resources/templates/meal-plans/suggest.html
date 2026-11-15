@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('おまかせ献立')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container container--narrow">
+        <a th:href="@{/meal-plans(date=${monday})}" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>献立に戻る
+        </a>
+
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">auto_awesome</span>おまかせ献立
+        </h1>
+        <p class="note">
+            <span th:text="${#temporals.format(monday, 'yyyy/M/d(E)')} + ' 〜 ' + ${#temporals.format(sunday, 'M/d(E)')}">2026/11/16(月) 〜 11/22(日)</span><br>
+            今日以降の空いている枠に、在庫と期限が近い食材を優先してレシピを入れます。
+        </p>
+
+        <!-- 条件（GET）：埋める枠を選んで提案し直す。押すたびに別の組み合わせになる -->
+        <form th:action="@{/meal-plans/suggest}" method="get" class="card section-card auto-filter">
+            <input type="hidden" name="date" th:value="${monday}">
+            <span class="form-label">埋める枠</span>
+            <div class="auto-filter__types">
+                <label class="check" th:each="t : ${mealTypes}">
+                    <input type="checkbox" name="mealTypes" th:value="${t}" th:checked="${selectedTypes.contains(t)}">
+                    <span th:text="${t}">夜</span>
+                </label>
+            </div>
+            <button type="submit" class="btn--outline btn--sm">
+                <span class="material-symbols-rounded">refresh</span>別の案にする
+            </button>
+        </form>
+
+        <!-- 提案が1つも無いとき -->
+        <div th:if="${#lists.isEmpty(suggestions)}" class="empty card">
+            <span class="empty__icon">🍽️</span>
+            <p>提案できる献立がありません。<br>
+               空いている枠が無いか、選べるレシピ（自分の投稿・いいねしたレシピ）がありません。</p>
+        </div>
+
+        <!-- 提案の一覧（POST）：チェックしたものだけ保存する -->
+        <form th:unless="${#lists.isEmpty(suggestions)}" th:action="@{/meal-plans/suggest}" method="post"
+              onsubmit="this.querySelector('button[type=submit]').disabled = true;">
+            <input type="hidden" name="date" th:value="${monday}">
+
+            <ul class="auto-list">
+                <li th:each="s : ${suggestions}">
+                    <!-- label で全体を囲むと、行のどこを押してもチェックが切り替わる -->
+                    <label class="auto-plan">
+                        <input type="checkbox" name="picked" th:value="${s.value}" checked>
+
+                        <span class="auto-plan__when">
+                            <span th:text="${#temporals.format(s.date, 'M/d(E)')}">11/16(月)</span>
+                            <small>
+                                <span class="material-symbols-rounded" th:text="${s.mealIcon}">dark_mode</span>
+                                <span th:text="${s.mealType}">夜</span>
+                            </small>
+                        </span>
+
+                        <span class="auto-plan__photo">
+                            <img th:if="${s.recipe.imagePath != null}"
+                                 th:src="@{/uploads/{f}(f=${s.recipe.imagePath})}" alt="">
+                            <span th:unless="${s.recipe.imagePath != null}" class="photo-placeholder"
+                                  th:text="${s.recipe.categoryIcon}">🍳</span>
+                        </span>
+
+                        <span class="auto-plan__body">
+                            <strong th:text="${s.recipe.title}">肉じゃが</strong>
+                            <span class="chips">
+                                <span class="tag tag--good" th:unless="${#lists.isEmpty(s.expiring)}">
+                                    <span class="material-symbols-rounded">schedule</span>
+                                    <span th:text="'期限が近い：' + ${#strings.listJoin(s.expiring, '、')}">期限が近い：じゃがいも</span>
+                                </span>
+                                <span class="tag" th:if="${s.haveCount > 0}">
+                                    <span class="material-symbols-rounded">kitchen</span>
+                                    <span th:text="'在庫の材料 ' + ${s.haveCount} + '品'">在庫の材料 3品</span>
+                                </span>
+                                <span class="tag tag--warn" th:unless="${#lists.isEmpty(s.missing)}">
+                                    <span class="material-symbols-rounded">shopping_cart</span>
+                                    <span th:text="'足りない：' + ${#strings.listJoin(s.missing, '、')}">足りない：玉ねぎ</span>
+                                </span>
+                            </span>
+                        </span>
+                    </label>
+                </li>
+            </ul>
+
+            <div class="form-actions">
+                <button type="submit" class="btn--wide">
+                    <span class="material-symbols-rounded">add</span>チェックした献立を追加
+                </button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

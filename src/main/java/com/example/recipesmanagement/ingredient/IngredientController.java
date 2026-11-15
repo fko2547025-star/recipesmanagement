@@ -3,6 +3,7 @@ package com.example.recipesmanagement.ingredient;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -15,11 +16,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
+import com.example.recipesmanagement.stock.CookableRecipeService;
 import com.example.recipesmanagement.stock.ExpiringRecipeService;
 import com.example.recipesmanagement.stock.StockCheckService;
+import com.example.recipesmanagement.stock.CookableRecipe;
+import com.example.recipesmanagement.stock.CookableRecipeService;
+import com.example.recipesmanagement.mealplan.ShoppingItem;
+import com.example.recipesmanagement.mealplan.ShoppingListService;
 
 @Controller
 @RequestMapping("/ingredients")
@@ -29,15 +37,21 @@ public class IngredientController {
     private final AppUserRepository userRepository;
     private final StockCheckService stockCheckService;
     private final ExpiringRecipeService expiringRecipeService;
+    private final CookableRecipeService cookableRecipeService;
+    private final ShoppingListService shoppingListService;
 
     public IngredientController(IngredientRepository repository,
                                 AppUserRepository userRepository,
                                 StockCheckService stockCheckService,
-                                ExpiringRecipeService expiringRecipeService) {
+                                ExpiringRecipeService expiringRecipeService,
+                                CookableRecipeService cookableRecipeService,
+                                ShoppingListService shoppingListService) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.stockCheckService = stockCheckService;
         this.expiringRecipeService = expiringRecipeService;
+        this.cookableRecipeService = cookableRecipeService;
+        this.shoppingListService = shoppingListService;
     }
 
     /**
@@ -103,6 +117,16 @@ public class IngredientController {
         model.addAttribute("suggestions", expiringRecipeService.suggest(expiring));
 
         return "ingredients/list";
+    }
+
+    // 今の在庫で作れるレシピ（今すぐ作れる ／ あと1〜2品で作れる）
+    @GetMapping("/cookable")
+    public String cookable(Principal principal, Model model) {
+        List<CookableRecipe> all = cookableRecipeService.find(currentUser(principal), 2);
+
+        model.addAttribute("ready", all.stream().filter(CookableRecipe::isReady).toList());
+        model.addAttribute("almost", all.stream().filter(c -> !c.isReady()).toList());
+        return "ingredients/cookable";
     }
 
     // 登録画面を表示
@@ -171,6 +195,70 @@ public class IngredientController {
         Ingredient ingredient = findOwned(id, principal);
         ingredient.changeQuantity(quantity);
         repository.save(ingredient);
+        return "redirect:/ingredients";
+    }
+
+    // ===== 買い物リスト → 在庫に追加 =====
+
+    /**
+     * 確認画面。買い物リストでチェックしたものを、初期値を入れた状態で表示する。
+     * 例：/ingredients/purchase?date=2026-11-09&picked=0&picked=3
+     *
+     * @param date   買い物リストの週（月曜日）
+     * @param picked チェックした行の番号（買い物リストの「買うもの」の上から 0, 1, 2 …）。何もチェックしていなければ null
+     */
+    @GetMapping("/purchase")
+    public String purchaseForm(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                            @RequestParam(required = false) List<Integer> picked,
+                            Principal principal,
+                            Model model,
+                            RedirectAttributes redirectAttributes) {
+
+        if (picked == null || picked.isEmpty()) {
+            redirectAttributes.addFlashAttribute("purchaseError", "在庫に追加するものにチェックを付けてください");
+            return "redirect:/meal-plans/shopping?date=" + date;
+        }
+
+        // 買い物リストを作り直して、「買うもの」だけにしぼる（画面と同じ並び順になる）
+        List<ShoppingItem> toBuy = shoppingListService.build(currentUser(principal), date).stream()
+                .filter(ShoppingItem::isToBuy)
+                .toList();
+
+        PurchaseForm form = new PurchaseForm();
+        for (Integer i : picked) {
+            if (i != null && i >= 0 && i < toBuy.size()) {   // 範囲外の番号は無視する
+                ShoppingItem item = toBuy.get(i);
+                form.addRow(item.getCheck().getName(), item.getBuyText());
+            }
+        }
+
+        model.addAttribute("form", form);
+        model.addAttribute("date", date);
+        return "ingredients/purchase";
+    }
+
+    /**
+     * まとめて登録する。全部の行に問題が無いときだけ、全部を保存する。
+     */
+    @PostMapping("/bulk")
+    public String createBulk(@ModelAttribute("form") PurchaseForm form,
+                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                            Principal principal,
+                            Model model,
+                            RedirectAttributes redirectAttributes) {
+
+        List<String> errors = form.validate();
+        if (!errors.isEmpty()) {
+            // エラーなら、入力した内容を持ったまま確認画面に戻す
+            model.addAttribute("errors", errors);
+            model.addAttribute("date", date);
+            return "ingredients/purchase";
+        }
+
+        // saveAll：リストの中身をまとめて INSERT する
+        List<Ingredient> saved = repository.saveAll(form.toIngredients(currentUser(principal)));
+
+        redirectAttributes.addFlashAttribute("message", saved.size() + "件の食材を在庫に追加しました");
         return "redirect:/ingredients";
     }
 }

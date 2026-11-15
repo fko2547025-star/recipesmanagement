@@ -15,8 +15,31 @@
                 <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
                 <p class="profile-card__name" th:text="${user.displayName}">じろう</p>
                 <p class="profile-card__id" th:text="'@' + ${user.username}">@jiro</p>
+
+                <!-- フォロワー・フォロー中の人数（押すと一覧へ） -->
+                <p class="follow-counts">
+                    <a th:href="@{/users/{id}/followers(id=${user.id})}">
+                        <strong th:text="${followerCount}">12</strong>フォロワー
+                    </a>
+                    <a th:href="@{/users/{id}/following(id=${user.id})}">
+                        <strong th:text="${followingCount}">5</strong>フォロー中
+                    </a>
+                </p>
+
                 <!-- その人の称号（料理レベル） -->
                 <span th:replace="~{fragments/rank :: badge(${level})}"></span>
+
+                <!-- フォローボタン（データが変わるので POST）。押すたびに、フォローする／やめるが切り替わる -->
+                <form th:if="${loginUsername != null}" th:action="@{/users/{id}/follow(id=${user.id})}" method="post">
+                    <!-- フォロー中なら枠だけのボタンにする（いいねボタンと同じ考え方） -->
+                    <button type="submit" class="btn" th:classappend="${following} ? 'btn--outline'">
+                        <span class="material-symbols-rounded" th:text="${following} ? 'how_to_reg' : 'person_add'">person_add</span>
+                        <span th:text="${following} ? 'フォロー中' : 'フォローする'">フォローする</span>
+                    </button>
+                </form>
+                <a th:if="${loginUsername == null}" href="/login" class="btn btn--outline">
+                    <span class="material-symbols-rounded">person_add</span>ログインしてフォロー
+                </a>
             </section>
 
             <section class="card stats-card">

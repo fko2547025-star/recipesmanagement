@@ -5,13 +5,22 @@
     <div th:replace="~{fragments/header :: header}"></div>
 
     <main class="container">
+        <!-- まとめて追加したあとのメッセージ（フラッシュ属性） -->
+        <div th:if="${message}" class="alert alert--success">
+            <span class="material-symbols-rounded">check_circle</span><span th:text="${message}">3件の食材を在庫に追加しました</span>
+        </div>
         <div class="page-head">
             <h1 class="page-title">
                 <span class="material-symbols-rounded">kitchen</span>食材管理
             </h1>
-            <a href="/ingredients/new" class="btn">
-                <span class="material-symbols-rounded">add</span>食材を追加
-            </a>
+            <div class="page-head__actions">
+                <a href="/ingredients/cookable" class="btn btn--outline">
+                    <span class="material-symbols-rounded">soup_kitchen</span>在庫で作れるレシピ
+                </a>
+                <a href="/ingredients/new" class="btn">
+                    <span class="material-symbols-rounded">add</span>食材を追加
+                </a>
+            </div>
         </div>
 
         <!-- ===== 期限が近い食材のお知らせ（押すとページ下の一覧へ移動） ===== -->

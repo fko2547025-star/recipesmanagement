@@ -18,6 +18,7 @@
                 <!-- カテゴリを選んでいる状態で検索したら、カテゴリも一緒に送る -->
                 <input th:if="${category != null and category != ''}" type="hidden" name="category" th:value="${category}">
                 <input type="hidden" name="sort" th:value="${sort}">
+                <input type="hidden" name="feed" th:value="${feed}"><!-- ★ フォロー中のまま検索する -->
                 <button type="submit">検索</button>
             </form>
         </div>
@@ -29,9 +30,9 @@
             <h2 class="section-title">
                 <span class="material-symbols-rounded">restaurant</span>カテゴリから探す
             </h2>
-            <!-- カテゴリを選んでいるときだけ「すべて見る」を出す（押すと選択を解除する。検索語と並び順は残す） -->
+            <!-- カテゴリを選んでいるときだけ「すべて見る」を出す（押すと選択を解除する。検索語・並び順・フォロー中は残す） -->
             <a th:if="${category != null and category != ''}"
-               th:href="${q != null and q != ''} ? @{/recipes(q=${q},sort=${sort})} : @{/recipes(sort=${sort})}"
+               th:href="${q != null and q != ''} ? @{/recipes(q=${q},sort=${sort},feed=${feed})} : @{/recipes(sort=${sort},feed=${feed})}"
                class="section-link">すべて見る<span class="material-symbols-rounded">chevron_right</span></a>
         </div>
 
@@ -39,12 +40,12 @@
             <!--
                 選んでいるカード（c == category）を押したとき → カテゴリを外す（解除）
                 それ以外のカードを押したとき → そのカテゴリで絞り込む
-                どちらの場合も、検索語（q）があれば残す
+                どちらの場合も、検索語（q）・並び順・フォロー中は残す（★ feed を追加）
             -->
             <a th:each="c : ${categories}"
             th:href="${c == category}
-                        ? (${q != null and q != ''} ? @{/recipes(q=${q},sort=${sort})} : @{/recipes(sort=${sort})})
-                        : (${q != null and q != ''} ? @{/recipes(category=${c},q=${q},sort=${sort})} : @{/recipes(category=${c},sort=${sort})})"
+                        ? (${q != null and q != ''} ? @{/recipes(q=${q},sort=${sort},feed=${feed})} : @{/recipes(sort=${sort},feed=${feed})})
+                        : (${q != null and q != ''} ? @{/recipes(category=${c},q=${q},sort=${sort},feed=${feed})} : @{/recipes(category=${c},sort=${sort},feed=${feed})})"
             class="category-card" th:classappend="${c == category} ? 'is-active'"
             th:title="${c == category} ? 'もう一度押すと解除' : ${c} + 'で絞り込む'">
                 <span class="category-card__icon" th:text="${categoryIcons.get(c)}">🍱</span>
@@ -55,22 +56,32 @@
 
     <!-- ===== レシピ一覧 ===== -->
     <section>
-                <!-- 見出し（左）と並び順（右）を、同じ行の左右の端に置く -->
+        <!-- ★ すべて／フォロー中の切り替え（ログイン中だけ）。カテゴリ・検索語・並び順は引き継ぐ -->
+        <nav class="tabs feed-tabs" th:if="${loginUsername != null}">
+            <a th:href="@{/recipes(category=${category},q=${q},sort=${sort},feed='all')}"
+               th:classappend="${feed == 'all'} ? 'is-active'">すべて</a>
+            <a th:href="@{/recipes(category=${category},q=${q},sort=${sort},feed='following')}"
+               th:classappend="${feed == 'following'} ? 'is-active'">フォロー中</a>
+        </nav>
+
+        <!-- 見出し（左）と並び順（右）を、同じ行の左右の端に置く -->
         <div class="section-head">
             <h2 class="section-title">
                 <span class="material-symbols-rounded">menu_book</span>
                 <!-- 検索中 →「〇〇」の検索結果、カテゴリ選択中 → 〇〇のレシピ、
-                     それ以外 → 並び順に合わせて「新着レシピ」か「人気のレシピ」 -->
+                     それ以外 → 並び順とフォロー中に合わせて（★ フォロー中の見出しを追加） -->
                 <span th:text="${q != null and q != ''} ? '「' + ${q} + '」の検索結果'
                                : (${category != null and category != ''} ? ${category} + 'のレシピ'
-                               : (${sort == 'popular'} ? '人気のレシピ' : '新着レシピ'))">新着レシピ</span>
+                               : (${feed == 'following'} ? (${sort == 'popular'} ? 'フォロー中の人気レシピ' : 'フォロー中の新着レシピ')
+                               : (${sort == 'popular'} ? '人気のレシピ' : '新着レシピ')))">新着レシピ</span>
                 <small class="text-muted" th:text="${#lists.size(recipes)} + '件'">20件</small>
             </h2>
 
-            <!-- 並び順（GET のフォーム）。選んだらすぐ送信する。カテゴリと検索語は隠し項目で引き継ぐ -->
+            <!-- 並び順（GET のフォーム）。選んだらすぐ送信する。カテゴリ・検索語・フォロー中は隠し項目で引き継ぐ -->
             <form th:action="@{/recipes}" method="get" class="sort-select">
                 <input th:if="${category != null and category != ''}" type="hidden" name="category" th:value="${category}">
                 <input th:if="${q != null and q != ''}" type="hidden" name="q" th:value="${q}">
+                <input type="hidden" name="feed" th:value="${feed}"><!-- ★ -->
                 <span class="material-symbols-rounded">sort</span>
                 <select name="sort" onchange="this.form.submit()" aria-label="並び順">
                     <option value="new" th:selected="${sort == 'new'}">新着順</option>
@@ -79,10 +90,11 @@
             </form>
         </div>
 
-        <!-- 1件も無いとき -->
+        <!-- 1件も無いとき（★ フォロー中なら、フォローの仕方を案内する） -->
         <div th:if="${#lists.isEmpty(recipes)}" class="empty card">
-            <span class="material-symbols-rounded empty__icon">search_off</span>
-            <p>レシピが見つかりませんでした</p>
+            <span class="material-symbols-rounded empty__icon" th:text="${feed == 'following'} ? 'group' : 'search_off'">search_off</span>
+            <p th:text="${feed == 'following'} ? 'フォローしている人のレシピが見つかりませんでした' : 'レシピが見つかりませんでした'">レシピが見つかりませんでした</p>
+            <p th:if="${feed == 'following'}" class="note">気になる投稿者のページで「フォローする」を押すと、ここに新着が並びます</p>
         </div>
 
         <div class="recipe-grid">

@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -25,6 +26,8 @@ import com.example.recipesmanagement.stock.StockCheckItem;
 import com.example.recipesmanagement.stock.StockCheckService;
 import com.example.recipesmanagement.stock.IngredientNameMatcher;
 import com.example.recipesmanagement.mypage.CookingRecordService;
+import com.example.recipesmanagement.comment.Comment;
+import com.example.recipesmanagement.follow.FollowService;
 
 /**
  * レシピ関係の画面を担当するコントローラー。
@@ -52,6 +55,7 @@ public class RecipeController {
     private final CommentRepository commentRepository;
     private final StockCheckService stockCheckService;
     private final CookingRecordService cookingRecordService;
+    private final FollowService followService;
 
     public RecipeController(RecipeRepository repository,
                             RecipeService recipeService,
@@ -59,7 +63,8 @@ public class RecipeController {
                             LikeRepository likeRepository,
                             CommentRepository commentRepository,
                             StockCheckService stockCheckService,
-                            CookingRecordService cookingRecordService) {
+                            CookingRecordService cookingRecordService,
+                            FollowService followService) {
         this.repository = repository;
         this.recipeService = recipeService;
         this.userRepository = userRepository;
@@ -67,6 +72,7 @@ public class RecipeController {
         this.commentRepository = commentRepository;
         this.stockCheckService = stockCheckService;
         this.cookingRecordService = cookingRecordService;
+        this.followService = followService;
     }
 
     /**
@@ -79,6 +85,8 @@ public class RecipeController {
     public String list(@RequestParam(required = false) String category,
                        @RequestParam(required = false) String q,
                        @RequestParam(defaultValue = "new") String sort,
+                       @RequestParam(defaultValue = "all") String feed, 
+                       Principal principal,  
                        Model model) {
 
         boolean hasCategory = category != null && !category.isEmpty();
@@ -100,6 +108,18 @@ public class RecipeController {
             recipes = repository.findAllByOrderByIdDesc();
         }
 
+        // ----- フォロー中だけ -----
+        // ログインしていないときや、決まった値以外が来たときは「すべて」にする
+        boolean onlyFollowing = feed.equals("following") && principal != null;
+        feed = onlyFollowing ? "following" : "all";
+
+        if (onlyFollowing) {
+            Set<Long> followeeIds = followService.followeeIds(currentUser(principal));
+            // 投稿者の id が「フォローしている人の id」に入っているレシピだけ残す
+            recipes = recipes.stream()
+                    .filter(r -> followeeIds.contains(r.getUser().getId()))
+                    .toList();
+        }
         // ----- 並び替え -----
         // いいね数は人気順の並べ替えと、カードの表示の両方で使うので、先に1回だけ数えておく
         Map<Long, Long> likeCounts = likeRepository.countAllByRecipe();
@@ -124,6 +144,7 @@ public class RecipeController {
         model.addAttribute("category", category);                   // 今選んでいるカテゴリ
         model.addAttribute("q", q);
         model.addAttribute("sort", sort);
+        model.addAttribute("feed", feed);
         model.addAttribute("likeCounts", likeCounts);   // id → いいね数                                 // 今の検索語
         return "recipes/list";
     }
@@ -166,7 +187,21 @@ public class RecipeController {
         model.addAttribute("factor", factor);
         model.addAttribute("likeCount", likeRepository.countByRecipe(recipe));
         model.addAttribute("liked", liked);
-        model.addAttribute("comments", commentRepository.findByRecipeOrderByIdAsc(recipe));
+        List<Comment> comments = commentRepository.findByRecipeOrderByIdAsc(recipe);
+        model.addAttribute("comments", comments);
+
+        // ----- つくれぽ -----
+        // 写真付きのつくれぽ（上の欄に、新しい順に並べる）
+        model.addAttribute("reports", comments.stream()
+                .filter(c -> c.isCookedReport() && c.getImagePath() != null)
+                .sorted(Comparator.comparing(Comment::getId).reversed())
+                .toList());
+        // 作った人の数（同じ人が2回つくれぽしても1人と数える）
+        model.addAttribute("reportUserCount", comments.stream()
+                .filter(Comment::isCookedReport)
+                .map(c -> c.getUser().getId())
+                .distinct()
+                .count());
         model.addAttribute("authorLevel", cookingRecordService.level(recipe.getUser()));   // 投稿者の称号
         return "recipes/detail";
     }

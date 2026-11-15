@@ -5,6 +5,10 @@
     <div th:replace="~{fragments/header :: header}"></div>
 
     <main class="container container--narrow">
+        <!-- チェックせずに「在庫に追加」を押したとき -->
+        <div th:if="${purchaseError}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span><span th:text="${purchaseError}">チェックを付けてください</span>
+        </div>
         <div class="page-head">
             <h1 class="page-title">
                 <span class="material-symbols-rounded">shopping_cart</span>買い物リスト
@@ -50,20 +54,29 @@
                     </button>
                 </div>
 
-                <ul class="check-list">
-                    <!-- data-text：コピー用の文字（例：玉ねぎ 1個）を、行に持たせておく -->
-                    <li th:each="item : ${toBuy}" th:attr="data-text=${item.check.name} + ' ' + ${item.buyText}">
-                        <!-- label で囲むと、文字を押してもチェックが切り替わる -->
-                        <label class="check-list__item">
-                            <!-- 買ったらチェック（画面だけで保存はしない）。取り消し線はCSSが付ける -->
-                            <input type="checkbox">
-                            <span th:text="${item.check.name}">玉ねぎ</span>
-                            <strong class="check-list__amount" th:text="${item.buyText}">1個</strong>
-                        </label>
-                        <small class="check-list__sub text-muted"
-                               th:text="'在庫：' + ${item.check.stockText} + ' ／ ' + ${item.usedIn}">在庫：- ／ 肉じゃが（11/5 夜）</small>
-                    </li>
-                </ul>
+                <!-- チェックしたものを、確認画面に送る（表示するだけなので GET） -->
+                <form th:action="@{/ingredients/purchase}" method="get">
+                    <input type="hidden" name="date" th:value="${monday}">
+
+                    <ul class="check-list">
+                        <!-- st.index：上から何番目か（0, 1, 2 …）。これをチェックボックスの値にして送る -->
+                        <li th:each="item, st : ${toBuy}" th:attr="data-text=${item.check.name} + ' ' + ${item.buyText}">
+                            <label class="check-list__item">
+                                <input type="checkbox" name="picked" th:value="${st.index}">
+                                <span th:text="${item.check.name}">玉ねぎ</span>
+                                <strong class="check-list__amount" th:text="${item.buyText}">1個</strong>
+                            </label>
+                            <small class="check-list__sub text-muted"
+                                th:text="'在庫：' + ${item.check.stockText} + ' ／ ' + ${item.usedIn}">在庫：- ／ 肉じゃが（11/5 夜）</small>
+                        </li>
+                    </ul>
+
+                    <div class="purchase-actions">
+                        <button type="submit">
+                            <span class="material-symbols-rounded">add_shopping_cart</span>チェックしたものを在庫に追加
+                        </button>
+                    </div>
+                </form>
             </section>
 
             <div th:if="${planCount > 0 and #lists.isEmpty(toBuy)}" class="alert alert--success">

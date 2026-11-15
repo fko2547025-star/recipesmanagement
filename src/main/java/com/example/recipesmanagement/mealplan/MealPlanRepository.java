@@ -37,4 +37,6 @@ public interface MealPlanRepository extends JpaRepository<MealPlan, Long> {
      */
     @Query("SELECT DISTINCT m.planDate FROM MealPlan m WHERE m.user = :user AND m.cooked = true")
     List<LocalDate> findCookedDates(@Param("user") AppUser user);
+
+    boolean existsByUserAndPlanDateAndMealType(AppUser user, LocalDate planDate, String mealType);
 }
