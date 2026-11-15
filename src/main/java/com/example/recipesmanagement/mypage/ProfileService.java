@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.recipesmanagement.common.ImageStorageService;
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
+import com.example.recipesmanagement.user.EmailRules;
 
 /**
  * プロフィール（ニックネーム・写真・アイコンの枠）の変更を担当するクラス。
@@ -28,13 +29,20 @@ public class ProfileService {
         this.imageStorageService = imageStorageService;
     }
 
-    public List<String> validate(String nickname, MultipartFile avatar) {
+    public List<String> validate(String nickname, String email,MultipartFile avatar) {
         List<String> errors = new ArrayList<>();
         if (nickname != null && nickname.trim().length() > NICKNAME_MAX) {
             errors.add("ニックネームは" + NICKNAME_MAX + "文字以内で入力してください");
         }
         if (avatar != null && !avatar.isEmpty() && !imageStorageService.isSupported(avatar)) {
             errors.add("写真は JPEG・PNG・WebP・GIF のいずれかを選んでください");
+        }
+        String normalizedEmail = EmailRules.normalize(email);
+        if (normalizedEmail != null) {
+            String emailError = EmailRules.check(normalizedEmail);
+            if (emailError != null) {
+                errors.add(emailError);
+            }
         }
         return errors;
     }
@@ -47,12 +55,12 @@ public class ProfileService {
      * @param avatarFrame  選んだ枠の key（validate で確認済み）
      */
     @Transactional
-    public void update(String username, String nickname, MultipartFile avatar,
+    public void update(String username, String nickname, String email, MultipartFile avatar,
                        boolean removeAvatar) {
         AppUser user = userRepository.findByUsername(username).orElseThrow();
 
         user.setNickname(nickname == null || nickname.isBlank() ? null : nickname.trim());
-
+        user.setEmail(EmailRules.normalize(email));
         String oldAvatar = user.getAvatarPath();
         if (avatar != null && !avatar.isEmpty()) {
             user.setAvatarPath(imageStorageService.store(avatar));   // 新しい写真に差し替え

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('パスワードを忘れた方')}"></head>
+<body class="auth-page">
+
+    <main class="auth-card">
+        <a href="/recipes" class="brand brand--large">
+            <span class="material-symbols-rounded">soup_kitchen</span>Recipi
+        </a>
+        <p class="auth-card__lead">パスワードの再設定</p>
+
+        <!-- 送信したあと（フラッシュ属性）。合っていてもいなくても、同じ文を出す -->
+        <div th:if="${sent}" class="alert alert--success">
+            <span class="material-symbols-rounded">mark_email_read</span>
+            <span>入力した内容が登録と合っていれば、再設定のメールを送りました。
+                  30分以内にメールのリンクを開いてください。届かないときは、迷惑メールのフォルダも確かめてください。</span>
+        </div>
+
+        <form th:unless="${sent}" th:action="@{/password/forgot}" method="post" class="auth-form">
+            <p class="note">登録したユーザーIDとメールアドレスを入力してください。再設定のリンクをメールで送ります。</p>
+            <label class="input-icon">
+                <span class="material-symbols-rounded">person</span>
+                <input type="text" name="username" placeholder="ユーザーID" maxlength="50" required autocomplete="username">
+            </label>
+            <label class="input-icon">
+                <span class="material-symbols-rounded">mail</span>
+                <input type="email" name="email" placeholder="メールアドレス" maxlength="255" required autocomplete="email">
+            </label>
+            <button type="submit" class="btn--block">再設定のメールを送る</button>
+        </form>
+
+        <a href="/login" class="auth-card__link">ログイン画面に戻る</a>
+    </main>
+
+</body>
+</html>

@@ -21,6 +21,13 @@
                 <input type="text" name="username" th:value="${username}" placeholder="ユーザーID" maxlength="50" required autocomplete="username">
             </label>
             <label class="input-icon">
+                <span class="material-symbols-rounded">mail</span>
+                <!-- type="email"：スマホでは @ の入ったキーボードが出る。ブラウザも形式をチェックしてくれる -->
+                <input type="email" name="email" th:value="${email}" placeholder="メールアドレス" maxlength="255" required
+                       autocomplete="email">
+            </label>
+            <small class="field-hint">パスワードを忘れたときに、再設定のメールを送ります</small>            
+            <label class="input-icon">
                 <span class="material-symbols-rounded">lock</span>
                 <!-- new-password：ブラウザが新しいパスワードの提案を出せるようにする -->
                 <input type="password" name="password" id="password" placeholder="パスワード（4文字以上）" minlength="4" required

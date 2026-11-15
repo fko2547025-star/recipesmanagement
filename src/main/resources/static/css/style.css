@@ -446,6 +446,7 @@ button:disabled {
    == 5. 入力欄・フォームの部品
    ================================================== */
 input[type="text"],
+input[type="email"],
 input[type="password"],
 input[type="number"],
 input[type="date"],
@@ -506,6 +507,7 @@ input[type="checkbox"] {
 
 /* .form-field の中の入力欄は横いっぱい */
 .form-field input[type="text"],
+.form-field input[type="email"], 
 .form-field input[type="password"],
 .form-field input[type="search"],
 .form-field input[type="date"],

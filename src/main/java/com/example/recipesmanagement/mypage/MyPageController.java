@@ -106,7 +106,7 @@ public class MyPageController {
     @GetMapping("/mypage/profile")
     public String profileForm(Principal principal, Model model) {
         AppUser user = currentUser(principal);
-        addProfileFormAttributes(model, user, user.getNickname());
+        addProfileFormAttributes(model, user, user.getNickname(), user.getEmail());
         return "mypage/profile";
     }
 
@@ -115,10 +115,10 @@ public class MyPageController {
      *
      * @param avatar       name="avatar" のファイル（選ばれていなければ空）
      * @param removeAvatar 「写真を削除する」のチェック。チェックが無いと送られてこないので、無ければ false
-     * @param avatarFrame  選んだアイコンの枠（none / bronze / …）
      */
     @PostMapping("/mypage/profile")
     public String updateProfile(@RequestParam(required = false) String nickname,
+                                @RequestParam(required = false) String email,   // ← 追加
                                 @RequestParam(value = "avatar", required = false) MultipartFile avatar,
                                 @RequestParam(defaultValue = "false") boolean removeAvatar,
                                 Principal principal,
@@ -127,16 +127,15 @@ public class MyPageController {
 
         AppUser user = currentUser(principal);
 
-        List<String> errors = profileService.validate(nickname, avatar);
+        List<String> errors = profileService.validate(nickname, email, avatar);
         if (!errors.isEmpty()) {
             model.addAttribute("errors", errors);
-            addProfileFormAttributes(model, user, nickname);
+            addProfileFormAttributes(model, user, nickname, email);   // 入力した値を残して戻す
             return "mypage/profile";
         }
 
-        profileService.update(principal.getName(), nickname, avatar, removeAvatar);
+        profileService.update(principal.getName(), nickname, email, avatar, removeAvatar);
 
-        // フラッシュ属性：リダイレクト先の画面で1回だけ使える値
         redirectAttributes.addFlashAttribute("message", "プロフィールを更新しました");
         return "redirect:/mypage";
     }
@@ -174,11 +173,12 @@ public class MyPageController {
 
     // ===== 内部で使う処理 =====
 
-    private void addProfileFormAttributes(Model model, AppUser user, String nickname) {
+    private void addProfileFormAttributes(Model model, AppUser user, String nickname, String email) {
         model.addAttribute("user", user);
         model.addAttribute("nickname", nickname);
+        model.addAttribute("email", email);
         model.addAttribute("nicknameMax", ProfileService.NICKNAME_MAX);
-        model.addAttribute("level", cookingRecordService.level(user));   // 今のランクの案内に使う
+        model.addAttribute("level", cookingRecordService.level(user));
     }
 
     private AppUser currentUser(Principal principal) {

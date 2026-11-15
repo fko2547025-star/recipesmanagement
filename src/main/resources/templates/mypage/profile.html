@@ -13,6 +13,11 @@
         </h1>
 
         <div th:if="${errors != null}" class="alert alert--error">
+        <!-- メールアドレスが未登録なら、登録をすすめる -->
+        <div th:if="${user.email == null}" class="alert alert--info">
+            <span class="material-symbols-rounded">mail</span>
+            <span>メールアドレスが未登録です。登録しておくと、パスワードを忘れたときに再設定できます。</span>
+        </div>            
             <span class="material-symbols-rounded">error</span>
             <ul class="alert__list">
                 <li th:each="e : ${errors}" th:text="${e}">エラー</li>
@@ -51,6 +56,13 @@
                        th:text="'レシピやコメントに表示される名前です。空欄にすると、ユーザー名（' + ${user.username} + '）が表示されます'">
                     空欄にすると、ユーザー名が表示されます
                 </small>
+            </div>
+            <!-- ===== メールアドレス ===== -->
+            <div class="form-field">
+                <label for="email">メールアドレス</label>
+                <input type="email" id="email" name="email" th:value="${email}" maxlength="255"
+                       placeholder="例：recipi@example.com" autocomplete="email">
+                <small class="field-hint">パスワードを忘れたときに、再設定のメールを送ります。ほかの人には表示されません</small>
             </div>
 
             <div class="form-field">

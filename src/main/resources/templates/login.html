@@ -21,7 +21,9 @@
         <div th:if="${param.registered}" class="alert alert--success">
             <span class="material-symbols-rounded">check_circle</span>登録が完了しました。ログインしてください
         </div>
-
+        <div th:if="${param.reset}" class="alert alert--success">
+            <span class="material-symbols-rounded">check_circle</span>パスワードを再設定しました。新しいパスワードでログインしてください
+        </div>
         <!--
             POST /login の処理は Spring Security が自動で行う。
             name="username" と name="password" は決まった名前なので変えないこと
@@ -40,6 +42,7 @@
             <button type="submit" class="btn--block">ログイン</button>
         </form>
 
+        <a href="/password/forgot" class="auth-card__link">パスワードを忘れた方はこちら</a>
         <a href="/register" class="auth-card__link">新規登録はこちら</a>
         <a href="/recipes" class="auth-card__link">ログインせずにレシピを見る</a>
     </main>

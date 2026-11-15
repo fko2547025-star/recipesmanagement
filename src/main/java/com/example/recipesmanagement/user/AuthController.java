@@ -33,20 +33,30 @@ public class AuthController {
     // 新規登録処理
     @PostMapping("/register")
     public String register(@RequestParam String username,
-                        @RequestParam String password,
-                        @RequestParam String passwordConfirm,   // ← 追加：確認用のパスワード
-                        Model model) {
+                           @RequestParam String email,             // ← 追加：メールアドレス
+                           @RequestParam String password,
+                           @RequestParam String passwordConfirm,
+                           Model model) {
 
-        // エラーで画面に戻ったとき、入力したユーザー名を残しておく（パスワードは安全のため残さない）
+        // エラーで画面に戻ったとき、入力したユーザー名・メールアドレスを残しておく（パスワードは安全のため残さない）
         model.addAttribute("username", username);
+        model.addAttribute("email", email);                         // ← 追加
 
         // 確認用のパスワードと一致しなければ、登録画面に戻す
         // 文字列の比較は == ではなく equals()（== は「同じ物か」を比べてしまう）
         if (!password.equals(passwordConfirm)) {
             model.addAttribute("error", "パスワードが一致しません");
             return "register";
-        }           
-                         
+        }
+
+        // ← 追加：メールアドレスのチェック（重複は許すので、形式だけ確かめる）
+        String normalizedEmail = EmailRules.normalize(email);
+        String emailError = EmailRules.check(normalizedEmail);
+        if (emailError != null) {
+            model.addAttribute("error", emailError);
+            return "register";
+        }
+
         if (repository.existsByUsername(username)) {
             model.addAttribute("error", "そのユーザー名はすでに使われています");
             return "register";
@@ -54,6 +64,7 @@ public class AuthController {
 
         AppUser user = new AppUser();
         user.setUsername(username);
+        user.setEmail(normalizedEmail);                             // ← 追加
         user.setPassword(passwordEncoder.encode(password));   // 暗号化して保存
         repository.save(user);
 

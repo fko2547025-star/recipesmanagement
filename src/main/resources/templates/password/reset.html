@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('新しいパスワード')}"></head>
+<body class="auth-page">
+
+    <main class="auth-card">
+        <a href="/recipes" class="brand brand--large">
+            <span class="material-symbols-rounded">soup_kitchen</span>Recipi
+        </a>
+        <p class="auth-card__lead">新しいパスワードを設定</p>
+
+        <!-- リンクが使えないとき（期限切れ・使用済み・でたらめなトークン） -->
+        <th:block th:if="${invalid}">
+            <div class="alert alert--error">
+                <span class="material-symbols-rounded">link_off</span>
+                <span>このリンクは使えません。期限（30分）が切れたか、すでに使われています。</span>
+            </div>
+            <a href="/password/forgot" class="btn btn--block">もう一度メールを送る</a>
+        </th:block>
+
+        <th:block th:unless="${invalid}">
+            <div th:if="${errors != null}" class="alert alert--error">
+                <span class="material-symbols-rounded">error</span>
+                <ul class="alert__list">
+                    <li th:each="e : ${errors}" th:text="${e}">エラー</li>
+                </ul>
+            </div>
+
+            <form th:action="@{/password/reset}" method="post" class="auth-form">
+                <!-- トークンは見えない項目で送り返す -->
+                <input type="hidden" name="token" th:value="${token}">
+                <label class="input-icon">
+                    <span class="material-symbols-rounded">lock</span>
+                    <input type="password" name="newPassword" id="password" required autocomplete="new-password"
+                           th:attr="minlength=${minLength}" th:placeholder="'新しいパスワード（' + ${minLength} + '文字以上）'">
+                </label>
+                <label class="input-icon">
+                    <span class="material-symbols-rounded">lock_reset</span>
+                    <input type="password" name="confirmPassword" id="passwordConfirm" required autocomplete="new-password"
+                           th:attr="minlength=${minLength}" placeholder="新しいパスワード（確認）">
+                </label>
+                <button type="submit" class="btn--block">パスワードを再設定する</button>
+            </form>
+        </th:block>
+
+        <a href="/login" class="auth-card__link">ログイン画面に戻る</a>
+    </main>
+
+    <script>
+        // 確認欄が、パスワードと同じかどうかを調べる（新規登録と同じしくみ）
+        const password = document.getElementById('password');
+        const confirmInput = document.getElementById('passwordConfirm');
+
+        function checkMatch() {
+            if (confirmInput.value !== '' && confirmInput.value !== password.value) {
+                confirmInput.setCustomValidity('パスワードが一致しません');
+            } else {
+                confirmInput.setCustomValidity('');
+            }
+        }
+
+        // リンクが使えない画面には入力欄が無いので、あるときだけ動かす
+        if (password && confirmInput) {
+            password.addEventListener('input', checkMatch);
+            confirmInput.addEventListener('input', checkMatch);
+        }
+    </script>
+
+</body>
+</html>
