@@ -123,7 +123,7 @@
             <h2 class="section-title"><span class="material-symbols-rounded">smart_toy</span>AIに質問</h2>
 
             <th:block th:if="${loginUsername != null}">
-                <p class="note">このレシピの材料や作り方を踏まえて、AIが答えます（例：「みりんが無いときは？」「焦げないコツは？」）。</p>
+                <p class="note">このレシピの材料や作り方を踏まえて、AIが答えます（例：「みりんが無いときは？」「焦げないコツは？」）。回答まで数十秒かかることがあります。</p>
                 <!-- th:action を使うと、CSRF 対策の隠し項目（_csrf）が自動で入る。送信は下の JavaScript で行う -->
                 <form id="aiAskForm" th:action="@{/ai/recipes/{id}/ask(id=${recipe.id})}" method="post"
                       class="comment-form" onsubmit="askAi(event)">

@@ -1,62 +1,58 @@
 package com.example.recipesmanagement.ai;
 
+import java.net.http.HttpClient;
 import java.time.Duration;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-
-import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
-import com.anthropic.errors.AnthropicIoException;
-import com.anthropic.errors.AnthropicServiceException;
-import com.anthropic.errors.RateLimitException;
-import com.anthropic.errors.UnauthorizedException;
-import com.anthropic.models.messages.Message;
-import com.anthropic.models.messages.MessageCreateParams;
-import com.anthropic.models.messages.OutputConfig;
-import com.anthropic.models.messages.StopReason;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 /**
- * AI（Claude API）を呼び出す共通の部品。
+ * AI を呼び出す共通の部品。
  *
- * APIキーは application.properties の app.ai.api-key（中身は ai-secret.properties に書く）か、
- * 環境変数 ANTHROPIC_API_KEY から読む。どちらも無いときは isEnabled() が false になり、
- * 画面では「AI機能は未設定です」と表示する（アプリのほかの機能はそのまま動く）。
+ * パソコンで動かす Ollama（無料の AI 実行ソフト）に質問を送り、回答を受け取る。
+ * インターネット上のサービスは使わないので、料金はかからない。
+ *
+ * 使う前にパソコンで次の準備が必要：
+ *   1. Ollama をインストールして起動しておく（https://ollama.com）
+ *   2. ollama pull qwen2.5:7b でモデルを取り込んでおく
+ *
+ * 場所とモデルは application.properties の app.ai.ollama-url / app.ai.model で変えられる。
  */
 @Service
 public class AiService {
 
     private static final Logger log = LoggerFactory.getLogger(AiService.class);
 
+    private final String ollamaUrl;
     private final String model;
+    private final RestClient restClient;
 
-    // APIキーが無いときは null（AI機能は使えない）
-    private final AnthropicClient client;
-
-    public AiService(@Value("${app.ai.api-key:}") String apiKey,
-                     @Value("${app.ai.model:claude-opus-5-5}") String model) {
+    public AiService(@Value("${app.ai.ollama-url:http://localhost:11434}") String ollamaUrl,
+                     @Value("${app.ai.model:qwen2.5:7b}") String model) {
+        this.ollamaUrl = ollamaUrl;
         this.model = model;
 
-        // 設定ファイルが空なら、環境変数を使う
-        String key = (apiKey == null || apiKey.isBlank()) ? System.getenv("ANTHROPIC_API_KEY") : apiKey;
+        // パソコンの中で動かす AI は回答に時間がかかりやすいので、待つ時間を長めにする
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)   // Ollama とは普通の HTTP/1.1 でやり取りする
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(Duration.ofMinutes(2));
 
-        if (key == null || key.isBlank()) {
-            this.client = null;
-            log.info("AI機能は未設定です（APIキーがありません）");
-        } else {
-            this.client = AnthropicOkHttpClient.builder()
-                    .apiKey(key.trim())
-                    .timeout(Duration.ofSeconds(90))   // 画面で待たせすぎないように
-                    .build();
-        }
-    }
-
-    /** APIキーが設定されていて、AI機能が使えるか */
-    public boolean isEnabled() {
-        return client != null;
+        this.restClient = RestClient.builder()
+                .baseUrl(ollamaUrl)
+                .requestFactory(factory)
+                .build();
     }
 
     /**
@@ -64,55 +60,70 @@ public class AiService {
      *
      * @param system      AI の役割や守ってほしいこと
      * @param userMessage 質問の本文（レシピなどの情報も含めてよい）
-     * @throws AiException 未設定・通信失敗など、回答が得られなかったとき（メッセージは画面にそのまま出せる日本語）
+     * @throws AiException 回答が得られなかったとき（メッセージは画面にそのまま出せる日本語）
      */
     public String ask(String system, String userMessage) {
-        if (!isEnabled()) {
-            throw new AiException("AI機能は未設定です。管理者にAPIキーの設定を依頼してください。");
-        }
-
-        MessageCreateParams params = MessageCreateParams.builder()
-                .model(model)
-                .maxTokens(16000L)
-                .system(system)
-                .addUserMessage(userMessage)
-                // effort：考える深さ。料理の質問なら LOW で十分速く・安く答えられる
-                .outputConfig(OutputConfig.builder().effort(OutputConfig.Effort.LOW).build())
-                .build();
+        // Ollama の /api/chat に送る内容
+        // stream=false：回答を少しずつではなく、最後にまとめて受け取る
+        Map<String, Object> body = Map.of(
+                "model", model,
+                "stream", false,
+                "messages", List.of(
+                        Map.of("role", "system", "content", system),
+                        Map.of("role", "user", "content", userMessage)));
 
         try {
-            Message response = client.messages().create(params);
+            // 返ってくる形：{"message": {"role": "assistant", "content": "回答"}, ...}
+            Map<?, ?> response = restClient.post()
+                    .uri("/api/chat")
+                    .body(body)
+                    .retrieve()
+                    .body(Map.class);
 
-            // 安全上の理由で AI が答えなかったとき
-            if (response.stopReason().filter(StopReason.REFUSAL::equals).isPresent()) {
-                throw new AiException("この質問には答えられませんでした。聞き方を変えてみてください。");
-            }
-
-            // 回答は複数のブロックに分かれていることがあるので、文章のブロックだけつなげる
-            String text = response.content().stream()
-                    .flatMap(block -> block.text().stream())
-                    .map(t -> t.text())
-                    .collect(Collectors.joining("\n"))
-                    .trim();
-
+            String text = extractContent(response);
             if (text.isEmpty()) {
                 throw new AiException("AIから回答が得られませんでした。もう一度お試しください。");
             }
             return text;
 
-        } catch (UnauthorizedException e) {
-            log.warn("AI: APIキーが正しくありません", e);
-            throw new AiException("AIのAPIキーが正しくありません。設定を確認してください。");
-        } catch (RateLimitException e) {
-            log.warn("AI: 利用回数の上限に達しました", e);
-            throw new AiException("AIが混み合っています。少し待ってからもう一度お試しください。");
-        } catch (AnthropicServiceException e) {
-            log.warn("AI: APIエラー status={}", e.statusCode(), e);
-            throw new AiException("AIでエラーが起きました。時間をおいてもう一度お試しください。");
-        } catch (AnthropicIoException e) {
-            log.warn("AI: 通信に失敗しました", e);
-            throw new AiException("AIに接続できませんでした。ネットワークを確認してください。");
+        } catch (HttpClientErrorException.NotFound e) {
+            // モデルが取り込まれていないと 404 が返る
+            log.warn("AI: モデル {} が見つかりません", model, e);
+            throw new AiException("AIのモデル「" + model + "」がありません。"
+                    + "パソコンで ollama pull " + model + " を実行してください。");
+        } catch (ResourceAccessException e) {
+            // つながらない（Ollama が起動していない）か、時間切れ
+            if (isTimeout(e)) {
+                log.warn("AI: 回答が時間内に返りませんでした", e);
+                throw new AiException("AIの回答に時間がかかりすぎました。もう一度お試しいただくか、"
+                        + "軽いモデル（qwen2.5:3b など）に変えてください。");
+            }
+            log.warn("AI: Ollama（{}）に接続できません", ollamaUrl, e);
+            throw new AiException("AI（Ollama）が起動していません。パソコンで Ollama を起動してください。");
+        } catch (RestClientException e) {
+            log.warn("AI: Ollama でエラーが起きました", e);
+            throw new AiException("AIでエラーが起きました。もう一度お試しください。");
         }
+    }
+
+    /** 返ってきた内容から、回答の文章（message.content）を取り出す */
+    private String extractContent(Map<?, ?> response) {
+        if (response == null || !(response.get("message") instanceof Map<?, ?> message)) {
+            return "";
+        }
+        Object content = message.get("content");
+        return content == null ? "" : content.toString().trim();
+    }
+
+    /** 例外の原因をたどって、時間切れかどうかを調べる */
+    private boolean isTimeout(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof java.net.http.HttpTimeoutException
+                    || t instanceof java.net.SocketTimeoutException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** 回答が得られなかったときの例外。メッセージは利用者向けの日本語 */

@@ -34,4 +34,3 @@ build/
 data/
 
 src/main/resources/mail-secret.properties
-src/main/resources/ai-secret.properties
