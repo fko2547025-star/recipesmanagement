@@ -2,6 +2,7 @@ package com.example.recipesmanagement.password;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;   // ★ 追加
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,14 @@ public class PasswordResetController {
 
     private final PasswordResetService resetService;
 
+    /*
+     * ★ 追加：メールのリンクの先頭を、設定（application.properties の app.public-url）で決めるとき用。
+     * ${app.public-url:} の「:」の後ろは、設定が無いときの値（空文字）。
+     * 空なら使わずに、アクセスしてきた URL から作る
+     */
+    @Value("${app.public-url:}")
+    private String publicUrl;
+
     public PasswordResetController(PasswordResetService resetService) {
         this.resetService = resetService;
     }
@@ -43,8 +52,10 @@ public class PasswordResetController {
                            @RequestParam String email,
                            RedirectAttributes redirectAttributes) {
 
-        // 今開いているサイトの先頭の URL（例：http://localhost:8081）。リンクを作るのに使う
-        String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+        // ★ 変更：設定に URL があればそれを、無ければ今開いているサイトの先頭の URL（例：http://localhost:8081）を使う
+        String baseUrl = !publicUrl.isBlank()
+                ? publicUrl
+                : ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         resetService.requestReset(username, email, baseUrl);
 
         // 合っていても合っていなくても、同じ表示にする
