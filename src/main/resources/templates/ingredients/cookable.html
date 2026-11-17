@@ -13,6 +13,25 @@
         </h1>
         <p class="note">食材管理の在庫と、レシピの材料を照らし合わせた結果です。少々・適量の材料は数えていません。</p>
 
+        <!-- ===== AIに相談：在庫から、登録されていない料理も含めて提案してもらう ===== -->
+        <section class="card section-card" id="ai-suggest">
+            <h2 class="section-title"><span class="material-symbols-rounded">smart_toy</span>AIに相談</h2>
+            <p class="note">今の在庫（期限が近いもの優先）で作れる料理を、AIが2品提案します。期限切れの食材は使いません。</p>
+            <!-- th:action を使うと、CSRF 対策の隠し項目（_csrf）が自動で入る。送信は /js/ai.js で行う -->
+            <form th:action="@{/ai/suggest-from-stock}" method="post" class="comment-form"
+                  data-answer="aiSuggestAnswer" onsubmit="submitAi(event)">
+                <!-- レシピ詳細の「AIに質問」と見た目をそろえるため textarea にする -->
+                <textarea name="request" rows="2" maxlength="100"
+                          placeholder="希望があれば入力（任意。例：15分で作れるもの、子ども向け）"></textarea>
+                <button type="submit">
+                    <span class="material-symbols-rounded">auto_awesome</span>提案してもらう
+                </button>
+            </form>
+            <!-- 回答・エラーの表示場所。recipe-memo__text：改行をそのまま表示する -->
+            <p id="aiSuggestAnswer" class="recipe-memo__text is-hidden"></p>
+            <p class="note">AIの提案はまちがえることがあります。火の通りやアレルギーなどはご自身でも確認してください。</p>
+        </section>
+
         <!-- 候補が1つも無いとき -->
         <div th:if="${#lists.isEmpty(ready) and #lists.isEmpty(almost)}" class="empty card">
             <span class="material-symbols-rounded empty__icon">kitchen</span>
@@ -80,5 +99,8 @@
             </span>
         </a>
     </th:block>
+
+    <!-- AIに相談を送る共通の処理 -->
+    <script src="/js/ai.js"></script>
 </body>
 </html>

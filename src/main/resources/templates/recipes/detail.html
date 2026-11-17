@@ -126,7 +126,7 @@
                 <p class="note">このレシピの材料や作り方を踏まえて、AIが答えます（例：「みりんが無いときは？」「焦げないコツは？」）。回答まで数十秒かかることがあります。</p>
                 <!-- th:action を使うと、CSRF 対策の隠し項目（_csrf）が自動で入る。送信は下の JavaScript で行う -->
                 <form id="aiAskForm" th:action="@{/ai/recipes/{id}/ask(id=${recipe.id})}" method="post"
-                      class="comment-form" onsubmit="askAi(event)">
+                      class="comment-form" data-answer="aiAnswer" onsubmit="submitAi(event)">
                     <textarea name="question" rows="2" maxlength="500" required
                               placeholder="このレシピについて聞きたいことを入力"></textarea>
                     <button type="submit" id="aiAskButton">
@@ -317,37 +317,8 @@
             // 写真を付けたら、「作りました」にもチェックを入れておく（外すこともできる）
             document.querySelector('input[name="cookedReport"]').checked = true;
         }
-
-        // AIに質問する（ページを読み込み直さずに送って、回答を表示する）
-        async function askAi(event) {
-            event.preventDefault();                 // 普通のフォーム送信（画面の移動）を止める
-            const form = event.target;
-            const button = document.getElementById('aiAskButton');
-            const answer = document.getElementById('aiAnswer');
-
-            button.disabled = true;
-            answer.classList.remove('is-hidden', 'text-danger');
-            answer.textContent = 'AIが考えています…';
-
-            try {
-                // FormData：フォームの中身（question と _csrf）をまとめて送る
-                const res = await fetch(form.action, { method: 'POST', body: new URLSearchParams(new FormData(form)) });
-                // ログインが切れていると、ログイン画面（HTML）が返ってくる
-                if (res.redirected || !(res.headers.get('Content-Type') || '').includes('json')) {
-                    throw new Error('ログインが切れました。ページを読み込み直してください。');
-                }
-                const data = await res.json();
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                answer.textContent = data.answer;   // textContent：HTML として解釈せず、文字としてそのまま表示
-            } catch (e) {
-                answer.classList.add('text-danger');
-                answer.textContent = e.message || 'エラーが起きました。もう一度お試しください。';
-            } finally {
-                button.disabled = false;
-            }
-        }
     </script>
+    <!-- AIに質問を送る共通の処理（ログイン中だけ使うので、ログイン中だけ読み込む） -->
+    <script th:if="${loginUsername != null}" src="/js/ai.js"></script>
 </body>
 </html>
