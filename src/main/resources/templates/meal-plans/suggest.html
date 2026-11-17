@@ -92,6 +92,28 @@
                 </button>
             </div>
         </form>
+
+        <!-- ===== AIで献立を考える：選べるレシピと在庫から、1週間の夕食を提案してもらう（表示だけ。保存はしない） ===== -->
+        <section class="card section-card" id="ai-meal-plan">
+            <h2 class="section-title"><span class="material-symbols-rounded">smart_toy</span>AIで献立を考える</h2>
+            <p class="note">自分の投稿・いいねしたレシピと在庫をもとに、AIが1週間の夕食を考えます（★は登録済みのレシピ）。
+                提案は表示するだけなので、使いたいものは「献立に追加」から登録してください。</p>
+            <!-- th:action を使うと、CSRF 対策の隠し項目（_csrf）が自動で入る。送信は /js/ai.js で行う -->
+            <form th:action="@{/ai/meal-plan}" method="post" class="comment-form"
+                  data-answer="aiMealPlanAnswer" onsubmit="submitAi(event)">
+                <textarea name="request" rows="2" maxlength="100"
+                          placeholder="希望があれば入力（任意。例：野菜多め、平日は時短）"></textarea>
+                <button type="submit">
+                    <span class="material-symbols-rounded">auto_awesome</span>考えてもらう
+                </button>
+            </form>
+            <!-- 回答・エラーの表示場所。recipe-memo__text：改行をそのまま表示する -->
+            <p id="aiMealPlanAnswer" class="recipe-memo__text is-hidden"></p>
+            <p class="note">AIの提案はまちがえることがあります。</p>
+        </section>
     </main>
+
+    <!-- AIで献立を考えるの送信処理 -->
+    <script src="/js/ai.js"></script>
 </body>
 </html>

@@ -123,6 +123,18 @@
 
             <!-- ===== 作り方（1行が1手順。番号の丸はCSSが自動で付ける） ===== -->
             <h2 class="form-section-title">作り方</h2>
+
+            <!-- ===== AIで下書き：料理名・人数・材料・メモから、説明と作り方を書いてもらう ===== -->
+            <div class="form-field">
+                <button type="button" id="aiDraftButton" class="btn btn--outline btn--sm"
+                        th:attr="data-url=@{/ai/draft-recipe}" onclick="draftWithAi(this)">
+                    <span class="material-symbols-rounded">smart_toy</span>AIで下書き
+                </button>
+                <small class="field-hint">料理名と材料を入れてから押すと、AIが作り方（と空欄なら「ひとこと」）を下書きします。数十秒かかることがあります。投稿前に内容を確認してください。</small>
+                <!-- 進み具合・エラーの表示場所 -->
+                <p id="aiDraftStatus" class="note is-hidden"></p>
+            </div>
+
             <ol id="step-rows" class="step-rows">
                 <!-- どの行も name="steps" → 送信すると、上から順に List<String> steps に入る -->
                 <li class="step-row" th:each="step : ${form.steps}">
@@ -178,6 +190,74 @@
                 row.remove();
             } else {
                 row.querySelectorAll('input, textarea').forEach(el => el.value = '');
+            }
+        }
+
+        // ===== AIで下書き =====
+        // フォームの料理名・人数・材料・メモを送り、返ってきた説明と作り方をフォームに入れる（まだ保存はしない）
+        async function draftWithAi(button) {
+            const form = button.closest('form');
+            const status = document.getElementById('aiDraftStatus');
+            const show = (text, isError) => {
+                status.textContent = text;
+                status.classList.remove('is-hidden');
+                status.classList.toggle('text-danger', isError);
+            };
+
+            if (!form.querySelector('#title').value.trim()) {
+                show('先に料理名を入力してください', true);
+                return;
+            }
+
+            // 送る項目だけを集める（写真は送らない）。_csrf は th:action のフォームに自動で入っている
+            const params = new URLSearchParams();
+            ['_csrf', 'title', 'servings', 'memo'].forEach(name => {
+                const el = form.querySelector('[name="' + name + '"]');
+                if (el) params.append(name, el.value);
+            });
+            ['ingredientNames', 'ingredientQuantities', 'ingredientUnits'].forEach(name => {
+                form.querySelectorAll('[name="' + name + '"]').forEach(el => params.append(name, el.value));
+            });
+
+            button.disabled = true;
+            show('AIが考えています…（数十秒かかることがあります）', false);
+            try {
+                const res = await fetch(button.dataset.url, { method: 'POST', body: params });
+                if (res.redirected || !(res.headers.get('Content-Type') || '').includes('json')) {
+                    throw new Error('ログインが切れました。ページを読み込み直してください。');
+                }
+                const data = await res.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // 作り方がすでに書かれているときは、置き換えてよいか確かめる
+                const stepBox = document.getElementById('step-rows');
+                const hasSteps = [...stepBox.querySelectorAll('textarea')].some(t => t.value.trim());
+                if (hasSteps && !confirm('今の作り方を、AIの下書きで置き換えますか？')) {
+                    show('下書きは使いませんでした', false);
+                    return;
+                }
+
+                // 1行目をひな形にして、手順の数だけ行を作り直す（addRow と同じやり方）
+                const template = stepBox.firstElementChild.cloneNode(true);
+                stepBox.innerHTML = '';
+                data.steps.forEach(step => {
+                    const row = template.cloneNode(true);
+                    row.querySelector('textarea').value = step;
+                    stepBox.appendChild(row);
+                });
+
+                // ひとことは、空欄のときだけ入れる（自分で書いた文を消さないように）
+                const desc = form.querySelector('#description');
+                if (desc && !desc.value.trim() && data.description) {
+                    desc.value = data.description;
+                }
+                show('AIの下書きを入れました。内容を確認・修正してから投稿してください。', false);
+            } catch (e) {
+                show(e.message || 'エラーが起きました。もう一度お試しください。', true);
+            } finally {
+                button.disabled = false;
             }
         }
 
