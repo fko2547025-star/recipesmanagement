@@ -23,7 +23,7 @@
    == 19. 買い物リスト
    == 20. 調理中モード
    == 21. AI（会話の表示・献立の登録）
-   == 22. リデザイン（料理SNS風の見た目。上の章の見た目をここで上書きする）
+   == 22. 一覧のいいね・カテゴリの写真
 
    スマホ用の調整（画面の幅が 768px 未満）は、それぞれの章の最後に書いている
    ================================================== */
@@ -34,32 +34,24 @@
    --名前 は CSS変数。色を変えたいときはここだけ直せば、全画面に反映される
    ================================================== */
 :root {
-    /* 背景・面（温かみのあるアイボリー） */
-    --bg: #faf6f0;              /* ページの背景 */
-    --surface: #fffdf9;         /* カードなどの面 */
-    --surface-2: #f5ece1;       /* 表の見出し・控えめな面 */
+    /* 背景・面 */
+    --bg: #f7efe4;              /* ページの背景（クリーム） */
+    --surface: #fffaf3;         /* カードなどの面 */
+    --surface-2: #f1e5d4;       /* 表の見出し・控えめな面 */
 
     /* 文字 */
-    --text: #3a2a20;            /* 本文（こげ茶） */
-    --text-muted: #8a7566;      /* 補足の文字 */
+    --text: #3d2a1e;            /* 本文（こげ茶） */
+    --text-muted: #8b7462;      /* 補足の文字 */
 
-    /* メインの色（ブラウン） */
-    --primary: #6e4329;
-    --primary-dark: #4e2e1b;
-    --primary-light: #f4e8db;   /* 選択中・ホバーの薄い茶色 */
+    /* メインの色（コーヒーブラウン） */
+    --primary: #7b4a2c;
+    --primary-dark: #5c351e;
+    --primary-light: #f3e3d1;   /* 選択中・ホバーの薄い茶色 */
 
-    /* 差し色（テラコッタ）：いいね・強調・選択中の印 */
-    --accent: #c8643c;
-    --accent-dark: #a94f2c;
-    --accent-light: #fbe9df;
-
-    /* 線・影（影は2枚重ねて、柔らかく立体的に見せる） */
-    --border: #ede1d2;
-    --shadow: 0 1px 2px rgba(78, 46, 27, 0.05), 0 8px 24px rgba(78, 46, 27, 0.07);
-    --shadow-strong: 0 4px 8px rgba(78, 46, 27, 0.06), 0 18px 40px rgba(78, 46, 27, 0.14);
-
-    /* 動きの速さの変化（最初は速く、最後はゆっくり止まる） */
-    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* 線・影 */
+    --border: #e4d4bf;
+    --shadow: 0 2px 10px rgba(92, 53, 30, 0.08);
+    --shadow-strong: 0 8px 24px rgba(92, 53, 30, 0.16);
 
     /* 状態の色 */
     --danger: #c0533a;          /* 期限切れ・エラー */
@@ -80,9 +72,8 @@
     --rank-predator: #e0302f;
 
     /* 形 */
-    --radius: 18px;
-    --radius-sm: 10px;
-    --radius-lg: 26px;          /* ホームの大きな写真など */
+    --radius: 14px;
+    --radius-sm: 8px;
     --radius-pill: 999px;
 
     /* 文字の種類 */
@@ -3675,323 +3666,12 @@ body.is-cooking { overflow: hidden; }
 
 
 /* ==================================================
-   == 22. リデザイン（料理SNS風の見た目）
-   アイボリー × ブラウン × テラコッタ。角丸と柔らかい影、写真を主役に。
-   上の章で決めた形は残し、見た目だけをここで上書きする（後に書いたほうが優先される）
+   == 22. 一覧のいいね・カテゴリの写真
    ================================================== */
 
-/* ----- 22-1. 全体・文字 ----- */
-h1, h2, h3,
-.page-title,
-.section-title {
-    letter-spacing: 0.03em;
-}
+/* ----- レシピカードの写真の右上の ♡（押すとその場でいいね） ----- */
+.recipe-card { position: relative; }   /* ♡ を重ねる基準 */
 
-.page-title {
-    font-size: 1.6rem;
-    margin: 28px 0 18px;
-}
-
-.section-title { font-size: 1.12rem; }
-
-/* 見出しの帯：狭い画面では、右側のボタンを次の行に送る（見出しの文字が縦に折れないように） */
-.page-head { flex-wrap: wrap; }
-.page-head .page-title { flex-shrink: 0; }
-
-@media (max-width: 767px) {
-    .page-title { font-size: 1.4rem; margin: 20px 0 14px; }
-}
-.section-title .material-symbols-rounded,
-.page-title .material-symbols-rounded { color: var(--accent); }
-
-/* ページを開いたとき、中身がふわっと浮き上がる */
-main {
-    animation: page-in 0.45s var(--ease) both;
-}
-
-@keyframes page-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: none; }
-}
-
-/* ----- 22-2. カード・ボタン・入力欄・タブの形をそろえる ----- */
-.card {
-    border-color: rgba(237, 225, 210, 0.8);
-    border-radius: var(--radius);
-}
-
-button,
-.btn {
-    transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
-}
-
-.btn--outline {
-    background: var(--surface);
-}
-
-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
-select,
-textarea {
-    border-radius: 12px;
-    border-color: var(--border);
-    background-color: #fff;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
-select:focus,
-textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 4px var(--accent-light);
-    outline: none;
-}
-
-/* 期間・すべて／フォロー中などのタブ（白い入れ物の中で、選んだものが茶色の丸になる） */
-.tabs {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-}
-
-.tabs a { transition: background 0.2s, color 0.2s; }
-.tabs a:not(.is-active):hover { background: var(--primary-light); }
-
-.chip { border-color: var(--border); }
-
-.tag {
-    background: var(--primary-light);
-}
-
-/* いいね数はテラコッタ、ハートは塗りつぶし */
-.like-mini,
-.like-count { color: var(--accent); }
-.like-mini .material-symbols-rounded,
-.like-count .material-symbols-rounded { font-variation-settings: "FILL" 1; }
-
-/* 料理写真の明るさ・鮮やかさを少しだけそろえる */
-.recipe-card__photo img,
-.ranking-item__photo img,
-.plan__photo img,
-.cookable__photo img,
-.recipe-detail__photo img {
-    filter: saturate(1.06) brightness(1.02);
-}
-
-.photo-placeholder {
-    background: linear-gradient(135deg, #f6eadc, #ecdac6);
-}
-
-/* ----- 22-3. ヘッダー（明るい色にして、写真を引き立てる） ----- */
-.site-header {
-    /* ほぼ不透明のアイボリー。
-       ※ backdrop-filter（すりガラス）はヘッダーに付けない。付けると、ヘッダーの中にある
-         スマホの画面下メニュー（position: fixed）が、画面ではなくヘッダーを基準に置かれてしまう */
-    background: rgba(255, 253, 249, 0.97);
-    color: var(--text);
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 2px 12px rgba(78, 46, 27, 0.05);
-}
-
-.brand,
-.brand:hover { color: var(--primary-dark); }
-.brand .material-symbols-rounded { color: var(--accent); }
-
-.site-header .btn--light {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-}
-
-.site-header .btn--light:hover {
-    background: var(--primary-dark);
-    border-color: var(--primary-dark);
-    color: #fff;
-}
-
-.site-header__text-link { color: var(--primary); font-weight: 700; }
-.site-header__text-link:hover { color: var(--primary-dark); }
-.user-menu .avatar { border-color: var(--surface); box-shadow: 0 0 0 1px var(--border); }
-
-@media (min-width: 768px) {
-    .site-nav__link { color: var(--text-muted); }
-    .site-nav__link:hover { background: var(--primary-light); color: var(--primary-dark); }
-    .site-nav__link.is-active { background: var(--primary-light); color: var(--primary-dark); }
-    .site-nav__link.is-active .material-symbols-rounded { color: var(--accent); font-variation-settings: "FILL" 1; }
-    .nav-badge { border-color: var(--surface); }
-}
-
-@media (max-width: 767px) {
-    /* 画面下のメニュー：選んでいるものはテラコッタ */
-    .site-nav {
-        background: rgba(255, 253, 249, 0.94);
-        -webkit-backdrop-filter: blur(12px);
-        backdrop-filter: blur(12px);
-    }
-    .site-nav__link.is-active { color: var(--accent); }
-}
-
-/* ----- 22-4. ホーム：大きな料理写真のヒーロー ----- */
-.hero {
-    max-width: 1048px;
-    margin: 16px auto 4px;
-    overflow: hidden;
-    border-radius: var(--radius-lg);
-    color: #fff;
-    /* 左側を濃い茶色のグラデーションで覆って、白い文字を読みやすくする */
-    background:
-        linear-gradient(100deg, rgba(43, 24, 13, 0.82) 0%, rgba(43, 24, 13, 0.5) 42%, rgba(43, 24, 13, 0.05) 78%),
-        url("../images/hero.jpg") right center / cover no-repeat,
-        var(--primary);
-    box-shadow: var(--shadow-strong);
-}
-
-.hero__inner { padding: 64px 44px 48px; }
-
-.hero__title {
-    color: #fff;
-    font-size: 2.5rem;
-    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
-}
-
-.hero__line { border-color: var(--accent); }
-.hero__lead { color: rgba(255, 255, 255, 0.9); }
-
-.search-bar { background: #fff; }
-.search-bar input[type="search"],
-.search-bar input[type="search"]:focus {
-    border: none;
-    background: transparent;
-    box-shadow: none;
-}
-
-@media (max-width: 767px) {
-    .hero {
-        margin: 12px 16px 4px;
-        border-radius: 22px;
-        background:
-            linear-gradient(180deg, rgba(43, 24, 13, 0.3) 0%, rgba(43, 24, 13, 0.75) 100%),
-            url("../images/hero.jpg") center / cover no-repeat,
-            var(--primary);
-    }
-    .hero__inner { padding: 36px 20px 22px; }
-    .hero__title { font-size: 1.75rem; }
-}
-
-/* ----- 22-5. カテゴリ：丸い写真（写真が無いカテゴリは絵文字） ----- */
-.category-cards {
-    /* PC：10カテゴリが1行に入るように、1つ分を少しせまくする */
-    grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
-}
-
-.category-card {
-    padding: 6px 4px 4px;
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    color: var(--text);
-}
-
-.category-card:hover {
-    transform: translateY(-3px);
-    box-shadow: none;
-}
-
-.category-card__icon {
-    overflow: hidden;
-    width: 76px;
-    height: 76px;
-    border: 3px solid var(--surface);
-    background: var(--primary-light);
-    box-shadow: var(--shadow);
-    transition: box-shadow 0.2s;
-}
-
-.category-card__icon.has-photo img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    filter: saturate(1.06) brightness(1.02);
-}
-
-.category-card:hover .category-card__icon { box-shadow: var(--shadow-strong); }
-
-.category-card.is-active {
-    border: none;
-    background: transparent;
-    box-shadow: none;
-}
-
-.category-card.is-active .category-card__icon { box-shadow: 0 0 0 3px var(--accent); }
-.category-card.is-active .category-card__name { color: var(--accent-dark); }
-
-@media (max-width: 767px) {
-    .category-card { flex: 0 0 76px; }
-    .category-card__icon {
-        width: 64px;
-        height: 64px;
-    }
-}
-
-/* ----- 22-6. レシピカード：写真が主役 ----- */
-.recipe-grid { gap: 20px; }
-
-.recipe-card {
-    position: relative;               /* 右上の ♡ を重ねる基準 */
-    border: none;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
-}
-
-.recipe-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-strong);
-}
-
-.recipe-card__photo { overflow: hidden; }
-
-.recipe-card__photo img { transition: transform 0.6s var(--ease); }
-.recipe-card:hover .recipe-card__photo img { transform: scale(1.05); }
-
-/* 写真の左下のバッジ（調理時間・難易度） */
-.recipe-card__badges {
-    position: absolute;
-    left: 10px;
-    right: 54px;
-    bottom: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.photo-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    max-width: 100%;
-    padding: 3px 10px 3px 8px;
-    border-radius: var(--radius-pill);
-    background: rgba(255, 253, 249, 0.92);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    color: var(--primary-dark);
-    font-size: 0.74rem;
-    font-weight: 700;
-    line-height: 1.4;
-}
-
-.photo-badge .material-symbols-rounded {
-    color: var(--accent);
-    font-size: 0.95rem;
-}
-
-.recipe-card__body { padding: 14px 16px 8px; }
-.recipe-card__title { margin-bottom: 4px; font-size: 1.02rem; }
-.recipe-card__desc { margin-bottom: 4px; }
-.recipe-card .recipe-card__meta { padding: 4px 16px 14px; }
-
-/* 写真の右上の ♡（押すとその場でいいね） */
 .card-like {
     position: absolute;
     top: 10px;
@@ -4000,13 +3680,13 @@ textarea:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     padding: 0;
     border: none;
     border-radius: 50%;
-    background: rgba(255, 253, 249, 0.92);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    background: rgba(255, 250, 243, 0.92);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     color: var(--primary-dark);
     text-decoration: none;
 }
@@ -4014,17 +3694,18 @@ textarea:focus {
 .card-like:hover {
     background: #fff;
     border: none;
-    color: var(--accent);
+    color: #d0604a;
 }
 
 .card-like:active { transform: scale(0.9); }
-.card-like .material-symbols-rounded { font-size: 1.35rem; }
+.card-like .material-symbols-rounded { font-size: 1.3rem; }
 
-.card-like.is-liked { color: var(--accent); }
+/* いいね済みは、塗りつぶしの赤いハート */
+.card-like.is-liked { color: #d0604a; }
 .card-like.is-liked .material-symbols-rounded { font-variation-settings: "FILL" 1; }
 
 /* いいねしたとき、ハートがポンと弾む */
-.card-like.is-pop .material-symbols-rounded { animation: heart-pop 0.5s var(--ease); }
+.card-like.is-pop .material-symbols-rounded { animation: heart-pop 0.5s ease-out; }
 
 @keyframes heart-pop {
     0%   { transform: scale(1); }
@@ -4034,144 +3715,24 @@ textarea:focus {
 }
 
 @media (max-width: 767px) {
-    .recipe-grid { gap: 12px; }
-    .recipe-card__body { padding: 10px 12px 6px; }
-    .recipe-card .recipe-card__meta { padding: 2px 12px 12px; }
     .card-like {
         top: 8px;
         right: 8px;
-        width: 34px;
-        height: 34px;
-    }
-    .recipe-card__badges { left: 8px; bottom: 8px; right: 8px; gap: 4px; }
-    .photo-badge { padding: 2px 8px 2px 6px; font-size: 0.68rem; }
-}
-
-/* ----- 22-7. ランキング ----- */
-.ranking-list { padding: 8px 0; }
-
-.ranking-item { transition: background 0.2s; }
-.ranking-item:hover { background: var(--primary-light); }
-
-/* 1〜3位は、左から薄いテラコッタのグラデーション */
-.ranking-item.is-top { background: linear-gradient(90deg, var(--accent-light), rgba(251, 233, 223, 0) 75%); }
-
-.ranking-item__photo {
-    border-radius: 14px;
-    box-shadow: var(--shadow);
-}
-
-.ranking-item__title { font-size: 1.02rem; }
-
-/* ----- 22-8. 献立：今日の色をテラコッタに、スマホは日付を選んで朝・昼・夜のカード ----- */
-.day { border-color: var(--border); }
-.day.is-today { border-color: var(--accent); background: var(--surface); }
-.day.is-today .day__head { background: var(--accent-light); color: var(--accent-dark); }
-
-.plan__photo { border-radius: 12px; }
-
-/* 日付の丸（スマホだけ使う） */
-.day-picker { display: none; }
-
-@media (max-width: 767px) {
-    .day-picker {
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 6px;
-        margin: 4px 0 16px;
-    }
-
-    .day-picker__day {
-        flex-direction: column;
-        gap: 0;
-        min-width: 0;
-        padding: 8px 0 6px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-pill);
-        background: var(--surface);
-        color: var(--text);
-        box-shadow: var(--shadow);
-        line-height: 1.3;
-    }
-
-    .day-picker__day:hover {
-        border-color: var(--accent);
-        background: var(--surface);
-        color: var(--text);
-    }
-
-    .day-picker__dow { color: var(--text-muted); font-size: 0.7rem; font-weight: 500; }
-    .day-picker__num { font-size: 1.05rem; }
-
-    /* 献立がある日の点 */
-    .day-picker__dot {
-        width: 5px;
-        height: 5px;
-        margin-top: 2px;
-        border-radius: 50%;
-    }
-    .day-picker__day.has-plans .day-picker__dot { background: var(--accent); }
-
-    .day-picker__day.is-today { border-color: var(--accent); }
-
-    .day-picker__day.is-selected {
-        border-color: var(--primary);
-        background: var(--primary);
-        color: #fff;
-    }
-    .day-picker__day.is-selected .day-picker__dow { color: rgba(255, 255, 255, 0.8); }
-    .day-picker__day.is-selected.has-plans .day-picker__dot { background: #fff; }
-
-    /* 選んだ日だけ表示し、朝・昼・夜を横に3枚並べる */
-    .week {
-        display: block;
-        overflow: visible;
-        padding-bottom: 0;
-    }
-    .week .day { display: none; }
-    .week .day.is-selected {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 10px;
-        overflow: visible;
-        border: none;
-        background: transparent;
-        box-shadow: none;
-    }
-    .week .day.is-selected .day__head { display: none; }
-    .week .day.is-selected .slot {
-        padding: 10px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--surface);
-        box-shadow: var(--shadow);
+        width: 32px;
+        height: 32px;
     }
 }
 
-/* ----- 22-9. マイページ・投稿フォーム ----- */
-.stat .material-symbols-rounded { color: var(--accent); }
-
-.photo-drop {
-    border-color: #e2cdb6;
-    border-radius: var(--radius);
-    background: var(--surface);
-    transition: border-color 0.2s, background 0.2s;
-}
-
-.photo-drop:hover { border-color: var(--accent); background: var(--accent-light); }
-.photo-drop__placeholder .material-symbols-rounded { color: var(--accent); }
-
-/* レシピ詳細の写真は大きな角丸 */
-.recipe-detail__photo { border-radius: var(--radius-lg); }
-
-/* ----- 22-10. 動きを減らす設定の端末では、動きを止める ----- */
 @media (prefers-reduced-motion: reduce) {
-    main,
     .card-like.is-pop .material-symbols-rounded { animation: none; }
-    .recipe-card,
-    .recipe-card__photo img,
-    .category-card { transition: none; }
-    .recipe-card:hover,
-    .category-card:hover { transform: none; }
-    .recipe-card:hover .recipe-card__photo img { transform: none; }
+}
+
+/* ----- ホームのカテゴリ：写真があるときは、丸の中いっぱいに写真を出す ----- */
+.category-card__icon.has-photo { overflow: hidden; }
+
+.category-card__icon.has-photo img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
 }
