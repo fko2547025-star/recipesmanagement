@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.recipesmanagement.comment.CommentRepository;
 import com.example.recipesmanagement.common.ImageStorageService;
 import com.example.recipesmanagement.user.AppUser;
 
@@ -27,10 +28,13 @@ public class RecipeService {
 
     private final RecipeRepository repository;
     private final ImageStorageService imageStorageService;
+    private final CommentRepository commentRepository;
 
-    public RecipeService(RecipeRepository repository, ImageStorageService imageStorageService) {
+    public RecipeService(RecipeRepository repository, ImageStorageService imageStorageService,
+                         CommentRepository commentRepository) {
         this.repository = repository;
         this.imageStorageService = imageStorageService;
+        this.commentRepository = commentRepository;
     }
 
     /**
@@ -122,6 +126,8 @@ public class RecipeService {
     public void delete(Long id, AppUser user) {
         Recipe recipe = findOwned(id, user);
         String image = recipe.getImagePath();
+        // コメントはデータベースが一緒に消すが、写真のファイルは残ってしまうので、先にファイル名を集めておく
+        List<String> commentImages = commentRepository.findImagePathsByRecipe(recipe);
 
         // 材料は cascade で一緒に削除される
         // いいね・コメントは、テーブル作成時の ON DELETE CASCADE で DB が自動で削除する
@@ -129,6 +135,7 @@ public class RecipeService {
         repository.delete(recipe);
 
         imageStorageService.delete(image);
+        commentImages.forEach(imageStorageService::delete);   // コメントの写真のファイルも消す
     }
 
     // ===== 内部で使う処理 =====
