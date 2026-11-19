@@ -26,22 +26,33 @@ public class LikeService {
     /**
      * いいねを切り替える（トグル）。
      * まだしていなければ「いいね」、すでにしていれば「取り消し」。
+     *
+     * @return 切り替えたあと、いいねしている状態なら true
      */
     @Transactional
-    public void toggle(Long recipeId, AppUser user) {
+    public boolean toggle(Long recipeId, AppUser user) {
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        // ifPresentOrElse：見つかったら1つ目の処理、見つからなければ2つ目の処理
-        likeRepository.findByUserAndRecipe(user, recipe).ifPresentOrElse(
-                // いいね済み → 取り消し
-                like -> likeRepository.delete(like),
-                // まだ → いいね
-                () -> {
-                    RecipeLike like = new RecipeLike();
-                    like.setUser(user);
-                    like.setRecipe(recipe);
-                    likeRepository.save(like);
-                });
+        // いいね済み → 取り消し
+        var existing = likeRepository.findByUserAndRecipe(user, recipe);
+        if (existing.isPresent()) {
+            likeRepository.delete(existing.get());
+            return false;
+        }
+        // まだ → いいね
+        RecipeLike like = new RecipeLike();
+        like.setUser(user);
+        like.setRecipe(recipe);
+        likeRepository.save(like);
+        return true;
+    }
+
+    /** レシピのいいね数 */
+    @Transactional(readOnly = true)
+    public long count(Long recipeId) {
+        Recipe recipe = recipeRepository.findById(recipeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return likeRepository.countByRecipe(recipe);
     }
 }

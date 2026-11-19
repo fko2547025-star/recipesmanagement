@@ -34,5 +34,15 @@
 
     <!-- アプリ共通の CSS（src/main/resources/static/css/style.css） -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <!--
+        CSRF 対策の合言葉。JavaScript で POST するとき（一覧のカードの ♡ など）に、ヘッダーに付けて送る。
+        _csrf は Spring Security が全画面に用意している
+    -->
+    <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
+
+    <!-- 一覧のカードの ♡ を押したときの処理（defer：ページを読み終わってから動かす） -->
+    <script th:src="@{/js/like.js}" defer></script>
 </head>
 </html>

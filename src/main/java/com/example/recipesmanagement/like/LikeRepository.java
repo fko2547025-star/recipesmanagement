@@ -60,4 +60,10 @@ public interface LikeRepository extends JpaRepository<RecipeLike, Long> {
     }
 
     long countByRecipe_User(AppUser user);
+
+    /**
+     * そのユーザーがいいねしたレシピの id。一覧のカードで「いいね済み（塗りつぶしのハート）」を出すのに使う。
+     */
+    @Query("select l.recipe.id from RecipeLike l where l.user = :user")
+    List<Long> findRecipeIdsByUser(@Param("user") AppUser user);
 }
