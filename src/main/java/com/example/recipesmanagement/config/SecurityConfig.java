@@ -19,7 +19,7 @@ public class SecurityConfig {
             // ページごとのアクセス制限（上から順に判定される）
             .authorizeHttpRequests(auth -> auth
                 // 新規登録・ログイン画面は誰でも
-                .requestMatchers("/login", "/register", "/password/**", "/email/verify", "/error", "/css/**", "/images/**").permitAll()
+                .requestMatchers("/login", "/register", "/password/**", "/email/verify", "/privacy", "/terms", "/error", "/css/**", "/images/**").permitAll()
                 // CSS・画像・アップロード写真は、ログインしていなくても読み込めるようにする
                 .requestMatchers("/css/**", "/images/**", "/uploads/**", "/js/**").permitAll()
                 // レシピ投稿画面はログイン必須（下の /recipes/* より先に書く）

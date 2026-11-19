@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!--
+        全画面共通のフッター。各画面の </body> の直前で、次の1行で読み込む。
+            <footer th:replace="~{fragments/footer :: footer}"></footer>
+    -->
+    <footer th:fragment="footer" class="site-footer">
+        <a href="/terms">利用規約</a>
+        <a href="/privacy">プライバシーポリシー</a>
+        <span th:text="'© ' + ${operatorName}">© Recipe 運営チーム</span>
+    </footer>
+</body>
+</html>
