@@ -130,20 +130,27 @@
             <h2 class="section-title"><span class="material-symbols-rounded">smart_toy</span>AIに質問</h2>
 
             <th:block th:if="${loginUsername != null}">
-                <p class="note">このレシピの材料や作り方を踏まえて、AIが答えます（例：「みりんが無いときは？」「焦げないコツは？」）。回答まで数十秒かかることがあります。</p>
-                <!-- th:action を使うと、CSRF 対策の隠し項目（_csrf）が自動で入る。送信は下の JavaScript で行う -->
+                <p class="note">このレシピの材料や作り方を踏まえて、AIが答えます（例：「みりんが無いときは？」「焦げないコツは？」）。続けて質問することもできます。回答まで数十秒かかることがあります。</p>
+                <!-- 会話の表示場所（質問と回答が順に並ぶ）。中身は /js/ai.js が足していく -->
+                <div id="aiAnswer" class="ai-chat is-hidden"></div>
+                <!-- th:action を使うと、CSRF 対策の隠し項目（_csrf）が自動で入る。送信は /js/ai.js で行う
+                     data-conversation="true"：続けて質問したとき、これまでの会話も一緒に送る -->
                 <form id="aiAskForm" th:action="@{/ai/recipes/{id}/ask(id=${recipe.id})}" method="post"
-                      class="comment-form" data-answer="aiAnswer" onsubmit="submitAi(event)">
+                      class="comment-form" data-answer="aiAnswer" data-conversation="true" onsubmit="submitAi(event)">
                     <!-- 今表示している人数。AI にはこの人数分に換算した分量を渡す -->
                     <input type="hidden" name="servings" th:value="${servings}">
                     <textarea name="question" rows="2" maxlength="500" required
                               placeholder="このレシピについて聞きたいことを入力"></textarea>
-                    <button type="submit" id="aiAskButton">
-                        <span class="material-symbols-rounded">send</span>質問する
-                    </button>
+                    <div class="ai-chat__actions">
+                        <button type="button" class="btn--outline btn--sm ai-chat__reset is-hidden"
+                                onclick="resetAiConversation(this)">
+                            <span class="material-symbols-rounded">restart_alt</span>会話をリセット
+                        </button>
+                        <button type="submit" id="aiAskButton">
+                            <span class="material-symbols-rounded">send</span>質問する
+                        </button>
+                    </div>
                 </form>
-                <!-- 回答・エラーの表示場所。recipe-memo__text：改行をそのまま表示する -->
-                <p id="aiAnswer" class="recipe-memo__text is-hidden"></p>
                 <p class="note">AIの回答はまちがえることがあります。火の通りやアレルギーなどはご自身でも確認してください。</p>
             </th:block>
 

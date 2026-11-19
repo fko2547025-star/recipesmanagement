@@ -22,6 +22,7 @@
    == 18. 食材管理（一覧・作れるレシピ・在庫に追加）
    == 19. 買い物リスト
    == 20. 調理中モード
+   == 21. AI（会話の表示・献立の登録）
 
    スマホ用の調整（画面の幅が 768px 未満）は、それぞれの章の最後に書いている
    ================================================== */
@@ -3557,3 +3558,49 @@ body.is-cooking { overflow: hidden; }
     min-height: 56px;               /* 料理中でも押しやすい大きさ */
     font-size: 1.1rem;
 }
+
+
+/* ==================================================
+   == 21. AI（会話の表示・献立の登録）
+   ================================================== */
+/* 会話：質問は右、回答は左に、吹き出しのように並べる */
+.ai-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.ai-chat__q,
+.ai-chat__a {
+    max-width: 90%;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    line-height: 1.7;
+    white-space: pre-line;          /* 改行をそのまま表示する */
+}
+
+.ai-chat__q {
+    align-self: flex-end;
+    background: var(--primary-light);
+}
+
+.ai-chat__a {
+    align-self: flex-start;
+    background: var(--surface-2);
+}
+
+/* 「会話をリセット」と「質問する」を横に並べる */
+.ai-chat__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* AI の献立から登録する候補 */
+.ai-picks {
+    margin-top: 12px;
+}
+
+.ai-picks .check-list { margin-bottom: 12px; }
