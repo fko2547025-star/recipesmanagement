@@ -18,8 +18,10 @@
         <form th:action="@{/register}" method="post" class="auth-form">
             <label class="input-icon">
                 <span class="material-symbols-rounded">person</span>
-                <input type="text" name="username" th:value="${username}" placeholder="ユーザーID" maxlength="50" required autocomplete="username">
+                <input type="text" name="username" th:value="${username}" placeholder="ユーザーID" maxlength="50" required autocomplete="username"
+                       minlength="3" pattern="[A-Za-z0-9_\-]+">
             </label>
+            <small class="field-hint">半角の英字・数字と「_」「-」で3〜50文字</small>
             <label class="input-icon">
                 <span class="material-symbols-rounded">mail</span>
                 <!-- type="email"：スマホでは @ の入ったキーボードが出る。ブラウザも形式をチェックしてくれる -->
@@ -30,14 +32,14 @@
             <label class="input-icon">
                 <span class="material-symbols-rounded">lock</span>
                 <!-- new-password：ブラウザが新しいパスワードの提案を出せるようにする -->
-                <input type="password" name="password" id="password" placeholder="パスワード（4文字以上）" minlength="4" required
+                <input type="password" name="password" id="password" placeholder="パスワード（8文字以上）" minlength="8" required
                        autocomplete="new-password">
             </label>
             <label class="input-icon">
                 <span class="material-symbols-rounded">lock_reset</span>
                 <!-- 確認用。name を passwordConfirm にして、サーバーでも password と同じか確かめる -->
                 <input type="password" name="passwordConfirm" id="passwordConfirm" placeholder="パスワード（確認）"
-                    minlength="4" required autocomplete="new-password" autocapitalize="off" autocorrect="off">
+                    minlength="8" required autocomplete="new-password" autocapitalize="off" autocorrect="off">
             </label>
             <button type="submit" class="btn--block">登録する</button>
         </form>

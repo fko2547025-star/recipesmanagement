@@ -94,7 +94,7 @@
         </form>
 
         <!-- ===== AIで献立を考える：選べるレシピと在庫から、1週間の夕食を提案してもらう（表示だけ。保存はしない） ===== -->
-        <section class="card section-card" id="ai-meal-plan">
+        <section class="card section-card" id="ai-meal-plan" th:if="${aiEnabled}">
             <h2 class="section-title"><span class="material-symbols-rounded">smart_toy</span>AIで献立を考える</h2>
             <p class="note">自分の投稿・いいねしたレシピと在庫をもとに、AIがこの週の夕食を考えます（★は登録済みのレシピ）。
                 ★のレシピは、下に出るチェックから献立に追加できます。</p>

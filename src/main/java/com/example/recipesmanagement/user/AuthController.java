@@ -40,6 +40,22 @@ public class AuthController {
 
         // エラーで画面に戻ったとき、入力したユーザー名・メールアドレスを残しておく（パスワードは安全のため残さない）
         model.addAttribute("username", username);
+
+        // ユーザー名：前後の空白を取り、長さと使える文字を確かめる
+        // （HTML の maxlength などはブラウザ側のチェックで簡単に外せるので、サーバーでも必ず確かめる）
+        username = UsernameRules.normalize(username);
+        String usernameError = UsernameRules.check(username);
+        if (usernameError != null) {
+            model.addAttribute("error", usernameError);
+            return "register";
+        }
+
+        // パスワード：長さ（8文字以上・72バイトまで）
+        String passwordError = PasswordRules.check(password);
+        if (passwordError != null) {
+            model.addAttribute("error", passwordError);
+            return "register";
+        }
         model.addAttribute("email", email);                         // ← 追加
 
         // 確認用のパスワードと一致しなければ、登録画面に戻す

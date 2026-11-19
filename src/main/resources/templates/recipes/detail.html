@@ -133,7 +133,7 @@
         </section>
 
         <!-- ===== AIに質問（ログイン中だけ使える。料金がかかるため） ===== -->
-        <section class="card section-card" id="ai-ask">
+        <section class="card section-card" id="ai-ask" th:if="${aiEnabled}">
             <h2 class="section-title"><span class="material-symbols-rounded">smart_toy</span>AIに質問</h2>
 
             <th:block th:if="${loginUsername != null}">
@@ -522,6 +522,6 @@
         }
     </script>
     <!-- AIに質問を送る共通の処理（ログイン中だけ使うので、ログイン中だけ読み込む） -->
-    <script th:if="${loginUsername != null}" src="/js/ai.js"></script>
+    <script th:if="${loginUsername != null and aiEnabled}" src="/js/ai.js"></script>
 </body>
 </html>
