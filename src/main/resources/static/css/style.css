@@ -23,7 +23,7 @@
    == 19. 買い物リスト
    == 20. 調理中モード
    == 21. AI（会話の表示・献立の登録）
-   == 22. 一覧のいいね・カテゴリの写真
+   == 22. 一覧のいいね・カテゴリの写真・写真が全面のレシピカード
 
    スマホ用の調整（画面の幅が 768px 未満）は、それぞれの章の最後に書いている
    ================================================== */
@@ -1342,10 +1342,16 @@ body.auth-page > .auth-card {
 .hero {
     /* 背景は3枚重ね。上に書いたものほど手前に来る
        1枚目：左側をクリーム色で隠すグラデーション（文字を読みやすくする）
+              幕が消える位置は、割合ではなく「文字と検索欄が並ぶ範囲」に合わせる。
+              割合だと、画面を狭めたときに幕の範囲も縮み、右寄せの写真（オムライス）に幕がかかってしまう。
+              max(380px, calc(50% - 160px))：狭い画面では左から380px、広い画面では中央より少し左まで
        2枚目：料理写真（右寄せで、エリアいっぱいに広げる）
        3枚目：写真が無いときの予備の色 */
     background:
-        linear-gradient(90deg, rgba(247, 239, 228, 0.97) 0%, rgba(247, 239, 228, 0.85) 38%, rgba(247, 239, 228, 0) 70%),
+        linear-gradient(90deg,
+            rgba(247, 239, 228, 0.97) 0%,
+            rgba(247, 239, 228, 0.85) max(380px, calc(50% - 160px)),
+            rgba(247, 239, 228, 0) max(700px, calc(50% + 160px))),
         url("../images/hero.jpg") right center / cover no-repeat,
         linear-gradient(135deg, #f7efe4, #ead6bf);
 }
@@ -1478,11 +1484,15 @@ body.auth-page > .auth-card {
 }
 
 @media (max-width: 767px) {
-    /* 写真を全体に薄く敷いて、文字を小さめにする */
+    /* 文字が並ぶ左側だけ濃く、右へ行くほど薄くして、右側の写真（オムライス）が見えるようにする。
+       写真も少し右寄せ（70%）にして、料理が右側に来るようにする */
     .hero {
         background:
-            linear-gradient(rgba(247, 239, 228, 0.82), rgba(247, 239, 228, 0.82)),
-            url("../images/hero.jpg") center / cover no-repeat,
+            linear-gradient(90deg,
+                rgba(247, 239, 228, 0.92) 0%,
+                rgba(247, 239, 228, 0.7) 55%,
+                rgba(247, 239, 228, 0.15) 100%),
+            url("../images/hero.jpg") 70% center / cover no-repeat,
             var(--bg);
     }
     .hero__inner { padding: 28px 16px 24px; }
@@ -3655,7 +3665,7 @@ body.is-cooking { overflow: hidden; }
 
 
 /* ==================================================
-   == 22. 一覧のいいね・カテゴリの写真
+   == 22. 一覧のいいね・カテゴリの写真・写真が全面のレシピカード
    ================================================== */
 
 /* ----- レシピカードの写真の右上の ♡（押すとその場でいいね） ----- */
@@ -3724,4 +3734,84 @@ body.is-cooking { overflow: hidden; }
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
+}
+
+/* ----- レシピカード：写真をカードいっぱいに出し、文字を写真の上に重ねる -----
+   HTML は今のまま（写真 → 料理名・タグ・ひとこと → 投稿者・いいね数）。
+   写真がカードの大きさを決め、文字の部分（body・meta）は position: absolute で写真の下側に重ねる */
+.recipe-card {
+    border: none;
+    background: #4e2e1b;            /* 写真を読み込むまでの色 */
+}
+
+.recipe-card__photo { aspect-ratio: 4 / 5; }   /* 少し縦長にして、写真を大きく見せる */
+
+/* 写真の下半分に、だんだん濃くなる黒い影を重ねて、白い文字を読みやすくする */
+.recipe-card__photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+        rgba(20, 12, 6, 0) 35%,
+        rgba(20, 12, 6, 0.4) 62%,
+        rgba(20, 12, 6, 0.82) 100%);
+    pointer-events: none;
+}
+
+/* 写真が無いレシピは、茶色の背景に絵文字（白い文字が読めるように）。
+   絵文字は上のほうに置いて、下に重ねる料理名とぶつからないようにする */
+.recipe-card .photo-placeholder {
+    align-items: flex-start;
+    padding-top: 18%;
+    background: linear-gradient(135deg, #9a6a48, #4e2e1b);
+}
+
+/* 料理名・タグ・ひとこと：写真の下側に重ねる。下の余白は、投稿者・いいね数の段の分 */
+.recipe-card__body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    padding: 14px 14px 50px;
+    color: #fff;
+}
+
+.recipe-card__title {
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+
+.recipe-card__desc {
+    margin-bottom: 0;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.recipe-card__tags { margin-bottom: 8px; }
+.recipe-card__tags .tag { background: rgba(255, 250, 243, 0.92); }
+
+/* 投稿者・いいね数：いちばん下に重ねる（文字の部分より手前にして、押せるようにする） */
+.recipe-card .recipe-card__meta {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    padding: 0 14px 12px;
+    color: #fff;
+}
+
+.recipe-card a.mini-user,
+.recipe-card .like-mini {
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* スマホ（2列）：カードが小さいので、もう少し縦長にし、余白と文字を小さくする */
+@media (max-width: 767px) {
+    .recipe-card__photo { aspect-ratio: 3 / 4; }
+    .recipe-card__body { padding: 10px 10px 42px; }
+    .recipe-card__tags { gap: 4px; margin-bottom: 6px; }
+    .recipe-card .recipe-card__meta { padding: 0 10px 10px; }
 }
