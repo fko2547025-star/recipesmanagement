@@ -138,11 +138,13 @@ public class AiController {
     /**
      * レシピについて AI に質問する。
      *
+     * @param servings 画面で表示している人数。分量をこの人数分に換算して AI に渡す（無い・範囲外ならレシピの人数）
      * @return 成功：{"answer": "..."}　失敗：{"error": "..."}（400 / 503）
      */
     @PostMapping("/recipes/{id:\\d+}/ask")
     public ResponseEntity<Map<String, String>> askAboutRecipe(@PathVariable Long id,
-                                                              @RequestParam(defaultValue = "") String question) {
+                                                              @RequestParam(defaultValue = "") String question,
+                                                              @RequestParam(required = false) Integer servings) {
         String q = question.trim();
         if (q.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "質問を入力してください"));
@@ -155,7 +157,10 @@ public class AiController {
         Recipe recipe = recipeRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        String message = "<recipe>\n" + describe(recipe) + "</recipe>\n\n質問：" + q;
+        // レシピ詳細と同じく、1〜20人分だけ受け付ける
+        int people = (servings != null && servings >= 1 && servings <= 20) ? servings : recipe.getServings();
+
+        String message = "<recipe>\n" + describe(recipe, people) + "</recipe>\n\n質問：" + q;
 
         try {
             return ResponseEntity.ok(Map.of("answer", aiService.ask(RECIPE_SYSTEM_PROMPT, message)));
@@ -361,16 +366,24 @@ public class AiController {
     /**
      * レシピの内容を、AI に渡す文章にする。
      */
-    private String describe(Recipe recipe) {
+    private String describe(Recipe recipe, int people) {
+        // 倍率：レシピ詳細の人数切り替えと同じ計算（int 同士だと小数が消えるので double にする）
+        double factor = (double) people / recipe.getServings();
         String ingredients = recipe.getIngredients().stream()
-                .map(i -> "- " + i.getName() + " " + i.getQuantityText()
+                .map(i -> "- " + i.getName() + " " + i.getQuantityText(factor)
                         + (i.getUnit() != null ? i.getUnit() : ""))
                 .collect(Collectors.joining("\n"));
 
         StringBuilder sb = new StringBuilder();
         sb.append("料理名：").append(recipe.getTitle()).append("\n");
         sb.append("カテゴリ：").append(recipe.getCategory()).append("\n");
-        sb.append("人数：").append(recipe.getServings()).append("人分\n");
+        if (people == recipe.getServings()) {
+            sb.append("人数：").append(people).append("人分\n");
+        } else {
+            sb.append("人数：").append(people).append("人分（元のレシピは")
+              .append(recipe.getServings()).append("人分。下の材料の分量は")
+              .append(people).append("人分に換算済み）\n");
+        }
         if (recipe.getDescription() != null && !recipe.getDescription().isBlank()) {
             sb.append("説明：").append(recipe.getDescription()).append("\n");
         }

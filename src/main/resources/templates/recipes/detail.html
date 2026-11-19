@@ -134,6 +134,8 @@
                 <!-- th:action を使うと、CSRF 対策の隠し項目（_csrf）が自動で入る。送信は下の JavaScript で行う -->
                 <form id="aiAskForm" th:action="@{/ai/recipes/{id}/ask(id=${recipe.id})}" method="post"
                       class="comment-form" data-answer="aiAnswer" onsubmit="submitAi(event)">
+                    <!-- 今表示している人数。AI にはこの人数分に換算した分量を渡す -->
+                    <input type="hidden" name="servings" th:value="${servings}">
                     <textarea name="question" rows="2" maxlength="500" required
                               placeholder="このレシピについて聞きたいことを入力"></textarea>
                     <button type="submit" id="aiAskButton">
