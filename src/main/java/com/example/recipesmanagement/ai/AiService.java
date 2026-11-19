@@ -40,6 +40,7 @@ public class AiService {
 
     private static final Logger log = LoggerFactory.getLogger(AiService.class);
 
+    private final boolean enabled;
     private final String ollamaUrl;
     private final String model;
     private final RestClient restClient;
@@ -47,8 +48,14 @@ public class AiService {
     // 少しずつ届く回答（1行に1つの JSON）を読むための部品
     private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
-    public AiService(@Value("${app.ai.ollama-url:http://localhost:11434}") String ollamaUrl,
+    /**
+     * @param enabled app.ai.enabled。false にすると AI 機能を使わない（画面の AI の欄も出さない）。
+     *                公開するサーバーには Ollama が無いので、公開用の設定（application-prod.properties）では false にする
+     */
+    public AiService(@Value("${app.ai.enabled:true}") boolean enabled,
+                     @Value("${app.ai.ollama-url:http://localhost:11434}") String ollamaUrl,
                      @Value("${app.ai.model:qwen2.5:7b}") String model) {
+        this.enabled = enabled;
         this.ollamaUrl = ollamaUrl;
         this.model = model;
 
@@ -74,6 +81,7 @@ public class AiService {
      * @throws AiException 回答が得られなかったとき（メッセージは画面にそのまま出せる日本語）
      */
     public String ask(String system, String userMessage) {
+        requireEnabled();
         // Ollama の /api/chat に送る内容
         // stream=false：回答を少しずつではなく、最後にまとめて受け取る
         Map<String, Object> body = Map.of(
@@ -116,6 +124,7 @@ public class AiService {
      * @throws AiException 回答が得られなかったとき（メッセージは画面にそのまま出せる日本語）
      */
     public void stream(String system, List<Map<String, String>> messages, Consumer<String> onChunk) {
+        requireEnabled();
         // stream=true：Ollama は回答を「1行に1つの JSON」で少しずつ返す
         //   {"message":{"content":"みりん"},"done":false}
         //   {"message":{"content":"の代わりに"},"done":false}
@@ -177,6 +186,18 @@ public class AiService {
         } catch (RestClientException e) {
             log.warn("AI: Ollama でエラーが起きました", e);
             throw new AiException("AIでエラーが起きました。もう一度お試しください。");
+        }
+    }
+
+    /** AI 機能を使う設定か（app.ai.enabled）。画面で AI の欄を出すかどうかにも使う */
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /** AI 機能を使わない設定なら、AI を呼ばずに断る（画面を通さずに直接送られてきたとき用） */
+    private void requireEnabled() {
+        if (!enabled) {
+            throw new AiException("AI機能は使えません。");
         }
     }
 

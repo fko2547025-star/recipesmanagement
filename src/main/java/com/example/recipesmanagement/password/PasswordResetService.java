@@ -21,7 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.recipesmanagement.mypage.PasswordService;
+import com.example.recipesmanagement.user.PasswordRules;
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
 import com.example.recipesmanagement.user.EmailRules;
@@ -117,8 +117,9 @@ public class PasswordResetService {
             return errors;
         }
         // パスワードのルールは、マイページのパスワード変更と同じにする
-        if (newPassword == null || newPassword.length() < PasswordService.MIN_LENGTH) {
-            errors.add("パスワードは" + PasswordService.MIN_LENGTH + "文字以上で入力してください");
+        String passwordError = PasswordRules.check(newPassword);
+        if (passwordError != null) {
+            errors.add(passwordError);
         }
         if (newPassword != null && !newPassword.equals(confirmPassword)) {
             errors.add("パスワードが一致しません");

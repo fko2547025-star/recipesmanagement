@@ -2,6 +2,9 @@ package com.example.recipesmanagement.password;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;   // ★ 追加
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.example.recipesmanagement.mypage.PasswordService;
 
@@ -28,12 +30,16 @@ import com.example.recipesmanagement.mypage.PasswordService;
 @RequestMapping("/password")
 public class PasswordResetController {
 
+    private static final Logger log = LoggerFactory.getLogger(PasswordResetController.class);
+
     private final PasswordResetService resetService;
 
     /*
-     * ★ 追加：メールのリンクの先頭を、設定（application.properties の app.public-url）で決めるとき用。
-     * ${app.public-url:} の「:」の後ろは、設定が無いときの値（空文字）。
-     * 空なら使わずに、アクセスしてきた URL から作る
+     * メールのリンクの先頭（例：https://recipe.example.com）。application.properties の app.public-url。
+     *
+     * アクセスしてきた URL からは作らない。URL の「ホスト名」の部分は、送る側が自由に書き換えられるので、
+     * 悪い人が他人の名前で申し込むと、その人に偽のサイトへのリンク（トークン付き）が届いてしまうため。
+     * 設定が空のときは、メールを送らない（ログに警告を出す）。
      */
     @Value("${app.public-url:}")
     private String publicUrl;
@@ -52,11 +58,12 @@ public class PasswordResetController {
                            @RequestParam String email,
                            RedirectAttributes redirectAttributes) {
 
-        // ★ 変更：設定に URL があればそれを、無ければ今開いているサイトの先頭の URL（例：http://localhost:8081）を使う
-        String baseUrl = !publicUrl.isBlank()
-                ? publicUrl
-                : ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-        resetService.requestReset(username, email, baseUrl);
+        if (publicUrl.isBlank()) {
+            log.warn("app.public-url が設定されていないため、パスワード再設定のメールを送りませんでした");
+        } else {
+            // 最後の「/」は取る（https://example.com/ → https://example.com）
+            resetService.requestReset(username, email, publicUrl.replaceAll("/+$", ""));
+        }
 
         // 合っていても合っていなくても、同じ表示にする
         redirectAttributes.addFlashAttribute("sent", true);

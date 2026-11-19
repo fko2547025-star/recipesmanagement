@@ -14,7 +14,7 @@
         <p class="note">食材管理の在庫と、レシピの材料を照らし合わせた結果です。少々・適量の材料は数えていません。</p>
 
         <!-- ===== AIに相談：在庫から、登録されていない料理も含めて提案してもらう ===== -->
-        <section class="card section-card" id="ai-suggest">
+        <section class="card section-card" id="ai-suggest" th:if="${aiEnabled}">
             <h2 class="section-title"><span class="material-symbols-rounded">smart_toy</span>AIに相談</h2>
             <p class="note">今の在庫（期限が近いもの優先）で作れる料理を、AIが2品提案します。期限切れの食材は使いません。</p>
             <!-- th:action を使うと、CSRF 対策の隠し項目（_csrf）が自動で入る。送信は /js/ai.js で行う -->

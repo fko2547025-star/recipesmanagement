@@ -10,9 +10,11 @@ import org.springframework.stereotype.Service;
 public class LoginUserDetailsService implements UserDetailsService {
 
     private final AppUserRepository repository;
+    private final LoginAttemptService loginAttemptService;
 
-    public LoginUserDetailsService(AppUserRepository repository) {
+    public LoginUserDetailsService(AppUserRepository repository, LoginAttemptService loginAttemptService) {
         this.repository = repository;
+        this.loginAttemptService = loginAttemptService;
     }
 
     @Override
@@ -23,6 +25,8 @@ public class LoginUserDetailsService implements UserDetailsService {
         return User.withUsername(user.getUsername())
                 .password(user.getPassword())
                 .roles("USER")
+                // 続けてログインに失敗してロック中なら、パスワードを確かめる前に断る（LockedException になる）
+                .accountLocked(loginAttemptService.isLocked(username))
                 .build();
     }
 }

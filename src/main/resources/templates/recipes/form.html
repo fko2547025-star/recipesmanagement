@@ -142,8 +142,8 @@
             <!-- ===== 作り方（1行が1手順。番号の丸はCSSが自動で付ける） ===== -->
             <h2 class="form-section-title">作り方</h2>
 
-            <!-- ===== AIで下書き：料理名・人数・材料・メモから、説明と作り方を書いてもらう ===== -->
-            <div class="form-field">
+            <!-- ===== AIで下書き：料理名・人数・材料・メモから、説明と作り方を書いてもらう（AI を使う設定のときだけ） ===== -->
+            <div class="form-field" th:if="${aiEnabled}">
                 <button type="button" id="aiDraftButton" class="btn btn--outline btn--sm"
                         th:attr="data-url=@{/ai/draft-recipe}" onclick="draftWithAi(this)">
                     <span class="material-symbols-rounded">smart_toy</span>AIで下書き

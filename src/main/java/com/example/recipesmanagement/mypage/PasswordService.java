@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
+import com.example.recipesmanagement.user.PasswordRules;
 
 /**
  * パスワードの変更を担当するクラス。
@@ -16,8 +17,8 @@ import com.example.recipesmanagement.user.AppUserRepository;
 @Service
 public class PasswordService {
 
-    // 新しいパスワードの最低文字数（新規登録の minlength="4" と同じにする）
-    public static final int MIN_LENGTH = 4;
+    // 新しいパスワードの最低文字数（新規登録・再設定と同じルール。PasswordRules で決めている）
+    public static final int MIN_LENGTH = PasswordRules.MIN_LENGTH;
 
     private final AppUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;   // SecurityConfig で @Bean 登録したもの
@@ -48,9 +49,10 @@ public class PasswordService {
             errors.add("今のパスワードが違います");
         }
 
-        // ② 新しいパスワードの長さ
-        if (newPassword == null || newPassword.length() < MIN_LENGTH) {
-            errors.add("新しいパスワードは" + MIN_LENGTH + "文字以上にしてください");
+        // ② 新しいパスワードの長さ（8文字以上・72バイトまで）
+        String passwordError = PasswordRules.check(newPassword);
+        if (passwordError != null) {
+            errors.add(passwordError);
         }
         // ③ 確認用と同じか
         else if (!newPassword.equals(confirmPassword)) {

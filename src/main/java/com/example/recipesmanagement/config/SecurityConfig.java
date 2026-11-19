@@ -3,10 +3,12 @@ package com.example.recipesmanagement.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
 @Configuration
 public class SecurityConfig {
@@ -31,7 +33,16 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")               // 自作のログイン画面を使う
                 .defaultSuccessUrl("/recipes")  // ログイン成功後の移動先
+                // ログインに失敗したとき：ロック中（続けて失敗した）なら ?locked、それ以外は ?error
+                .failureHandler((request, response, exception) ->
+                        response.sendRedirect(request.getContextPath()
+                                + (exception instanceof LockedException ? "/login?locked" : "/login?error")))
                 .permitAll()
+            )
+            // ほかのサイトへ移動・読み込みをするとき、今のページの URL を伝えない
+            // （パスワード再設定の画面の URL にはトークンが入っているので、外のサイトに渡らないように）
+            .headers(headers -> headers
+                .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.SAME_ORIGIN))
             )
             // ログアウトの設定
             .logout(logout -> logout

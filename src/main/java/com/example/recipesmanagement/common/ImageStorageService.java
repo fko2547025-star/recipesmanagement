@@ -6,6 +6,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
@@ -52,10 +53,51 @@ public class ImageStorageService {
 
     /**
      * 受け付けている画像の種類か調べる。
+     *
+     * ブラウザが送ってくる種類（Content-Type）は、送る側が自由に書けるので、それだけでは信用しない。
+     * ファイルの中身の先頭を見て、本当に JPEG・PNG・WebP・GIF の画像か確かめる。
      */
     public boolean isSupported(MultipartFile file) {
         String type = file.getContentType();
-        return type != null && EXTENSIONS.containsKey(type);
+        return type != null && EXTENSIONS.containsKey(type) && detectType(file) != null;
+    }
+
+    /**
+     * ファイルの中身の先頭の数バイト（画像の種類ごとに決まっている印）から、画像の種類を調べる。
+     *
+     * @return image/jpeg などの種類。画像でなければ null
+     */
+    private static String detectType(MultipartFile file) {
+        byte[] head = new byte[12];
+        int read;
+        try (InputStream in = file.getInputStream()) {
+            read = in.readNBytes(head, 0, head.length);
+        } catch (IOException e) {
+            return null;
+        }
+        if (read >= 3 && (head[0] & 0xFF) == 0xFF && (head[1] & 0xFF) == 0xD8 && (head[2] & 0xFF) == 0xFF) {
+            return "image/jpeg";                          // JPEG：FF D8 FF
+        }
+        if (read >= 8 && Arrays.equals(Arrays.copyOf(head, 8),
+                new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'})) {
+            return "image/png";                           // PNG：89 50 4E 47 0D 0A 1A 0A
+        }
+        if (read >= 6 && (startsWith(head, "GIF87a") || startsWith(head, "GIF89a"))) {
+            return "image/gif";                           // GIF：GIF87a / GIF89a
+        }
+        if (read >= 12 && startsWith(head, "RIFF") && new String(head, 8, 4).equals("WEBP")) {
+            return "image/webp";                          // WebP：RIFF ＋ 4バイト ＋ WEBP
+        }
+        return null;
+    }
+
+    private static boolean startsWith(byte[] bytes, String ascii) {
+        for (int i = 0; i < ascii.length(); i++) {
+            if (bytes[i] != ascii.charAt(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -66,7 +108,9 @@ public class ImageStorageService {
      * ・元のファイル名に「../」などが入っていても、変な場所に保存されないようにする
      */
     public String store(MultipartFile file) {
-        String extension = EXTENSIONS.get(file.getContentType());
+        // 拡張子は、中身から調べた本当の種類で決める（送られてきた種類は使わない）
+        String detected = detectType(file);
+        String extension = detected == null ? null : EXTENSIONS.get(detected);
         if (extension == null) {
             throw new IllegalArgumentException("対応していない画像の種類です");
         }

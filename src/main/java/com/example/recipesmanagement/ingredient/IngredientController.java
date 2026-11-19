@@ -9,6 +9,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -68,6 +70,19 @@ public class IngredientController {
     @ModelAttribute("categoryIcons")
     public Map<String, String> categoryIcons() {
         return Ingredient.CATEGORY_ICONS;
+    }
+
+    /**
+     * 食材のフォームから、id（番号）と user（持ち主）は受け取らない。
+     *
+     * @ModelAttribute Ingredient は、送られてきた値をそのまま食材に入れてしまう。
+     * 画面に無い id を付けて送られると、他人の食材を上書きして自分のものにできてしまうため、
+     * この2つは送られてきても無視する（id はデータベースが、持ち主はログイン中のユーザーから決める）。
+     * "ingredient"：@ModelAttribute Ingredient の名前（型の名前を小文字にしたもの）にだけ当てる
+     */
+    @InitBinder("ingredient")
+    public void protectIngredientFields(WebDataBinder binder) {
+        binder.setDisallowedFields("id", "user", "user.*");
     }
     
     // ログイン中のユーザーを取得
@@ -142,6 +157,7 @@ public class IngredientController {
     // 登録処理
     @PostMapping
     public String create(@ModelAttribute Ingredient ingredient, Principal principal) {
+        ingredient.setId(null);                       // 念のため：必ず新しい食材として保存する
         ingredient.setUser(currentUser(principal));   // 持ち主をセット
 
         // 選択肢以外の値（画面を書き換えて送られたものなど）なら「その他」にする
