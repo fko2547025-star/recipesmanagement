@@ -24,6 +24,22 @@
         </div>
     </section>
 
+    <!-- ===== 期限のお知らせ（ログイン中で、期限が近い食材があるときだけ） =====
+         expiringCount は LoginUserAdvice が全画面に渡している（ヘッダーの数字と同じ）。
+         「×」で閉じると、その日はもう出さない（ブラウザに今日の日付を覚えておく） -->
+    <section th:if="${expiringCount > 0}" id="expiryNotice" class="is-hidden">
+        <div class="alert alert--error banner">
+            <span class="material-symbols-rounded">error</span>
+            <span>期限が近い食材があります
+                <strong th:text="'（3日以内：' + ${expiringCount} + '件）'">（3日以内：3件）</strong>
+            </span>
+            <a href="/ingredients#expiring" class="banner__link">確認する<span class="material-symbols-rounded">chevron_right</span></a>
+            <button type="button" class="icon-btn" onclick="closeExpiryNotice()" title="今日はもう表示しない">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+    </section>
+
     <!-- ===== カテゴリから探す ===== -->
     <section>
         <div class="section-head">
@@ -109,5 +125,26 @@
         </div>
     </section>
 
+    <script>
+        // ===== 期限のお知らせ：今日「×」で閉じていなければ表示する =====
+        // localStorage はブラウザに小さな値を覚えておく仕組み。使えないブラウザでも表示はする
+        const EXPIRY_KEY = 'expiryNoticeClosed';
+        const today = new Date().toLocaleDateString('sv');   // 例：2026-11-19（sv は「年-月-日」の形になる）
+
+        function closeExpiryNotice() {
+            document.getElementById('expiryNotice').classList.add('is-hidden');
+            try { localStorage.setItem(EXPIRY_KEY, today); } catch (e) { /* 覚えられなくても閉じるだけ */ }
+        }
+
+        (function () {
+            const notice = document.getElementById('expiryNotice');
+            if (!notice) return;                                  // 期限が近い食材が無いときは何もしない
+            let closedDay = null;
+            try { closedDay = localStorage.getItem(EXPIRY_KEY); } catch (e) { /* 読めなければ表示する */ }
+            if (closedDay !== today) {
+                notice.classList.remove('is-hidden');
+            }
+        })();
+    </script>
 </body>
 </html>
