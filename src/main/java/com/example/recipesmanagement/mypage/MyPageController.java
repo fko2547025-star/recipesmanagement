@@ -106,7 +106,7 @@ public class MyPageController {
     @GetMapping("/mypage/profile")
     public String profileForm(Principal principal, Model model) {
         AppUser user = currentUser(principal);
-        addProfileFormAttributes(model, user, user.getNickname(), user.getEmail());
+        addProfileFormAttributes(model, user, user.getNickname(), user.getEmail(), user.getAvoidFoods());
         return "mypage/profile";
     }
 
@@ -119,6 +119,7 @@ public class MyPageController {
     @PostMapping("/mypage/profile")
     public String updateProfile(@RequestParam(required = false) String nickname,
                                 @RequestParam(required = false) String email,   // ← 追加
+                                @RequestParam(required = false) String avoidFoods,
                                 @RequestParam(value = "avatar", required = false) MultipartFile avatar,
                                 @RequestParam(defaultValue = "false") boolean removeAvatar,
                                 Principal principal,
@@ -127,14 +128,14 @@ public class MyPageController {
 
         AppUser user = currentUser(principal);
 
-        List<String> errors = profileService.validate(nickname, email, avatar);
+        List<String> errors = profileService.validate(nickname, email, avoidFoods, avatar);
         if (!errors.isEmpty()) {
             model.addAttribute("errors", errors);
-            addProfileFormAttributes(model, user, nickname, email);   // 入力した値を残して戻す
+            addProfileFormAttributes(model, user, nickname, email, avoidFoods);   // 入力した値を残して戻す
             return "mypage/profile";
         }
 
-        profileService.update(principal.getName(), nickname, email, avatar, removeAvatar);
+        profileService.update(principal.getName(), nickname, email, avoidFoods, avatar, removeAvatar);
 
         redirectAttributes.addFlashAttribute("message", "プロフィールを更新しました");
         return "redirect:/mypage";
@@ -173,11 +174,14 @@ public class MyPageController {
 
     // ===== 内部で使う処理 =====
 
-    private void addProfileFormAttributes(Model model, AppUser user, String nickname, String email) {
+    private void addProfileFormAttributes(Model model, AppUser user, String nickname, String email,
+                                          String avoidFoods) {
         model.addAttribute("user", user);
         model.addAttribute("nickname", nickname);
         model.addAttribute("email", email);
+        model.addAttribute("avoidFoods", avoidFoods);
         model.addAttribute("nicknameMax", ProfileService.NICKNAME_MAX);
+        model.addAttribute("avoidFoodsMax", ProfileService.AVOID_FOODS_MAX);
         model.addAttribute("level", cookingRecordService.level(user));
     }
 

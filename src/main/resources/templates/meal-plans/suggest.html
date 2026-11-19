@@ -96,11 +96,13 @@
         <!-- ===== AIで献立を考える：選べるレシピと在庫から、1週間の夕食を提案してもらう（表示だけ。保存はしない） ===== -->
         <section class="card section-card" id="ai-meal-plan">
             <h2 class="section-title"><span class="material-symbols-rounded">smart_toy</span>AIで献立を考える</h2>
-            <p class="note">自分の投稿・いいねしたレシピと在庫をもとに、AIが1週間の夕食を考えます（★は登録済みのレシピ）。
-                提案は表示するだけなので、使いたいものは「献立に追加」から登録してください。</p>
+            <p class="note">自分の投稿・いいねしたレシピと在庫をもとに、AIがこの週の夕食を考えます（★は登録済みのレシピ）。
+                ★のレシピは、下に出るチェックから献立に追加できます。</p>
             <!-- th:action を使うと、CSRF 対策の隠し項目（_csrf）が自動で入る。送信は /js/ai.js で行う -->
             <form th:action="@{/ai/meal-plan}" method="post" class="comment-form"
-                  data-answer="aiMealPlanAnswer" onsubmit="submitAi(event)">
+                  data-answer="aiMealPlanAnswer" data-onanswer="showMealPicks" onsubmit="submitAi(event)">
+                <!-- この画面で表示している週。AI はこの週の献立を考え、日付付きの候補を返す -->
+                <input type="hidden" name="date" th:value="${monday}">
                 <textarea name="request" rows="2" maxlength="100"
                           placeholder="希望があれば入力（任意。例：野菜多め、平日は時短）"></textarea>
                 <button type="submit">
@@ -109,11 +111,51 @@
             </form>
             <!-- 回答・エラーの表示場所。recipe-memo__text：改行をそのまま表示する -->
             <p id="aiMealPlanAnswer" class="recipe-memo__text is-hidden"></p>
+
+            <!-- ★の登録済みレシピから、献立に追加できる候補（AI の回答が届いたら showMealPicks が中身を作る）
+                 保存はおまかせ献立と同じ POST /meal-plans/suggest（値は「日付|夜|レシピid」） -->
+            <form id="aiMealPicks" th:action="@{/meal-plans/suggest}" method="post" class="ai-picks is-hidden"
+                  onsubmit="this.querySelector('button[type=submit]').disabled = true;">
+                <input type="hidden" name="date" th:value="${monday}">
+                <p class="form-label">献立に追加する（すでに献立がある枠には追加されません）</p>
+                <ul class="ai-picks__list"></ul>
+                <button type="submit">
+                    <span class="material-symbols-rounded">add</span>チェックした献立を追加
+                </button>
+            </form>
+            <p id="aiMealPicksNone" class="note is-hidden">今日以降の日に、献立に追加できる★のレシピはありませんでした。</p>
+
             <p class="note">AIの提案はまちがえることがあります。</p>
         </section>
     </main>
 
     <!-- AIで献立を考えるの送信処理 -->
     <script src="/js/ai.js"></script>
+    <script>
+        // AI の献立が届いたら、献立に追加できる候補をチェックボックスで並べる
+        function showMealPicks(data) {
+            const form = document.getElementById('aiMealPicks');
+            const list = form.querySelector('ul');
+            const picks = data.picks || [];
+            list.innerHTML = '';
+            picks.forEach(pick => {
+                const li = document.createElement('li');
+                const label = document.createElement('label');
+                label.className = 'check';
+                const box = document.createElement('input');
+                box.type = 'checkbox';
+                box.name = 'picked';
+                box.value = pick.value;
+                box.checked = true;
+                const text = document.createElement('span');
+                text.textContent = pick.label;           // textContent：文字としてそのまま表示
+                label.append(box, text);
+                li.appendChild(label);
+                list.appendChild(li);
+            });
+            form.classList.toggle('is-hidden', picks.length === 0);
+            document.getElementById('aiMealPicksNone').classList.toggle('is-hidden', picks.length > 0);
+        }
+    </script>
 </body>
 </html>

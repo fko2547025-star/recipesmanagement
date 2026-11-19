@@ -21,6 +21,9 @@ public class ProfileService {
     // ニックネームの最大文字数（テーブルの VARCHAR(50) に合わせる）
     public static final int NICKNAME_MAX = 50;
 
+    // アレルギー・苦手な食材の最大文字数（テーブルの VARCHAR(200) に合わせる）
+    public static final int AVOID_FOODS_MAX = 200;
+
     private final AppUserRepository userRepository;
     private final ImageStorageService imageStorageService;
 
@@ -29,10 +32,13 @@ public class ProfileService {
         this.imageStorageService = imageStorageService;
     }
 
-    public List<String> validate(String nickname, String email,MultipartFile avatar) {
+    public List<String> validate(String nickname, String email, String avoidFoods, MultipartFile avatar) {
         List<String> errors = new ArrayList<>();
         if (nickname != null && nickname.trim().length() > NICKNAME_MAX) {
             errors.add("ニックネームは" + NICKNAME_MAX + "文字以内で入力してください");
+        }
+        if (avoidFoods != null && avoidFoods.trim().length() > AVOID_FOODS_MAX) {
+            errors.add("アレルギー・苦手な食材は" + AVOID_FOODS_MAX + "文字以内で入力してください");
         }
         if (avatar != null && !avatar.isEmpty() && !imageStorageService.isSupported(avatar)) {
             errors.add("写真は JPEG・PNG・WebP・GIF のいずれかを選んでください");
@@ -55,12 +61,13 @@ public class ProfileService {
      * @param avatarFrame  選んだ枠の key（validate で確認済み）
      */
     @Transactional
-    public void update(String username, String nickname, String email, MultipartFile avatar,
-                       boolean removeAvatar) {
+    public void update(String username, String nickname, String email, String avoidFoods,
+                       MultipartFile avatar, boolean removeAvatar) {
         AppUser user = userRepository.findByUsername(username).orElseThrow();
 
         user.setNickname(nickname == null || nickname.isBlank() ? null : nickname.trim());
         user.setEmail(EmailRules.normalize(email));
+        user.setAvoidFoods(avoidFoods == null || avoidFoods.isBlank() ? null : avoidFoods.trim());
         String oldAvatar = user.getAvatarPath();
         if (avatar != null && !avatar.isEmpty()) {
             user.setAvatarPath(imageStorageService.store(avatar));   // 新しい写真に差し替え

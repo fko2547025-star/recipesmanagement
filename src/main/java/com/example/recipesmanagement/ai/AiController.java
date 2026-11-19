@@ -1,13 +1,24 @@
 package com.example.recipesmanagement.ai;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,9 +26,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
+
+import tools.jackson.databind.json.JsonMapper;
 
 import com.example.recipesmanagement.ingredient.Ingredient;
 import com.example.recipesmanagement.mealplan.MealPlanService;
+import com.example.recipesmanagement.stock.IngredientNameMatcher;
 import com.example.recipesmanagement.recipe.Recipe;
 import com.example.recipesmanagement.recipe.RecipeRepository;
 import com.example.recipesmanagement.stock.StockCheckService;
@@ -26,6 +41,7 @@ import com.example.recipesmanagement.user.AppUserRepository;
 
 /**
  * AI（料理サポート）の窓口。画面の JavaScript から呼ばれ、結果を JSON で返す。
+ * 「質問」と「在庫から提案」は、回答を少しずつ返す（1行に1つの JSON。{"text": "続き"} か {"error": "..."}）。
  *
  * | URL                     | メソッド | 処理                           | ログイン |
  * |-------------------------|----------|--------------------------------|----------|
@@ -65,9 +81,18 @@ public class AiController {
             3. …
             """;
 
+    // 続けて質問するとき、AI に渡すこれまでの会話の数（質問と回答の組）と、1つの回答の最大文字数
+    private static final int MAX_HISTORY = 3;
+    private static final int MAX_HISTORY_ANSWER_LENGTH = 2000;
+
+    // 少しずつ返す回答の形（1行に1つの JSON）と、少しずつ返すときの待ち時間の上限（3分）
+    private static final MediaType NDJSON = MediaType.parseMediaType("application/x-ndjson;charset=UTF-8");
+    private static final long STREAM_TIMEOUT_MS = 180_000L;
+
     private static final String RECIPE_SYSTEM_PROMPT = """
             あなたは家庭料理のアシスタントです。必ず日本語で答えてください。
             <recipe> の中は、利用者が見ているレシピです。このレシピを踏まえて質問に答えてください。
+            前の質問の続きを聞かれたら、それまでの会話も踏まえて答えてください。
             ルール：
             1. 300字以内で、短く具体的に答える。
             2. 手順を説明するときは箇条書きにする。
@@ -97,6 +122,11 @@ public class AiController {
     // 献立の提案：AI に渡すレシピの最大件数
     private static final int MAX_MEAL_RECIPES = 50;
 
+    // 献立の提案の1行（例：月：★豚の生姜焼き（理由））から、曜日と料理名を取り出す
+    private static final Pattern MEAL_LINE = Pattern.compile("^([月火水木金土日])\\s*[:：]\\s*(.+)$");
+    private static final String WEEKDAYS = "月火水木金土日";
+    private static final DateTimeFormatter PICK_DATE = DateTimeFormatter.ofPattern("M/d(E)", Locale.JAPANESE);
+
     private static final String MEAL_PLAN_SYSTEM_PROMPT = """
             あなたは家庭の献立を考えるアシスタントです。必ず日本語で答えてください。
             <recipes> は利用者が登録しているレシピ、<stock> は家にある食材です（上ほど期限が近い）。
@@ -122,61 +152,79 @@ public class AiController {
     private final StockCheckService stockCheckService;
     private final AppUserRepository userRepository;
     private final MealPlanService mealPlanService;
+    private final AsyncTaskExecutor taskExecutor;
+    private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
+    /**
+     * @param taskExecutor Spring Boot が用意する「裏で処理を動かす」仕組み。AI の回答を待ちながら画面に送るのに使う
+     */
     public AiController(AiService aiService,
                         RecipeRepository recipeRepository,
                         StockCheckService stockCheckService,
                         AppUserRepository userRepository,
-                        MealPlanService mealPlanService) {
+                        MealPlanService mealPlanService,
+                        @Qualifier("applicationTaskExecutor") AsyncTaskExecutor taskExecutor) {
         this.aiService = aiService;
         this.recipeRepository = recipeRepository;
         this.stockCheckService = stockCheckService;
         this.userRepository = userRepository;
         this.mealPlanService = mealPlanService;
+        this.taskExecutor = taskExecutor;
     }
 
     /**
      * レシピについて AI に質問する。
      *
-     * @return 成功：{"answer": "..."}　失敗：{"error": "..."}（400 / 503）
+     * @param servings         画面で表示している人数。分量をこの人数分に換算して AI に渡す（無い・範囲外ならレシピの人数）
+     * @param historyQuestions これまでの質問（古い順）。続けて質問するときに画面から送られてくる
+     * @param historyAnswers   これまでの回答（historyQuestions と同じ順番）
+     * @return 回答を少しずつ（NDJSON）。入力の誤りは {"error": "..."} の1行（400）
      */
     @PostMapping("/recipes/{id:\\d+}/ask")
-    public ResponseEntity<Map<String, String>> askAboutRecipe(@PathVariable Long id,
-                                                              @RequestParam(defaultValue = "") String question) {
+    public ResponseEntity<ResponseBodyEmitter> askAboutRecipe(@PathVariable Long id,
+                                            @RequestParam(defaultValue = "") String question,
+                                            @RequestParam(required = false) Integer servings,
+                                            @RequestParam(required = false) List<String> historyQuestions,
+                                            @RequestParam(required = false) List<String> historyAnswers,
+                                            Principal principal) {
         String q = question.trim();
         if (q.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "質問を入力してください"));
+            return streamError("質問を入力してください");
         }
         if (q.length() > MAX_QUESTION_LENGTH) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "質問は" + MAX_QUESTION_LENGTH + "文字以内で入力してください"));
+            return streamError("質問は" + MAX_QUESTION_LENGTH + "文字以内で入力してください");
         }
 
         Recipe recipe = recipeRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        String message = "<recipe>\n" + describe(recipe) + "</recipe>\n\n質問：" + q;
+        // レシピ詳細と同じく、1〜20人分だけ受け付ける
+        int people = (servings != null && servings >= 1 && servings <= 20) ? servings : recipe.getServings();
 
-        try {
-            return ResponseEntity.ok(Map.of("answer", aiService.ask(RECIPE_SYSTEM_PROMPT, message)));
-        } catch (AiService.AiException e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error", e.getMessage()));
-        }
+        // レシピの内容は AI への指示（system）に入れる。会話が続いても毎回同じレシピを踏まえて答えられる
+        String system = RECIPE_SYSTEM_PROMPT
+                + "\n<recipe>\n" + describe(recipe, people) + "</recipe>"
+                + avoidNote(currentUser(principal),
+                        "このレシピに含まれる場合は、そのことと代わりの食材を必ず伝えてください。");
+
+        List<Map<String, String>> messages = history(historyQuestions, historyAnswers);
+        messages.add(AiService.userMessage(q));
+
+        return streamAnswer(system, messages);
     }
 
     /**
      * ログイン中のユーザーの在庫から、作れる料理を AI に提案させる。
      *
      * @param request 希望（任意。例：15分で作れるもの）
-     * @return 成功：{"answer": "..."}　失敗：{"error": "..."}（400 / 503）
+     * @return 回答を少しずつ（NDJSON）。入力の誤り・在庫なしは {"error": "..."} の1行（400）
      */
     @PostMapping("/suggest-from-stock")
-    public ResponseEntity<Map<String, String>> suggestFromStock(@RequestParam(defaultValue = "") String request,
+    public ResponseEntity<ResponseBodyEmitter> suggestFromStock(@RequestParam(defaultValue = "") String request,
                                                                 Principal principal) {
         String wish = request.trim();
         if (wish.length() > MAX_REQUEST_LENGTH) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "希望は" + MAX_REQUEST_LENGTH + "文字以内で入力してください"));
+            return streamError("希望は" + MAX_REQUEST_LENGTH + "文字以内で入力してください");
         }
 
         AppUser user = currentUser(principal);
@@ -184,18 +232,14 @@ public class AiController {
 
         // 在庫が無いときは、AI を呼ばずに知らせる
         if (stock.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "使える在庫がありません。食材を登録すると提案できます。"));
+            return streamError("使える在庫がありません。食材を登録すると提案できます。");
         }
 
         String message = "<stock>\n" + describeStock(stock) + "\n</stock>\n\n"
-                + (wish.isEmpty() ? "おすすめの料理を2品提案してください。" : "希望：" + wish);
+                + (wish.isEmpty() ? "おすすめの料理を2品提案してください。" : "希望：" + wish)
+                + avoidNote(user, "これらを使う料理は提案しないでください。");
 
-        try {
-            return ResponseEntity.ok(Map.of("answer", aiService.ask(STOCK_SYSTEM_PROMPT, message)));
-        } catch (AiService.AiException e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error", e.getMessage()));
-        }
+        return streamAnswer(STOCK_SYSTEM_PROMPT, List.of(AiService.userMessage(message)));
     }
 
     /**
@@ -211,7 +255,8 @@ public class AiController {
             @RequestParam(required = false) List<String> ingredientNames,
             @RequestParam(required = false) List<String> ingredientQuantities,
             @RequestParam(required = false) List<String> ingredientUnits,
-            @RequestParam(defaultValue = "") String memo) {
+            @RequestParam(defaultValue = "") String memo,
+            Principal principal) {
 
         String name = title.trim();
         if (name.isEmpty()) {
@@ -241,6 +286,7 @@ public class AiController {
             sb.append("メモ：").append(memo.trim()).append("\n");
         }
         sb.append("</draft>");
+        sb.append(avoidNote(currentUser(principal), "<draft> にない材料や調味料を足すときは、これらを使わないでください。"));
 
         String text;
         try {
@@ -259,14 +305,19 @@ public class AiController {
 
     /**
      * 選べるレシピ（自分の投稿・いいねしたレシピ）と在庫から、1週間の夕食を AI に提案させる。
-     * 提案は表示するだけで、献立には保存しない。
+     * ここでは保存しない。★の付いた登録済みレシピは「献立に追加できる候補」として一緒に返し、
+     * 画面でチェックしたものを、おまかせ献立と同じ POST /meal-plans/suggest で保存する。
      *
      * @param request 希望（任意。例：野菜多め）
-     * @return 成功：{"answer": "..."}　失敗：{"error": "..."}（400 / 503）
+     * @param date    この日を含む週の献立を考える（おまかせ献立の画面で表示している週）
+     * @return 成功：{"answer": "...", "picks": [{"value": "日付|夜|レシピid", "label": "11/23(月) 夜：親子丼"}, ...]}
+     *         失敗：{"error": "..."}（400 / 503）
      */
     @PostMapping("/meal-plan")
-    public ResponseEntity<Map<String, String>> suggestMealPlan(@RequestParam(defaultValue = "") String request,
-                                                               Principal principal) {
+    public ResponseEntity<Map<String, Object>> suggestMealPlan(
+            @RequestParam(defaultValue = "") String request,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Principal principal) {
         String wish = request.trim();
         if (wish.length() > MAX_REQUEST_LENGTH) {
             return ResponseEntity.badRequest()
@@ -274,35 +325,166 @@ public class AiController {
         }
 
         AppUser user = currentUser(principal);
+        LocalDate monday = MealPlanService.weekStart(date != null ? date : LocalDate.now());
 
         // 献立の登録画面と同じ「選べるレシピ」。料理名が同じものは1つにまとめる
-        Map<String, String> recipes = new LinkedHashMap<>();
+        // （料理名 → レシピ。AI の答えの★料理名を、どのレシピか調べるのにも使う）
+        Map<String, Recipe> recipes = new LinkedHashMap<>();
         for (Recipe r : mealPlanService.recipeOptions(user, null)) {
             if (recipes.size() >= MAX_MEAL_RECIPES) {
                 break;
             }
-            recipes.putIfAbsent(r.getTitle(), "- " + r.getTitle() + "（" + r.getCategory() + "）");
+            recipes.putIfAbsent(r.getTitle(), r);
         }
         List<Ingredient> stock = usableStock(user);
 
         String message = "<recipes>\n"
-                + (recipes.isEmpty() ? "（登録なし）" : String.join("\n", recipes.values()))
+                + (recipes.isEmpty() ? "（登録なし）" : recipes.values().stream()
+                        .map(r -> "- " + r.getTitle() + "（" + r.getCategory() + "）")
+                        .collect(Collectors.joining("\n")))
                 + "\n</recipes>\n\n<stock>\n"
                 + (stock.isEmpty() ? "（在庫なし）" : describeStock(stock))
                 + "\n</stock>\n\n"
-                + (wish.isEmpty() ? "1週間の夕食を考えてください。" : "希望：" + wish);
+                + (wish.isEmpty() ? "1週間の夕食を考えてください。" : "希望：" + wish)
+                + avoidNote(user, "これらを使う料理は献立に入れないでください。");
 
+        String answer;
         try {
-            return ResponseEntity.ok(Map.of("answer", aiService.ask(MEAL_PLAN_SYSTEM_PROMPT, message)));
+            answer = aiService.ask(MEAL_PLAN_SYSTEM_PROMPT, message);
         } catch (AiService.AiException e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error", e.getMessage()));
         }
+        return ResponseEntity.ok(Map.of("answer", answer, "picks", mealPicks(answer, recipes, monday)));
+    }
+
+    /**
+     * AI の献立の答えから、献立に追加できる候補を作る。
+     * 対象：★が付いていて、料理名が選べるレシピと一致し、今日以降の日のもの。枠は「夜」。
+     * 値はおまかせ献立と同じ「日付|夜|レシピid」（保存のときに、もう一度確かめられる）。
+     */
+    static List<Map<String, String>> mealPicks(String answer, Map<String, Recipe> recipes, LocalDate monday) {
+        // 空白の違いは無視して料理名を比べる（「豚の 生姜焼き」でも見つかるように）
+        Map<String, Recipe> byName = new LinkedHashMap<>();
+        recipes.forEach((title, r) -> byName.putIfAbsent(IngredientNameMatcher.normalize(title), r));
+
+        LocalDate today = LocalDate.now();
+        List<Map<String, String>> picks = new ArrayList<>();
+        for (String raw : answer.lines().toList()) {
+            Matcher m = MEAL_LINE.matcher(raw.replace("*", "").trim());
+            if (!m.matches() || !m.group(2).contains("★")) {
+                continue;
+            }
+            // 「★豚の生姜焼き（豚こまの期限が近い）」→「豚の生姜焼き」
+            String title = m.group(2).substring(m.group(2).indexOf('★') + 1).split("[（(]")[0].trim();
+            Recipe recipe = byName.get(IngredientNameMatcher.normalize(title));
+            LocalDate day = monday.plusDays(WEEKDAYS.indexOf(m.group(1)));
+            if (recipe == null || day.isBefore(today)) {
+                continue;
+            }
+            picks.add(Map.of(
+                    "value", day + "|夜|" + recipe.getId(),
+                    "label", day.format(PICK_DATE) + " 夜：" + recipe.getTitle()));
+        }
+        return picks;
     }
 
     // ===== 内部で使う処理 =====
 
+    /**
+     * AI の回答を、届いた分から画面に送る。
+     * 1行に1つの JSON：回答の続きは {"text": "..."}、途中で失敗したら {"error": "..."}。
+     * 回答を送り始めた後は HTTP の状態（200 など）を変えられないので、エラーも同じ形で送る。
+     *
+     * ResponseBodyEmitter：send() するたびに、その分をすぐ画面に送る仕組み。
+     * AI の回答を待つ処理は taskExecutor（裏の処理）で動かし、届いた分から send() する。
+     */
+    private ResponseEntity<ResponseBodyEmitter> streamAnswer(String system, List<Map<String, String>> messages) {
+        ResponseBodyEmitter emitter = new ResponseBodyEmitter(STREAM_TIMEOUT_MS);
+        taskExecutor.execute(() -> {
+            try {
+                aiService.stream(system, messages, text -> sendLine(emitter, Map.of("text", text)));
+                emitter.complete();
+            } catch (AiService.AiException e) {
+                try {
+                    sendLine(emitter, Map.of("error", e.getMessage()));
+                    emitter.complete();
+                } catch (UncheckedIOException closed) {
+                    emitter.complete();   // 画面がもう閉じられている
+                }
+            } catch (UncheckedIOException e) {
+                emitter.complete();       // 画面を閉じた・別のページに移ったなど。続きは送らない
+            } catch (RuntimeException e) {
+                emitter.completeWithError(e);
+            }
+        });
+        return ResponseEntity.ok().contentType(NDJSON).body(emitter);
+    }
+
+    /**
+     * AI を呼ばずにエラーを返す（入力の誤りなど）。少しずつ返すときと同じ形（{"error": "..."} の1行）にする。
+     */
+    private ResponseEntity<ResponseBodyEmitter> streamError(String message) {
+        ResponseBodyEmitter emitter = new ResponseBodyEmitter(STREAM_TIMEOUT_MS);
+        sendLine(emitter, Map.of("error", message));   // 返す前に send しても、返した後にまとめて送られる
+        emitter.complete();
+        return ResponseEntity.badRequest().contentType(NDJSON).body(emitter);
+    }
+
+    /** JSON を1行送る。文字化けしないよう、UTF-8 のバイト列にしてから送る */
+    private void sendLine(ResponseBodyEmitter emitter, Map<String, String> data) {
+        byte[] json = jsonMapper.writeValueAsBytes(data);
+        byte[] line = new byte[json.length + 1];
+        System.arraycopy(json, 0, line, 0, json.length);
+        line[json.length] = '\n';
+        try {
+            emitter.send(line, MediaType.APPLICATION_OCTET_STREAM);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * 画面から送られてきた「これまでの会話」を、AI に渡す形にする。新しいものから MAX_HISTORY 組だけ使う。
+     */
+    private static List<Map<String, String>> history(List<String> questions, List<String> answers) {
+        List<Map<String, String>> messages = new ArrayList<>();
+        if (questions == null || answers == null) {
+            return messages;
+        }
+        int count = Math.min(questions.size(), answers.size());
+        for (int i = Math.max(0, count - MAX_HISTORY); i < count; i++) {
+            String q = truncate(questions.get(i), MAX_QUESTION_LENGTH);
+            String a = truncate(answers.get(i), MAX_HISTORY_ANSWER_LENGTH);
+            if (q.isEmpty() || a.isEmpty()) {
+                continue;
+            }
+            messages.add(AiService.userMessage(q));
+            messages.add(AiService.assistantMessage(a));
+        }
+        return messages;
+    }
+
+    private static String truncate(String text, int max) {
+        String t = text == null ? "" : text.trim();
+        return t.length() > max ? t.substring(0, max) : t;
+    }
+
     private AppUser currentUser(Principal principal) {
         return userRepository.findByUsername(principal.getName()).orElseThrow();
+    }
+
+    /**
+     * プロフィールの「アレルギー・苦手な食材」を AI に伝える文。登録が無ければ空文字。
+     *
+     * @param instruction その機能での扱い方（例：これらを使う料理は提案しないでください。）
+     */
+    private static String avoidNote(AppUser user, String instruction) {
+        String avoid = user.getAvoidFoods();
+        if (avoid == null || avoid.isBlank()) {
+            return "";
+        }
+        return "\n\n<avoid>\n" + avoid.trim() + "\n</avoid>\n"
+                + "<avoid> の中は、利用者のアレルギー・苦手な食材です。" + instruction;
     }
 
     /**
@@ -361,16 +543,24 @@ public class AiController {
     /**
      * レシピの内容を、AI に渡す文章にする。
      */
-    private String describe(Recipe recipe) {
+    private String describe(Recipe recipe, int people) {
+        // 倍率：レシピ詳細の人数切り替えと同じ計算（int 同士だと小数が消えるので double にする）
+        double factor = (double) people / recipe.getServings();
         String ingredients = recipe.getIngredients().stream()
-                .map(i -> "- " + i.getName() + " " + i.getQuantityText()
+                .map(i -> "- " + i.getName() + " " + i.getQuantityText(factor)
                         + (i.getUnit() != null ? i.getUnit() : ""))
                 .collect(Collectors.joining("\n"));
 
         StringBuilder sb = new StringBuilder();
         sb.append("料理名：").append(recipe.getTitle()).append("\n");
         sb.append("カテゴリ：").append(recipe.getCategory()).append("\n");
-        sb.append("人数：").append(recipe.getServings()).append("人分\n");
+        if (people == recipe.getServings()) {
+            sb.append("人数：").append(people).append("人分\n");
+        } else {
+            sb.append("人数：").append(people).append("人分（元のレシピは")
+              .append(recipe.getServings()).append("人分。下の材料の分量は")
+              .append(people).append("人分に換算済み）\n");
+        }
         if (recipe.getDescription() != null && !recipe.getDescription().isBlank()) {
             sb.append("説明：").append(recipe.getDescription()).append("\n");
         }
