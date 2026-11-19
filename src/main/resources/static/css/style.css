@@ -102,6 +102,8 @@ body {
     font-size: 15px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
+    /* 区切りのない長い英数字（URL など）も、枠からはみ出さずに折り返す */
+    overflow-wrap: anywhere;
 }
 
 h1, h2, h3 {
@@ -278,10 +280,18 @@ body > a:not(.site-header) {
 /* 見出しの行（左にタイトル、右にリンク） */
 .section-head {
     display: flex;
+    flex-wrap: wrap;                  /* 狭い画面で1行に入らないときは、右側のボタンを次の行に送る */
     align-items: center;
     justify-content: space-between;   /* 左右の端に分ける */
-    gap: 12px;
+    gap: 8px 12px;
     margin: 28px 0 12px;
+}
+
+/* 見出しの右側のボタン・リンクは、文字を折り返さない */
+.section-head > .btn,
+.section-head > button,
+.section-head > a {
+    white-space: nowrap;
 }
 
 .section-title {
@@ -685,17 +695,31 @@ td img {
     margin: 12px 0;
 }
 
-@media (max-width: 767px) {
-    /* 表は横にスクロールできるようにする（はみ出して画面が崩れないように） */
-    table {
-        display: block;
-        overflow-x: auto;
-    }
+/* 入れ物の中の表は、入れ物の余白だけにする（下に余白が二重にできないように） */
+.table-wrap table { margin: 0; }
 
+@media (max-width: 767px) {
+    /* 表がはみ出すときは、表を .table-wrap で囲み、その中だけ横にスクロールさせる。
+       （table を display: block にすると、中身が短いときに表の右側が空白になるため使わない） */
     th,
     td {
         padding: 8px;
         white-space: nowrap;
+    }
+
+    /* 1列目（材料名など）だけは折り返してよい。名前が長くても、ほかの列が画面に入るように */
+    th:first-child,
+    td:first-child {
+        white-space: normal;
+    }
+
+    /* 1列目が細くなりすぎないように、幅 6em・高さ 0 の見えない部品を入れて最低幅にする
+       （表のマスには min-width や width が効かず、1文字ずつ折り返すほど細くなってしまうため） */
+    th:first-child::before,
+    td:first-child::before {
+        content: "";
+        display: block;
+        width: 6em;
     }
 }
 
@@ -760,13 +784,13 @@ td img {
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    max-width: 100%;                /* 枠より長いときは、はみ出さずに折り返す */
     padding: 3px 10px 3px 8px;
     border-radius: var(--radius-pill);
     background: #f3e6d6;
     color: var(--primary-dark);
     font-size: 0.78rem;
     font-weight: 700;
-    white-space: nowrap;
 }
 
 .tag .material-symbols-rounded {
@@ -1062,6 +1086,12 @@ td img {
     font-size: 0.68rem;
     font-weight: 700;
     line-height: 1;
+}
+
+/* タブレットくらいの幅（768〜1023px）では、メニューの左右の余白を詰めて1行に収める */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .site-header__inner { gap: 10px; }
+    .site-nav__link { padding: 6px 8px; }
 }
 
 /* ----- 右側（投稿ボタン・ユーザー） ----- */
@@ -2065,7 +2095,9 @@ body.auth-page > .auth-card {
 /* スマホ：写真を上、情報を下の1列にする */
 @media (max-width: 767px) {
     .recipe-detail {
-        grid-template-columns: 1fr;
+        /* minmax(0, 1fr)：中の表などが広くても、列が画面の幅より広がらないようにする
+           （1fr だけだと、中身の幅に合わせて列が広がり、ページ全体が横にはみ出す） */
+        grid-template-columns: minmax(0, 1fr);
         gap: 16px;
     }
     .recipe-detail__photo { position: static; }   /* スマホでは写真を止めない */
@@ -3308,7 +3340,15 @@ body.auth-page > .auth-card {
     cursor: pointer;
 }
 
-.check-list__amount { margin-left: auto; }
+.check-list__amount {
+    flex-shrink: 0;                 /* 分量は縮めず、右端に残す */
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+/* 材料名は縮められるようにする（長い名前でも、分量が画面の外に出ないように）。チェックボックスは縮めない */
+.check-list__item > span { min-width: 0; }
+.check-list__item > input { flex-shrink: 0; }
 
 /* :has()：中のチェックボックスにチェックが入っている行だけに当てる */
 .check-list__item:has(input:checked) {
