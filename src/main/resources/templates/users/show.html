@@ -13,8 +13,6 @@
         <div class="mypage-top">
             <section class="card profile-card">
                 <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
-                <!-- その人の称号（料理レベル）。アイコンのすぐ下に出す -->
-                <span th:replace="~{fragments/rank :: badge(${level})}"></span>
                 <p class="profile-card__name" th:text="${user.displayName}">じろう</p>
                 <p class="profile-card__id" th:text="'@' + ${user.username}">@jiro</p>
 
