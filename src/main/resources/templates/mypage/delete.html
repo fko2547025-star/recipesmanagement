@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('退会')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container container--narrow">
+        <a href="/mypage/profile" class="back-link">
+            <span class="material-symbols-rounded">arrow_back</span>プロフィール編集に戻る
+        </a>
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">person_remove</span>退会
+        </h1>
+
+        <div th:if="${error}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span><span th:text="${error}">パスワードが違います</span>
+        </div>
+
+        <form th:action="@{/mypage/delete}" method="post" class="card"
+              onsubmit="return confirm('本当に退会しますか？ 消したデータは元に戻せません。')">
+            <div class="alert alert--error">
+                <span class="material-symbols-rounded">warning</span>
+                <span>退会すると、次のデータがすべて消えます。<strong>元に戻すことはできません。</strong></span>
+            </div>
+            <ul>
+                <li>投稿したレシピと写真（ほかの人がそのレシピに付けたいいね・コメントも消えます）</li>
+                <li>書いたコメント・つくれぽ、いいね</li>
+                <li>フォロー・フォロワー</li>
+                <li>献立・食材の記録</li>
+                <li>プロフィール（ニックネーム・写真・メールアドレス）</li>
+            </ul>
+
+            <div class="form-field">
+                <label for="password">確認のため、パスワードを入力してください</label>
+                <input type="password" id="password" name="password" required
+                       autocomplete="current-password" autocapitalize="off" autocorrect="off">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn--danger btn--wide">退会する</button>
+                <a href="/mypage/profile" class="btn btn--outline">キャンセル</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

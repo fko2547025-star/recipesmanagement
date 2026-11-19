@@ -28,6 +28,9 @@
         <div th:if="${param.reset}" class="alert alert--success">
             <span class="material-symbols-rounded">check_circle</span>パスワードを再設定しました。新しいパスワードでログインしてください
         </div>
+        <div th:if="${param.deleted}" class="alert alert--info">
+            <span class="material-symbols-rounded">check_circle</span>退会しました。ご利用ありがとうございました
+        </div>
         <!--
             POST /login の処理は Spring Security が自動で行う。
             name="username" と name="password" は決まった名前なので変えないこと
