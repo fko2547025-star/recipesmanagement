@@ -36,3 +36,5 @@ data/
 src/main/resources/mail-secret.properties
 # メールのパスワード（プロジェクト直下に置く）
 mail-secret.properties
+# 投稿された写真（以前の保存先）。写真は app.upload-dir（プロジェクトの外）に保存する
+src/main/resources/static/images/recipes_photo/
