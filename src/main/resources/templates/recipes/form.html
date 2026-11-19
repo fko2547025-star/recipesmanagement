@@ -79,6 +79,24 @@
                         </div>
                         <small class="field-hint">材料の分量は、この人数分で入力してください</small>
                     </div>
+                    <!-- 調理時間と難易度（どちらも任意）。一覧のカードと詳細にバッジで表示する -->
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="cookingTime">調理時間（任意）</label>
+                            <div class="inline-field">
+                                <input type="number" id="cookingTime" th:field="*{cookingTime}" min="1" max="999"
+                                       class="input-short" placeholder="15">
+                                <span>分</span>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="difficulty">難易度（任意）</label>
+                            <select id="difficulty" th:field="*{difficulty}">
+                                <option value="">選ばない</option>
+                                <option th:each="d : ${difficulties}" th:value="${d}" th:text="${d}">かんたん</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="form-field">
                         <label for="description">ひとこと（任意）</label>
                         <textarea id="description" th:field="*{description}" rows="2" maxlength="500"

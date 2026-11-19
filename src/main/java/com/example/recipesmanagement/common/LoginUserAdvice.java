@@ -3,9 +3,12 @@ import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
 import com.example.recipesmanagement.ingredient.Ingredient;
 import com.example.recipesmanagement.ingredient.IngredientRepository;
+import com.example.recipesmanagement.like.LikeRepository;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -25,8 +28,11 @@ public class LoginUserAdvice {
 
     private final AppUserRepository userRepository;
     private final IngredientRepository ingredientRepository;
+    private final LikeRepository likeRepository;
 
-    public LoginUserAdvice(AppUserRepository userRepository, IngredientRepository ingredientRepository) {
+    public LoginUserAdvice(AppUserRepository userRepository, IngredientRepository ingredientRepository,
+                           LikeRepository likeRepository) {
+        this.likeRepository = likeRepository;
         this.userRepository = userRepository;
         this.ingredientRepository = ingredientRepository;
     }
@@ -68,6 +74,20 @@ public class LoginUserAdvice {
         LocalDate limit = LocalDate.now().plusDays(Ingredient.EXPIRING_DAYS);
         return ingredientRepository.countByUser_UsernameAndExpiryDateLessThanEqualAndQuantityGreaterThan(
                 principal.getName(), limit, 0.0);
+    }
+
+    /**
+     * ログイン中のユーザーがいいねしたレシピの id（一覧のカードの ♡ を塗りつぶすため）。
+     * 全画面で ${likedRecipeIds} として使える。ログインしていなければ空。
+     */
+    @ModelAttribute("likedRecipeIds")
+    public Set<Long> likedRecipeIds(Principal principal) {
+        if (principal == null) {
+            return Set.of();
+        }
+        return userRepository.findByUsername(principal.getName())
+                .map(user -> (Set<Long>) new HashSet<>(likeRepository.findRecipeIdsByUser(user)))
+                .orElse(Set.of());
     }
 
     /**

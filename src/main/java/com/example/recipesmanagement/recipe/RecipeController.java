@@ -56,6 +56,7 @@ public class RecipeController {
     private final StockCheckService stockCheckService;
     private final CookingRecordService cookingRecordService;
     private final FollowService followService;
+    private final CategoryImages categoryImages;
 
     public RecipeController(RecipeRepository repository,
                             RecipeService recipeService,
@@ -64,7 +65,8 @@ public class RecipeController {
                             CommentRepository commentRepository,
                             StockCheckService stockCheckService,
                             CookingRecordService cookingRecordService,
-                            FollowService followService) {
+                            FollowService followService,
+                            CategoryImages categoryImages) {
         this.repository = repository;
         this.recipeService = recipeService;
         this.userRepository = userRepository;
@@ -73,6 +75,7 @@ public class RecipeController {
         this.stockCheckService = stockCheckService;
         this.cookingRecordService = cookingRecordService;
         this.followService = followService;
+        this.categoryImages = categoryImages;
     }
 
     /**
@@ -141,6 +144,7 @@ public class RecipeController {
         model.addAttribute("recipes", recipes);
         model.addAttribute("categories", Recipe.CATEGORIES);        // カードを並べる順番
         model.addAttribute("categoryIcons", Recipe.CATEGORY_ICONS); // カテゴリ名 → 絵文字
+        model.addAttribute("categoryImages", categoryImages.urls()); // カテゴリ名 → 写真（置かれているものだけ）
         model.addAttribute("category", category);                   // 今選んでいるカテゴリ
         model.addAttribute("q", q);
         model.addAttribute("sort", sort);
@@ -299,6 +303,7 @@ public class RecipeController {
         model.addAttribute("form", form);
         model.addAttribute("categories", Recipe.CATEGORIES);
         model.addAttribute("categoryIcons", Recipe.CATEGORY_ICONS);   // ← 追加：選択肢に絵文字を付けるため
+        model.addAttribute("difficulties", Recipe.DIFFICULTIES);     // 難易度の選択肢
         model.addAttribute("recipeId", recipeId);
         model.addAttribute("currentImage", currentImage);
         return "recipes/form";

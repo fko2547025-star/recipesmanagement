@@ -64,7 +64,11 @@
                         : (${q != null and q != ''} ? @{/recipes(category=${c},q=${q},sort=${sort},feed=${feed})} : @{/recipes(category=${c},sort=${sort},feed=${feed})})"
             class="category-card" th:classappend="${c == category} ? 'is-active'"
             th:title="${c == category} ? 'もう一度押すと解除' : ${c} + 'で絞り込む'">
-                <span class="category-card__icon" th:text="${categoryIcons.get(c)}">🍱</span>
+                <!-- 写真（static/images/categories/ に置いたもの）があれば丸い写真、無ければ絵文字 -->
+                <span class="category-card__icon" th:classappend="${categoryImages.get(c) != null} ? 'has-photo'">
+                    <img th:if="${categoryImages.get(c) != null}" th:src="${categoryImages.get(c)}" alt="" loading="lazy">
+                    <span th:unless="${categoryImages.get(c) != null}" th:text="${categoryIcons.get(c)}">🍱</span>
+                </span>
                 <span class="category-card__name" th:text="${c}">和食</span>
             </a>
         </div>
