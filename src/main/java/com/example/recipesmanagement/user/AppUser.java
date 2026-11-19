@@ -19,6 +19,7 @@ public class AppUser {
     private String nickname;
     private String avatarPath;
     private String email;
+    private String avoidFoods;  // アレルギー・苦手な食材（AI に伝える。任意）
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -45,4 +46,7 @@ public class AppUser {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getAvoidFoods() { return avoidFoods; }
+    public void setAvoidFoods(String avoidFoods) { this.avoidFoods = avoidFoods; }
 }

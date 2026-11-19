@@ -144,7 +144,8 @@ public class AiController {
     @PostMapping("/recipes/{id:\\d+}/ask")
     public ResponseEntity<Map<String, String>> askAboutRecipe(@PathVariable Long id,
                                                               @RequestParam(defaultValue = "") String question,
-                                                              @RequestParam(required = false) Integer servings) {
+                                                              @RequestParam(required = false) Integer servings,
+                                                              Principal principal) {
         String q = question.trim();
         if (q.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "質問を入力してください"));
@@ -160,7 +161,9 @@ public class AiController {
         // レシピ詳細と同じく、1〜20人分だけ受け付ける
         int people = (servings != null && servings >= 1 && servings <= 20) ? servings : recipe.getServings();
 
-        String message = "<recipe>\n" + describe(recipe, people) + "</recipe>\n\n質問：" + q;
+        String message = "<recipe>\n" + describe(recipe, people) + "</recipe>\n\n質問：" + q
+                + avoidNote(currentUser(principal),
+                        "このレシピに含まれる場合は、そのことと代わりの食材を必ず伝えてください。");
 
         try {
             return ResponseEntity.ok(Map.of("answer", aiService.ask(RECIPE_SYSTEM_PROMPT, message)));
@@ -194,7 +197,8 @@ public class AiController {
         }
 
         String message = "<stock>\n" + describeStock(stock) + "\n</stock>\n\n"
-                + (wish.isEmpty() ? "おすすめの料理を2品提案してください。" : "希望：" + wish);
+                + (wish.isEmpty() ? "おすすめの料理を2品提案してください。" : "希望：" + wish)
+                + avoidNote(user, "これらを使う料理は提案しないでください。");
 
         try {
             return ResponseEntity.ok(Map.of("answer", aiService.ask(STOCK_SYSTEM_PROMPT, message)));
@@ -216,7 +220,8 @@ public class AiController {
             @RequestParam(required = false) List<String> ingredientNames,
             @RequestParam(required = false) List<String> ingredientQuantities,
             @RequestParam(required = false) List<String> ingredientUnits,
-            @RequestParam(defaultValue = "") String memo) {
+            @RequestParam(defaultValue = "") String memo,
+            Principal principal) {
 
         String name = title.trim();
         if (name.isEmpty()) {
@@ -246,6 +251,7 @@ public class AiController {
             sb.append("メモ：").append(memo.trim()).append("\n");
         }
         sb.append("</draft>");
+        sb.append(avoidNote(currentUser(principal), "<draft> にない材料や調味料を足すときは、これらを使わないでください。"));
 
         String text;
         try {
@@ -295,7 +301,8 @@ public class AiController {
                 + "\n</recipes>\n\n<stock>\n"
                 + (stock.isEmpty() ? "（在庫なし）" : describeStock(stock))
                 + "\n</stock>\n\n"
-                + (wish.isEmpty() ? "1週間の夕食を考えてください。" : "希望：" + wish);
+                + (wish.isEmpty() ? "1週間の夕食を考えてください。" : "希望：" + wish)
+                + avoidNote(user, "これらを使う料理は献立に入れないでください。");
 
         try {
             return ResponseEntity.ok(Map.of("answer", aiService.ask(MEAL_PLAN_SYSTEM_PROMPT, message)));
@@ -308,6 +315,20 @@ public class AiController {
 
     private AppUser currentUser(Principal principal) {
         return userRepository.findByUsername(principal.getName()).orElseThrow();
+    }
+
+    /**
+     * プロフィールの「アレルギー・苦手な食材」を AI に伝える文。登録が無ければ空文字。
+     *
+     * @param instruction その機能での扱い方（例：これらを使う料理は提案しないでください。）
+     */
+    private static String avoidNote(AppUser user, String instruction) {
+        String avoid = user.getAvoidFoods();
+        if (avoid == null || avoid.isBlank()) {
+            return "";
+        }
+        return "\n\n<avoid>\n" + avoid.trim() + "\n</avoid>\n"
+                + "<avoid> の中は、利用者のアレルギー・苦手な食材です。" + instruction;
     }
 
     /**

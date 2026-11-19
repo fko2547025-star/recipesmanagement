@@ -65,6 +65,15 @@
                 <small class="field-hint">パスワードを忘れたときに、再設定のメールを送ります。ほかの人には表示されません</small>
             </div>
 
+            <!-- ===== アレルギー・苦手な食材（AI 機能に伝える） ===== -->
+            <div class="form-field">
+                <label for="avoidFoods">アレルギー・苦手な食材（任意）</label>
+                <textarea id="avoidFoods" name="avoidFoods" rows="2" th:text="${avoidFoods}"
+                          th:attr="maxlength=${avoidFoodsMax}"
+                          placeholder="例：卵アレルギー、えび・かに、セロリが苦手"></textarea>
+                <small class="field-hint">AIの質問・提案・下書き・献立で、これらの食材は使わないようにします。ほかの人には表示されません。AIの答えはまちがえることがあるので、アレルギーは必ずご自身でも確認してください</small>
+            </div>
+
             <div class="form-field">
                 <label>ユーザー名（ログイン用・変更できません）</label>
                 <input type="text" th:value="${user.username}" disabled>
