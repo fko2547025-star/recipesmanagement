@@ -3521,15 +3521,26 @@ body.is-cooking { overflow: hidden; }
     min-height: 44px;
 }
 
+#cookTimerButton {
+    min-height: 56px;
+    padding: 0 24px;
+    font-size: 1.3rem;
+}
+
 .cook-mode__timer-display {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 6px 16px;
+    gap: 16px;
+    padding: 12px 28px;              /* まわりの余白を広げる */
     border-radius: var(--radius-pill);
     background: var(--surface);
     box-shadow: var(--shadow);
-    font-size: 1.4rem;
+    font-size: 2.6rem;               /* 文字の大きさ（1.4rem → 2.6rem） */
+}
+
+/* タイマーのアイコン（⏱）も文字に合わせて大きくする */
+.cook-mode__timer-display .material-symbols-rounded {
+    font-size: 1em;
 }
 
 /* 時間になったら赤く光らせる（「止める」を押しやすいように、大きさは変えない） */
