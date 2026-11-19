@@ -4109,7 +4109,7 @@ body.is-cooking { overflow: hidden; }
     box-shadow: 0 0 14px rgba(246, 207, 90, 0.85);
 }
 
-/* ----- 23-3. プロフィールの枠：つやのある金属の輪＋白い縁取り＋外側のリング＋光 ----- */
+/* ----- 23-3. プロフィールの枠：つやのある金属の輪＋細い白い縁（控えめ） ----- */
 /* 輪の明るい部分を白く鋭くして、強い光の筋を2本入れる（輪が回ると、光の筋も回る） */
 .avatar[class*="frame--"] {
     background:
@@ -4118,38 +4118,20 @@ body.is-cooking { overflow: hidden; }
             #fff 0deg, var(--rank-light) 14deg, var(--rank-color) 60deg, var(--rank-dark) 110deg,
             var(--rank-color) 150deg, #fff 180deg, var(--rank-light) 194deg, var(--rank-color) 240deg,
             var(--rank-dark) 290deg, var(--rank-color) 330deg, #fff 360deg) border-box;
+    /* 細い白い縁と、軽い影。まわりの光は16章の半分にして控えめに */
     box-shadow:
-        0 0 0 2px rgba(255, 255, 255, 0.9),
-        0 0 0 4px var(--rank-dark),
-        0 6px 14px rgba(0, 0, 0, 0.25),
-        0 0 var(--frame-glow) var(--rank-color);
+        0 0 0 1px rgba(255, 255, 255, 0.85),
+        0 3px 8px rgba(0, 0, 0, 0.18),
+        0 0 calc(var(--frame-glow) / 2) var(--rank-color);
 }
 
-/* 大きなアイコン（マイページなど）：輪を太くし、白・濃い色・明るい色・ランクの色・白のリングを重ねる */
+/* 大きなアイコン（マイページなど）：白い縁と、外側に細い線を1本だけ */
 .avatar--xl[class*="frame--"] {
-    --frame-width: 8px;
-    position: relative;
     box-shadow:
-        0 0 0 3px rgba(255, 255, 255, 0.98),
-        0 0 0 6px var(--rank-dark),
-        0 0 0 7px color-mix(in srgb, var(--rank-light) 40%, #fff),
-        0 0 0 9px var(--rank-color),
-        0 0 0 10px rgba(255, 255, 255, 0.7),
-        0 12px 26px rgba(0, 0, 0, 0.3),
-        0 0 var(--frame-glow) var(--rank-color);
-}
-
-/* 大きなアイコンの写真の上側に、ガラスのような反射を薄く重ねる */
-.avatar--xl[class*="frame--"]::after {
-    content: "";
-    position: absolute;
-    left: 14%;
-    right: 14%;
-    top: 6%;
-    height: 38%;
-    border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
-    pointer-events: none;
+        0 0 0 2px rgba(255, 255, 255, 0.95),
+        0 0 0 3px color-mix(in srgb, var(--rank-dark) 70%, transparent),
+        0 8px 18px rgba(0, 0, 0, 0.2),
+        0 0 calc(var(--frame-glow) / 2) var(--rank-color);
 }
 
 /* Lv.8：金と深紅の輪が回り、金色の光が脈打つ */
@@ -4164,13 +4146,10 @@ body.is-cooking { overflow: hidden; }
 
 .avatar--xl.frame--predator {
     box-shadow:
-        0 0 0 3px #fffbe8,
-        0 0 0 6px #a8761a,
-        0 0 0 7px #fff3b0,
-        0 0 0 10px #e7b23e,
-        0 0 0 11px rgba(255, 255, 255, 0.75),
-        0 12px 26px rgba(0, 0, 0, 0.32),
-        0 0 var(--frame-glow) rgba(255, 170, 60, 0.95);
+        0 0 0 2px #fffbe8,
+        0 0 0 3px #c9963a,
+        0 8px 18px rgba(0, 0, 0, 0.22),
+        0 0 calc(var(--frame-glow) / 2) rgba(255, 170, 60, 0.8);
 }
 
 @keyframes frame-pulse {
