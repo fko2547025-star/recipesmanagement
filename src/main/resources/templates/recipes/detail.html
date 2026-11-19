@@ -111,7 +111,14 @@
 
             <!-- ===== 作り方 ===== -->
         <section class="card section-card">
-            <h2 class="section-title"><span class="material-symbols-rounded">menu_book</span>作り方</h2>
+            <div class="section-head">
+                <h2 class="section-title"><span class="material-symbols-rounded">menu_book</span>作り方</h2>
+                <!-- 調理中モード：手順を1つずつ大きく表示する（手順が無いレシピでは出さない） -->
+                <button type="button" class="btn--outline btn--sm" th:if="${!#lists.isEmpty(recipe.stepList)}"
+                        onclick="openCookMode()">
+                    <span class="material-symbols-rounded">skillet</span>調理中モード
+                </button>
+            </div>
             <!-- 1手順ずつ <li> にする。番号の丸はCSSで付ける -->
             <ol class="steps">
                 <li th:each="step : ${recipe.stepList}" th:text="${step}">玉ねぎを切る</li>
@@ -297,7 +304,184 @@
         </section>
 
     </main>
+
+    <!-- ===== 調理中モード（画面いっぱいに、手順を1つずつ表示する） ===== -->
+    <div id="cookMode" class="cook-mode is-hidden" role="dialog" aria-modal="true" aria-label="調理中モード">
+        <div class="cook-mode__head">
+            <strong class="cook-mode__title" th:text="${recipe.title}">豚の生姜焼き</strong>
+            <span id="cookCount" class="cook-mode__count">1 / 3</span>
+            <button type="button" class="icon-btn" onclick="closeCookMode()" title="調理中モードを終わる">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+
+        <!-- 手順は最初から全部書いておき、今の手順だけ表示する -->
+        <ol class="cook-mode__steps">
+            <li th:each="step, st : ${recipe.stepList}" class="cook-mode__step is-hidden">
+                <span class="cook-mode__num" th:text="${st.count}">1</span>
+                <p class="cook-mode__text" th:text="${step}">玉ねぎを切る</p>
+            </li>
+        </ol>
+
+        <!-- 手順に「5分」などの時間があるときだけ出るタイマー -->
+        <div class="cook-mode__timer">
+            <button type="button" id="cookTimerButton" class="btn--outline is-hidden" onclick="startCookTimer()"></button>
+            <div id="cookTimerDisplay" class="cook-mode__timer-display is-hidden">
+                <span class="material-symbols-rounded">timer</span>
+                <strong id="cookTimerTime">05:00</strong>
+                <button type="button" class="btn--outline btn--sm" onclick="stopCookTimer()">止める</button>
+            </div>
+        </div>
+
+        <div class="cook-mode__nav">
+            <button type="button" id="cookPrev" class="btn--outline" onclick="moveCookStep(-1)">
+                <span class="material-symbols-rounded">chevron_left</span>前へ
+            </button>
+            <button type="button" id="cookNext" onclick="moveCookStep(1)">
+                次へ<span class="material-symbols-rounded">chevron_right</span>
+            </button>
+        </div>
+    </div>
+
     <script>
+        // ===== 調理中モード =====
+        let cookIndex = 0;          // 今表示している手順（0 から）
+        let wakeLock = null;        // 画面が消えないようにする仕組み（対応しているブラウザだけ）
+        let timerId = null;         // 動いているタイマー
+        let timerEnd = 0;           // タイマーが鳴る時刻（ミリ秒）
+
+        function cookSteps() {
+            return document.querySelectorAll('.cook-mode__step');
+        }
+
+        function openCookMode() {
+            document.getElementById('cookMode').classList.remove('is-hidden');
+            document.body.classList.add('is-cooking');     // 後ろのページがスクロールしないように
+            showCookStep(0);
+            keepScreenOn();
+        }
+
+        function closeCookMode() {
+            document.getElementById('cookMode').classList.add('is-hidden');
+            document.body.classList.remove('is-cooking');
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
+
+        function moveCookStep(diff) {
+            const next = cookIndex + diff;
+            if (next >= cookSteps().length) {
+                closeCookMode();                            // 最後の手順の「完成！」で終わる
+                return;
+            }
+            if (next >= 0) {
+                showCookStep(next);
+            }
+        }
+
+        function showCookStep(index) {
+            const steps = cookSteps();
+            cookIndex = index;
+            steps.forEach((li, i) => li.classList.toggle('is-hidden', i !== index));
+            document.getElementById('cookCount').textContent = (index + 1) + ' / ' + steps.length;
+            document.getElementById('cookPrev').disabled = index === 0;
+            const next = document.getElementById('cookNext');
+            next.innerHTML = index === steps.length - 1
+                ? '<span class="material-symbols-rounded">check</span>完成！'
+                : '次へ<span class="material-symbols-rounded">chevron_right</span>';
+
+            // 手順の文に「5分」「30秒」などがあれば、その時間のタイマーボタンを出す（全角数字も読む）
+            const text = steps[index].textContent.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+            const min = text.match(/(\d+)\s*分/);
+            const sec = text.match(/(\d+)\s*秒/);
+            const seconds = (min ? Number(min[1]) * 60 : 0) + (sec ? Number(sec[1]) : 0);
+            const button = document.getElementById('cookTimerButton');
+            button.dataset.seconds = seconds;
+            button.innerHTML = '<span class="material-symbols-rounded">timer</span>' + formatTime(seconds) + ' のタイマー';
+            // タイマーが動いている間は、ボタンは出さない（タイマーは手順を移っても動き続ける）
+            button.classList.toggle('is-hidden', seconds <= 0 || timerId !== null);
+        }
+
+        // ----- タイマー -----
+        function startCookTimer() {
+            const seconds = Number(document.getElementById('cookTimerButton').dataset.seconds);
+            timerEnd = Date.now() + seconds * 1000;
+            document.getElementById('cookTimerButton').classList.add('is-hidden');
+            document.getElementById('cookTimerDisplay').classList.remove('is-hidden', 'is-ringing');
+            tickCookTimer();
+            timerId = setInterval(tickCookTimer, 250);
+        }
+
+        function tickCookTimer() {
+            const left = Math.max(0, Math.ceil((timerEnd - Date.now()) / 1000));
+            document.getElementById('cookTimerTime').textContent = left > 0 ? formatTime(left) : '時間です！';
+            if (left === 0) {
+                clearInterval(timerId);
+                timerId = -1;                                    // 鳴っている（止めるまで表示を残す）
+                document.getElementById('cookTimerDisplay').classList.add('is-ringing');
+                beep();
+                if (navigator.vibrate) navigator.vibrate([300, 200, 300]);
+            }
+        }
+
+        function stopCookTimer() {
+            clearInterval(timerId);
+            timerId = null;
+            document.getElementById('cookTimerDisplay').classList.add('is-hidden');
+            showCookStep(cookIndex);                             // タイマーボタンを出し直す
+        }
+
+        // 「ピピピ」と3回鳴らす（音のファイルを使わず、ブラウザで音を作る）
+        function beep() {
+            try {
+                const audio = new AudioContext();
+                [0, 0.4, 0.8].forEach(start => {
+                    const osc = audio.createOscillator();
+                    osc.frequency.value = 880;
+                    osc.connect(audio.destination);
+                    osc.start(audio.currentTime + start);
+                    osc.stop(audio.currentTime + start + 0.2);
+                });
+            } catch (e) {
+                // 音が出せないブラウザでは、表示だけで知らせる
+            }
+        }
+
+        function formatTime(seconds) {
+            const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+            const s = String(seconds % 60).padStart(2, '0');
+            return m + ':' + s;
+        }
+
+        // ----- 画面が消えないようにする -----
+        async function keepScreenOn() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (e) {
+                wakeLock = null;                                 // 使えないときは、何もしない
+            }
+        }
+
+        // 別のアプリに切り替えて戻ってきたとき、もう一度「画面を消さない」をお願いする
+        document.addEventListener('visibilitychange', () => {
+            const open = !document.getElementById('cookMode').classList.contains('is-hidden');
+            if (open && document.visibilityState === 'visible') {
+                keepScreenOn();
+            }
+        });
+
+        // キーボード：← → で手順を移動、Esc で終わる
+        document.addEventListener('keydown', e => {
+            if (document.getElementById('cookMode').classList.contains('is-hidden')) return;
+            if (e.key === 'ArrowRight') moveCookStep(1);
+            if (e.key === 'ArrowLeft') moveCookStep(-1);
+            if (e.key === 'Escape') closeCookMode();
+        });
+
         // 選んだ写真を、投稿ボタンの上に小さく表示する（＋5MBのチェック）
         function previewCommentPhoto(input) {
             const file = input.files[0];
