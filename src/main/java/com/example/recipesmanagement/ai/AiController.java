@@ -3,14 +3,20 @@ package com.example.recipesmanagement.ai;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +32,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import com.example.recipesmanagement.ingredient.Ingredient;
 import com.example.recipesmanagement.mealplan.MealPlanService;
+import com.example.recipesmanagement.stock.IngredientNameMatcher;
 import com.example.recipesmanagement.recipe.Recipe;
 import com.example.recipesmanagement.recipe.RecipeRepository;
 import com.example.recipesmanagement.stock.StockCheckService;
@@ -114,6 +121,11 @@ public class AiController {
 
     // 献立の提案：AI に渡すレシピの最大件数
     private static final int MAX_MEAL_RECIPES = 50;
+
+    // 献立の提案の1行（例：月：★豚の生姜焼き（理由））から、曜日と料理名を取り出す
+    private static final Pattern MEAL_LINE = Pattern.compile("^([月火水木金土日])\\s*[:：]\\s*(.+)$");
+    private static final String WEEKDAYS = "月火水木金土日";
+    private static final DateTimeFormatter PICK_DATE = DateTimeFormatter.ofPattern("M/d(E)", Locale.JAPANESE);
 
     private static final String MEAL_PLAN_SYSTEM_PROMPT = """
             あなたは家庭の献立を考えるアシスタントです。必ず日本語で答えてください。
@@ -293,14 +305,19 @@ public class AiController {
 
     /**
      * 選べるレシピ（自分の投稿・いいねしたレシピ）と在庫から、1週間の夕食を AI に提案させる。
-     * 提案は表示するだけで、献立には保存しない。
+     * ここでは保存しない。★の付いた登録済みレシピは「献立に追加できる候補」として一緒に返し、
+     * 画面でチェックしたものを、おまかせ献立と同じ POST /meal-plans/suggest で保存する。
      *
      * @param request 希望（任意。例：野菜多め）
-     * @return 成功：{"answer": "..."}　失敗：{"error": "..."}（400 / 503）
+     * @param date    この日を含む週の献立を考える（おまかせ献立の画面で表示している週）
+     * @return 成功：{"answer": "...", "picks": [{"value": "日付|夜|レシピid", "label": "11/23(月) 夜：親子丼"}, ...]}
+     *         失敗：{"error": "..."}（400 / 503）
      */
     @PostMapping("/meal-plan")
-    public ResponseEntity<Map<String, String>> suggestMealPlan(@RequestParam(defaultValue = "") String request,
-                                                               Principal principal) {
+    public ResponseEntity<Map<String, Object>> suggestMealPlan(
+            @RequestParam(defaultValue = "") String request,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Principal principal) {
         String wish = request.trim();
         if (wish.length() > MAX_REQUEST_LENGTH) {
             return ResponseEntity.badRequest()
@@ -308,30 +325,67 @@ public class AiController {
         }
 
         AppUser user = currentUser(principal);
+        LocalDate monday = MealPlanService.weekStart(date != null ? date : LocalDate.now());
 
         // 献立の登録画面と同じ「選べるレシピ」。料理名が同じものは1つにまとめる
-        Map<String, String> recipes = new LinkedHashMap<>();
+        // （料理名 → レシピ。AI の答えの★料理名を、どのレシピか調べるのにも使う）
+        Map<String, Recipe> recipes = new LinkedHashMap<>();
         for (Recipe r : mealPlanService.recipeOptions(user, null)) {
             if (recipes.size() >= MAX_MEAL_RECIPES) {
                 break;
             }
-            recipes.putIfAbsent(r.getTitle(), "- " + r.getTitle() + "（" + r.getCategory() + "）");
+            recipes.putIfAbsent(r.getTitle(), r);
         }
         List<Ingredient> stock = usableStock(user);
 
         String message = "<recipes>\n"
-                + (recipes.isEmpty() ? "（登録なし）" : String.join("\n", recipes.values()))
+                + (recipes.isEmpty() ? "（登録なし）" : recipes.values().stream()
+                        .map(r -> "- " + r.getTitle() + "（" + r.getCategory() + "）")
+                        .collect(Collectors.joining("\n")))
                 + "\n</recipes>\n\n<stock>\n"
                 + (stock.isEmpty() ? "（在庫なし）" : describeStock(stock))
                 + "\n</stock>\n\n"
                 + (wish.isEmpty() ? "1週間の夕食を考えてください。" : "希望：" + wish)
                 + avoidNote(user, "これらを使う料理は献立に入れないでください。");
 
+        String answer;
         try {
-            return ResponseEntity.ok(Map.of("answer", aiService.ask(MEAL_PLAN_SYSTEM_PROMPT, message)));
+            answer = aiService.ask(MEAL_PLAN_SYSTEM_PROMPT, message);
         } catch (AiService.AiException e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error", e.getMessage()));
         }
+        return ResponseEntity.ok(Map.of("answer", answer, "picks", mealPicks(answer, recipes, monday)));
+    }
+
+    /**
+     * AI の献立の答えから、献立に追加できる候補を作る。
+     * 対象：★が付いていて、料理名が選べるレシピと一致し、今日以降の日のもの。枠は「夜」。
+     * 値はおまかせ献立と同じ「日付|夜|レシピid」（保存のときに、もう一度確かめられる）。
+     */
+    static List<Map<String, String>> mealPicks(String answer, Map<String, Recipe> recipes, LocalDate monday) {
+        // 空白の違いは無視して料理名を比べる（「豚の 生姜焼き」でも見つかるように）
+        Map<String, Recipe> byName = new LinkedHashMap<>();
+        recipes.forEach((title, r) -> byName.putIfAbsent(IngredientNameMatcher.normalize(title), r));
+
+        LocalDate today = LocalDate.now();
+        List<Map<String, String>> picks = new ArrayList<>();
+        for (String raw : answer.lines().toList()) {
+            Matcher m = MEAL_LINE.matcher(raw.replace("*", "").trim());
+            if (!m.matches() || !m.group(2).contains("★")) {
+                continue;
+            }
+            // 「★豚の生姜焼き（豚こまの期限が近い）」→「豚の生姜焼き」
+            String title = m.group(2).substring(m.group(2).indexOf('★') + 1).split("[（(]")[0].trim();
+            Recipe recipe = byName.get(IngredientNameMatcher.normalize(title));
+            LocalDate day = monday.plusDays(WEEKDAYS.indexOf(m.group(1)));
+            if (recipe == null || day.isBefore(today)) {
+                continue;
+            }
+            picks.add(Map.of(
+                    "value", day + "|夜|" + recipe.getId(),
+                    "label", day.format(PICK_DATE) + " 夜：" + recipe.getTitle()));
+        }
+        return picks;
     }
 
     // ===== 内部で使う処理 =====

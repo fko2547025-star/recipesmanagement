@@ -3603,4 +3603,11 @@ body.is-cooking { overflow: hidden; }
     margin-top: 12px;
 }
 
-.ai-picks .check-list { margin-bottom: 12px; }
+.ai-picks__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 8px 0 12px;
+    padding: 0;
+    list-style: none;
+}
