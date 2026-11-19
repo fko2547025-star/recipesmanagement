@@ -177,28 +177,31 @@
             <p th:if="${missingCount == 0}">すべて在庫があります</p>
             <p class="note">食材管理の在庫と照らし合わせた結果です。名前が似ている食材を同じものとして探しています。</p>
 
-            <table>
-                <thead>
-                    <tr><th>材料</th><th>必要</th><th>在庫</th><th>状態</th><th>期限</th></tr>
-                </thead>
-                <tbody>
-                    <tr th:each="c : ${stockCheck}">
-                        <td th:text="${c.name}">豚ロース</td>
-                        <td th:text="${c.neededText}">200g</td>
-                        <td th:text="${c.stockText}">豚ロース 150g</td>
-                        <!-- 「足りない」「在庫なし」は赤字（isProblem()） -->
-                        <td th:classappend="${c.problem} ? 'text-danger'">
-                            <span th:text="${c.status.label}">足りない</span>
-                            <span th:if="${c.shortageText != null}" th:text="'（あと' + ${c.shortageText} + '）'">（あと50g）</span>
-                        </td>
-                        <td>
-                            <span th:if="${c.nearestExpiry != null}"
-                                  th:text="${#temporals.format(c.nearestExpiry, 'M/d')}">10/28</span>
-                            <span th:if="${c.expiringSoon}" class="text-warning">（期限間近）</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- table-wrap：スマホで表がはみ出したら、表だけ横にスクロールさせる -->
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>材料</th><th>必要</th><th>在庫</th><th>状態</th><th>期限</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="c : ${stockCheck}">
+                            <td th:text="${c.name}">豚ロース</td>
+                            <td th:text="${c.neededText}">200g</td>
+                            <td th:text="${c.stockText}">豚ロース 150g</td>
+                            <!-- 「足りない」「在庫なし」は赤字（isProblem()） -->
+                            <td th:classappend="${c.problem} ? 'text-danger'">
+                                <span th:text="${c.status.label}">足りない</span>
+                                <span th:if="${c.shortageText != null}" th:text="'（あと' + ${c.shortageText} + '）'">（あと50g）</span>
+                            </td>
+                            <td>
+                                <span th:if="${c.nearestExpiry != null}"
+                                      th:text="${#temporals.format(c.nearestExpiry, 'M/d')}">10/28</span>
+                                <span th:if="${c.expiringSoon}" class="text-warning">（期限間近）</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <!-- ===== 投稿者・投稿日時 ===== -->
