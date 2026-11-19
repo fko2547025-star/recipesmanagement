@@ -13,6 +13,8 @@
         <div class="mypage-top">
             <section class="card profile-card">
                 <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
+                <!-- その人の称号（料理レベル）。アイコンのすぐ下に出す -->
+                <span th:replace="~{fragments/rank :: badge(${level})}"></span>
                 <p class="profile-card__name" th:text="${user.displayName}">じろう</p>
                 <p class="profile-card__id" th:text="'@' + ${user.username}">@jiro</p>
 
@@ -25,9 +27,6 @@
                         <strong th:text="${followingCount}">5</strong>フォロー中
                     </a>
                 </p>
-
-                <!-- その人の称号（料理レベル） -->
-                <span th:replace="~{fragments/rank :: badge(${level})}"></span>
 
                 <!-- フォローボタン（データが変わるので POST）。押すたびに、フォローする／やめるが切り替わる -->
                 <form th:if="${loginUsername != null}" th:action="@{/users/{id}/follow(id=${user.id})}" method="post">
@@ -56,6 +55,24 @@
                         <span class="stat__label">もらったいいね</span>
                         <strong class="stat__value" th:text="${receivedLikeCount}">12</strong>
                     </div>
+                </div>
+
+                <!-- ===== その人の料理レベル（マイページと同じカード。ポイントの増やし方の説明は出さない） ===== -->
+                <div class="level" th:classappend="'rank--' + ${level.rank}">
+                    <div class="level__head">
+                        <span class="level__icon">
+                            <svg th:replace="~{fragments/rank :: emblem(${level}, 44)}"></svg>
+                        </span>
+                        <span class="level__lv" th:text="'Lv.' + ${level.level}">Lv.2</span>
+                        <strong class="level__title" th:text="${level.title}">家庭の料理人</strong>
+                        <span class="level__points" th:text="${level.points} + 'pt'">56pt</span>
+                    </div>
+                    <div class="level__bar">
+                        <span class="level__fill" th:style="'width: ' + ${level.progressPercent} + '%'"></span>
+                    </div>
+                    <small class="level__next" th:if="${!level.max}"
+                           th:text="'次の「' + ${level.nextTitle} + '」まで あと ' + ${level.pointsToNext} + 'pt'">次の「頼れるシェフ」まで あと 24pt</small>
+                    <small class="level__next" th:if="${level.max}">最高レベルに到達しました！</small>
                 </div>
             </section>
         </div>
