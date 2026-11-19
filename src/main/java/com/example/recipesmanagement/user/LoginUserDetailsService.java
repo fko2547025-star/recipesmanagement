@@ -32,7 +32,8 @@ public class LoginUserDetailsService implements UserDetailsService {
 
         return User.withUsername(user.getUsername())
                 .password(user.getPassword())
-                .roles("USER")
+                // 役割（USER か ADMIN）。ADMIN だけが /admin/** を開ける（SecurityConfig）
+                .roles(user.isAdmin() ? "ADMIN" : "USER")
                 // 続けてログインに失敗してロック中なら、パスワードを確かめる前に断る（LockedException になる）
                 .accountLocked(loginAttemptService.isLocked(username, currentIp()))
                 .build();

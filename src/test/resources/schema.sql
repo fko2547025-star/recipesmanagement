@@ -16,7 +16,8 @@ CREATE TABLE users (
     avoid_foods VARCHAR(200),                   -- アレルギー・苦手な食材（AI に伝える）
     email_verified       BOOLEAN NOT NULL DEFAULT TRUE,  -- メールアドレスの確認が済んだか
     email_verify_token   VARCHAR(64),                    -- 確認メールのリンクのトークンのハッシュ
-    email_verify_expires TIMESTAMP                       -- そのリンクの有効期限
+    email_verify_expires TIMESTAMP,                      -- そのリンクの有効期限
+    role                 VARCHAR(20) NOT NULL DEFAULT 'USER'  -- USER か ADMIN（管理者）
 );
 
 -- レシピ

@@ -26,6 +26,8 @@ public class SecurityConfig {
                 .requestMatchers("/recipes/new").authenticated()
                 // レシピ一覧・詳細・ランキングは「見るだけ」なら誰でも
                 .requestMatchers(HttpMethod.GET, "/", "/recipes", "/recipes/*", "/ranking", "/users/*", "/users/*/followers", "/users/*/following").permitAll()
+                // 管理者の画面は ADMIN だけ
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 // それ以外（投稿・いいね・コメント・マイページ・献立・食材管理）はログイン必須
                 .anyRequest().authenticated()
             )

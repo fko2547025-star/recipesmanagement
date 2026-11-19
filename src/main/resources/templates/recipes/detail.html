@@ -113,6 +113,15 @@
                         </button>
                     </form>
                 </div>
+                <!-- ===== 投稿者以外：通報 ===== -->
+                <p th:if="${loginUsername != null and loginUsername != recipe.user.username}" class="note">
+                    <a th:href="@{/reports/new(recipeId=${recipe.id})}" class="comment__action">
+                        <span class="material-symbols-rounded">flag</span>このレシピを通報
+                    </a>
+                </p>
+                <div th:if="${reported}" class="alert alert--success">
+                    <span class="material-symbols-rounded">check_circle</span>通報を受け付けました。運営が内容を確認します
+                </div>
             </div>
         </div>
 
@@ -280,6 +289,9 @@
                             <button type="submit" class="btn--danger btn--sm">削除</button>
                         </form>
                     </th:block>
+                    <!-- ほかの人のコメント：通報 -->
+                    <a th:if="${loginUsername != null and loginUsername != c.user.username}"
+                       th:href="@{/reports/new(commentId=${c.id})}" class="comment__action" title="このコメントを通報">通報</a>
                 </div>
 
                 <!-- 他の人が書いた文章なので、必ず th:text で表示する -->

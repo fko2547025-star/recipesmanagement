@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('通報の一覧')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container">
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">admin_panel_settings</span>通報の一覧（管理者）
+        </h1>
+
+        <div th:if="${message}" class="alert alert--success">
+            <span class="material-symbols-rounded">check_circle</span><span th:text="${message}">削除しました</span>
+        </div>
+
+        <p th:if="${#lists.isEmpty(reports)}" class="note">通報はありません。</p>
+
+        <!-- 通報された内容は、ほかの人が書いた文章なので、必ず th:text で表示する -->
+        <section th:each="r : ${reports}" class="card section-card">
+            <p class="text-muted">
+                <span th:text="${#temporals.format(r.createdAt, 'yyyy/MM/dd HH:mm')}">2026/11/19 12:00</span>
+                ・通報した人：<span th:text="${r.reporter.displayName} + ' (@' + ${r.reporter.username} + ')'">はなこ</span>
+            </p>
+            <p><strong>理由：</strong><span th:text="${r.reason}">悪口</span></p>
+
+            <div th:if="${r.recipe != null}">
+                <p><strong>レシピ：</strong>
+                    <a th:href="@{/recipes/{id}(id=${r.recipe.id})}" th:text="${r.recipe.title}" target="_blank">カレー</a>
+                    （投稿者：<span th:text="'@' + ${r.recipe.user.username}">@taro</span>）
+                </p>
+            </div>
+            <div th:if="${r.comment != null}">
+                <p><strong>コメント：</strong>
+                    （投稿者：<span th:text="'@' + ${r.comment.user.username}">@taro</span>、
+                    <a th:href="@{/recipes/{id}(id=${r.comment.recipe.id})} + '#comment-' + ${r.comment.id}" target="_blank">レシピで見る</a>）
+                </p>
+                <div class="comment__text" th:text="${r.comment.content}">コメントの内容</div>
+            </div>
+
+            <div class="form-actions">
+                <form th:action="@{/admin/reports/{id}/delete-target(id=${r.id})}" method="post"
+                      onsubmit="return confirm('通報されたものを削除しますか？ 元に戻せません。');">
+                    <button type="submit" class="btn--danger btn--sm">
+                        <span class="material-symbols-rounded">delete</span>
+                        <span th:text="${r.recipe != null} ? 'レシピを削除' : 'コメントを削除'">削除</span>
+                    </button>
+                </form>
+                <form th:action="@{/admin/reports/{id}/dismiss(id=${r.id})}" method="post">
+                    <button type="submit" class="btn--outline btn--sm">問題なし（通報を取り下げる）</button>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
