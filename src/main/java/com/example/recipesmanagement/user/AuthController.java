@@ -19,14 +19,17 @@ public class AuthController {
     private final AppUserRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final RateLimiter rateLimiter;
+    private final EmailVerificationService verificationService;
 
     // 同じ場所（IP アドレス）から1時間に作れるアカウントの数（大量にアカウントを作られないように）
     public static final int REGISTER_PER_HOUR = 5;
 
-    public AuthController(AppUserRepository repository, PasswordEncoder passwordEncoder, RateLimiter rateLimiter) {
+    public AuthController(AppUserRepository repository, PasswordEncoder passwordEncoder, RateLimiter rateLimiter,
+                          EmailVerificationService verificationService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.rateLimiter = rateLimiter;
+        this.verificationService = verificationService;
     }
 
     // ログイン画面
@@ -100,6 +103,7 @@ public class AuthController {
         user.setUsername(username);
         user.setEmail(normalizedEmail);                             // ← 追加
         user.setPassword(passwordEncoder.encode(password));   // 暗号化して保存
+        verificationService.startVerification(user);          // 確認のメールを送る（確認が済むまでは未確認）
         repository.save(user);
 
         return "redirect:/login?registered";

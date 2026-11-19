@@ -1,13 +1,7 @@
 package com.example.recipesmanagement.password;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.recipesmanagement.common.SecureTokens;
 import com.example.recipesmanagement.user.PasswordRules;
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
@@ -36,9 +31,6 @@ public class PasswordResetService {
 
     // リンクの有効期限（分）
     public static final int EXPIRE_MINUTES = 30;
-
-    // SecureRandom：推測されにくい乱数（ふつうの Random は、続きを予想されることがある）
-    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final PasswordResetTokenRepository tokenRepository;
     private final AppUserRepository userRepository;
@@ -78,13 +70,17 @@ public class PasswordResetService {
         if (user == null || user.getEmail() == null || !user.getEmail().equalsIgnoreCase(address)) {
             return;   // 合わないときは、理由を言わずに終わる
         }
+        // 確認が済んでいないメールアドレスには送らない（他人のアドレスを登録して、そこへメールを送らせないように）
+        if (!user.isEmailVerified()) {
+            return;
+        }
 
         // 前に送ったリンクは使えなくする（最後に送った1つだけ使える）
         tokenRepository.deleteByUser(user);
 
         // トークンを作り、ハッシュだけを保存する
-        String token = generateToken();
-        tokenRepository.save(new PasswordResetToken(user, hash(token),
+        String token = SecureTokens.generate();
+        tokenRepository.save(new PasswordResetToken(user, SecureTokens.hash(token),
                 LocalDateTime.now().plusMinutes(EXPIRE_MINUTES)));
 
         sendMail(user, baseUrl + "/password/reset?token=" + token);
@@ -98,7 +94,7 @@ public class PasswordResetService {
         if (token == null || token.isBlank()) {
             return Optional.empty();
         }
-        return tokenRepository.findByTokenHash(hash(token))
+        return tokenRepository.findByTokenHash(SecureTokens.hash(token))
                 .filter(PasswordResetToken::isUsable);
     }
 
@@ -136,30 +132,6 @@ public class PasswordResetService {
     }
 
     // ===== 内部で使う処理 =====
-
-    /**
-     * 推測されにくいトークンを作る。
-     * 32バイト（256ビット）の乱数を、URL に入れても問題ない文字（A-Z a-z 0-9 - _）だけの文字列にする。
-     */
-    private String generateToken() {
-        byte[] bytes = new byte[32];
-        RANDOM.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    }
-
-    /**
-     * SHA-256 のハッシュ（16進数64文字）。同じ文字列からは、必ず同じハッシュになる。
-     */
-    private String hash(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashed = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hashed);
-        } catch (NoSuchAlgorithmException e) {
-            // SHA-256 は Java に必ずあるので、ここには来ない
-            throw new IllegalStateException(e);
-        }
-    }
 
     /**
      * 再設定のメールを送る。

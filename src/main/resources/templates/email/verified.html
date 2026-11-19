@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('メールアドレスの確認')}"></head>
+<body class="auth-page">
+
+    <main class="auth-card">
+        <a href="/recipes" class="brand brand--large">
+            <span class="material-symbols-rounded">soup_kitchen</span>Recipi
+        </a>
+        <p class="auth-card__lead">メールアドレスの確認</p>
+
+        <div th:if="${verified}" class="alert alert--success">
+            <span class="material-symbols-rounded">mark_email_read</span>
+            <span>メールアドレスの確認が済みました。パスワードを忘れたときに、再設定のメールを受け取れます。</span>
+        </div>
+        <div th:unless="${verified}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span>
+            <span>このリンクは使えません（期限が切れたか、すでに使われています）。
+                  マイページから、確認のメールをもう一度送れます。</span>
+        </div>
+
+        <a href="/mypage" class="auth-card__link">マイページへ</a>
+    </main>
+
+</body>
+</html>

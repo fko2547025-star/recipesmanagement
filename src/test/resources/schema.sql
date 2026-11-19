@@ -13,7 +13,10 @@ CREATE TABLE users (
     nickname    VARCHAR(50),                    -- 表示名（任意）
     avatar_path VARCHAR(255),                   -- プロフィール写真のファイル名
     email       VARCHAR(255),                   -- パスワード再設定用
-    avoid_foods VARCHAR(200)                    -- アレルギー・苦手な食材（AI に伝える）
+    avoid_foods VARCHAR(200),                   -- アレルギー・苦手な食材（AI に伝える）
+    email_verified       BOOLEAN NOT NULL DEFAULT TRUE,  -- メールアドレスの確認が済んだか
+    email_verify_token   VARCHAR(64),                    -- 確認メールのリンクのトークンのハッシュ
+    email_verify_expires TIMESTAMP                       -- そのリンクの有効期限
 );
 
 -- レシピ

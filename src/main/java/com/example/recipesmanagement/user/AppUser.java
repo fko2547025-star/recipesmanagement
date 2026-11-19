@@ -1,5 +1,7 @@
 package com.example.recipesmanagement.user;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,6 +22,12 @@ public class AppUser {
     private String avatarPath;
     private String email;
     private String avoidFoods;  // アレルギー・苦手な食材（AI に伝える。任意）
+
+    // メールアドレスの確認が済んでいるか。確認が済むまで、パスワード再設定のメールは送らない。
+    // 前からいるユーザーは確認済みとして扱う（データベースの既定値も TRUE）
+    private boolean emailVerified = true;
+    private String emailVerifyToken;           // 確認メールのリンクのトークンのハッシュ（確認が済んだら null）
+    private LocalDateTime emailVerifyExpires;  // そのリンクの有効期限
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -49,4 +57,18 @@ public class AppUser {
 
     public String getAvoidFoods() { return avoidFoods; }
     public void setAvoidFoods(String avoidFoods) { this.avoidFoods = avoidFoods; }
+
+    public boolean isEmailVerified() { return emailVerified; }
+    public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
+
+    public String getEmailVerifyToken() { return emailVerifyToken; }
+    public void setEmailVerifyToken(String emailVerifyToken) { this.emailVerifyToken = emailVerifyToken; }
+
+    public LocalDateTime getEmailVerifyExpires() { return emailVerifyExpires; }
+    public void setEmailVerifyExpires(LocalDateTime emailVerifyExpires) { this.emailVerifyExpires = emailVerifyExpires; }
+
+    /** メールアドレスを登録していて、まだ確認が済んでいないか（マイページにお知らせを出す） */
+    public boolean isEmailUnverified() {
+        return email != null && !emailVerified;
+    }
 }
