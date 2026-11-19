@@ -4315,25 +4315,6 @@ body.is-cooking { overflow: hidden; }
    25. マイページ・プロフィールの並びと余白
    ===================================================================== */
 
-/* 称号はアイコンのすぐ下。アイコンの光と重ならないよう、上下に少し余白を取る。
-   ボタンより小さくし、幅は文字に合わせる */
-.profile-card .reward-badge {
-    margin: 10px 0 4px;
-    width: auto;
-    height: 34px;
-    padding: 0 14px 0 10px;
-    font-size: 0.85rem;
-}
-.profile-card .reward-badge .rank-emblem {
-    width: 24px;
-    height: 24px;
-}
-.profile-card .reward-badge .rank-emblem.rank--predator {
-    width: 28px;
-    height: 28px;
-    margin: -3px 0;
-}
-
 /* 右の枠の中を縦に並べ、料理レベルのカードを「数字のまとめの下の空き」の真ん中に置く。
    左のプロフィールの枠が高くなっても（管理者はボタンが1つ多い）、カードは常に真ん中に来る */
 .stats-card {

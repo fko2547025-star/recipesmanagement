@@ -37,8 +37,6 @@
                     <span th:replace="~{fragments/avatar :: avatar(${user}, 'avatar--xl')}"></span>
                 </th:block>
 
-                <!-- 称号（エンブレム＋料理レベル）。アイコンのすぐ下に出す -->
-                <span th:replace="~{fragments/rank :: badge(${level})}"></span>
                 <p class="profile-card__name" th:text="${user.displayName}">はるお</p>
                 <p class="profile-card__id" th:text="'@' + ${user.username}">@1</p>
                 <!-- フォロワー・フォロー中の人数（押すと一覧へ） -->
