@@ -1,5 +1,6 @@
 package com.example.recipesmanagement.password;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -14,7 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.recipesmanagement.common.RateLimiter;
 import com.example.recipesmanagement.mypage.PasswordService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * パスワードの再設定。ログインしていなくても使える（SecurityConfig で許可する）。
@@ -33,6 +37,11 @@ public class PasswordResetController {
     private static final Logger log = LoggerFactory.getLogger(PasswordResetController.class);
 
     private final PasswordResetService resetService;
+    private final RateLimiter rateLimiter;
+
+    // 再設定のメールを送れる回数（1時間あたり）。他人のメールボックスにメールを大量に送りつけられないように
+    public static final int MAIL_PER_USER_PER_HOUR = 3;    // 同じユーザー名あて
+    public static final int MAIL_PER_IP_PER_HOUR = 10;     // 同じ場所（IP アドレス）から
 
     /*
      * メールのリンクの先頭（例：https://recipe.example.com）。application.properties の app.public-url。
@@ -44,8 +53,9 @@ public class PasswordResetController {
     @Value("${app.public-url:}")
     private String publicUrl;
 
-    public PasswordResetController(PasswordResetService resetService) {
+    public PasswordResetController(PasswordResetService resetService, RateLimiter rateLimiter) {
         this.resetService = resetService;
+        this.rateLimiter = rateLimiter;
     }
 
     @GetMapping("/forgot")
@@ -56,9 +66,14 @@ public class PasswordResetController {
     @PostMapping("/forgot")
     public String sendMail(@RequestParam String username,
                            @RequestParam String email,
+                           HttpServletRequest request,
                            RedirectAttributes redirectAttributes) {
 
-        if (publicUrl.isBlank()) {
+        if (!rateLimiter.tryAcquire("reset-ip", request.getRemoteAddr(), MAIL_PER_IP_PER_HOUR, Duration.ofHours(1))
+                || !rateLimiter.tryAcquire("reset-user", username.trim().toLowerCase(), MAIL_PER_USER_PER_HOUR, Duration.ofHours(1))) {
+            // 回数を超えたら送らない。画面の表示は同じにする（ユーザー名が本当にあるかを知られないように）
+            log.info("パスワード再設定のメールの回数制限を超えたため、送りませんでした");
+        } else if (publicUrl.isBlank()) {
             log.warn("app.public-url が設定されていないため、パスワード再設定のメールを送りませんでした");
         } else {
             // 最後の「/」は取る（https://example.com/ → https://example.com）

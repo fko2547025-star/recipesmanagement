@@ -1,6 +1,7 @@
 package com.example.recipesmanagement.comment;
 
 import java.security.Principal;
+import java.time.Duration;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.recipesmanagement.common.RateLimiter;
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
 
@@ -29,10 +31,15 @@ public class CommentController {
 
     private final CommentService commentService;
     private final AppUserRepository userRepository;
+    private final RateLimiter rateLimiter;
 
-    public CommentController(CommentService commentService, AppUserRepository userRepository) {
+    // 1人が1分間に投稿できるコメントの数（大量の書き込みを防ぐ）
+    public static final int COMMENTS_PER_MINUTE = 5;
+
+    public CommentController(CommentService commentService, AppUserRepository userRepository, RateLimiter rateLimiter) {
         this.commentService = commentService;
         this.userRepository = userRepository;
+        this.rateLimiter = rateLimiter;
     }
 
     /**
@@ -50,6 +57,10 @@ public class CommentController {
                         RedirectAttributes redirectAttributes) {
 
         String error = commentService.validate(content, image);
+        if (error == null
+                && !rateLimiter.tryAcquire("comment", principal.getName(), COMMENTS_PER_MINUTE, Duration.ofMinutes(1))) {
+            error = "短い時間にたくさん投稿されています。少し待ってからもう一度お試しください";
+        }
         if (error != null) {
             // エラーメッセージと入力内容を、リダイレクト先の詳細画面に1回だけ渡す
             // （写真はリダイレクトで持ち越せないので、もう一度選んでもらう）
