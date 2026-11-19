@@ -34,3 +34,5 @@ build/
 data/
 
 src/main/resources/mail-secret.properties
+# メールのパスワード（プロジェクト直下に置く）
+mail-secret.properties
