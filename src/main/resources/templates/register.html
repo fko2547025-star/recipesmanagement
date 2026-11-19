@@ -41,11 +41,14 @@
                 <input type="password" name="passwordConfirm" id="passwordConfirm" placeholder="パスワード（確認）"
                     minlength="8" required autocomplete="new-password" autocapitalize="off" autocorrect="off">
             </label>
+            <p class="note">「登録する」を押すと、<a href="/terms" target="_blank">利用規約</a>と
+               <a href="/privacy" target="_blank">プライバシーポリシー</a>に同意したものとします。</p>
             <button type="submit" class="btn--block">登録する</button>
         </form>
 
         <a href="/login" class="auth-card__link">ログインはこちら</a>
     </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
     <script>
         // 確認欄が、パスワードと同じかどうかを調べる
         const password = document.getElementById('password');

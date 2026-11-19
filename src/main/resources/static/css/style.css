@@ -1241,6 +1241,7 @@ td img {
    ================================================== */
 .auth-page {
     display: flex;
+    flex-direction: column;   /* カードの下にフッターを並べる */
     align-items: center;
     justify-content: center;
     min-height: 100vh;
@@ -4171,3 +4172,23 @@ body.is-cooking { overflow: hidden; }
         animation: none;
     }
 }
+
+/* ===== フッター（利用規約・プライバシーポリシー） ===== */
+.site-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 20px;
+    margin-top: 40px;
+    padding-top: 20px;
+    padding-bottom: 24px;
+    font-size: 0.8rem;
+    color: var(--text-muted, #888);
+}
+.site-footer a { color: inherit; }
+.auth-page .site-footer { margin-top: 20px; }
+
+/* ===== 規約などの長い文章 ===== */
+.legal h2 { font-size: 1.05rem; margin: 24px 0 8px; }
+.legal p, .legal li { line-height: 1.8; }
+.legal ul { padding-left: 1.4em; }

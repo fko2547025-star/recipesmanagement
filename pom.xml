@@ -78,6 +78,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
+		<!-- 写真の情報（向き・撮影場所など）を読む。写真を保存するとき、向きを直してから位置情報などを消すのに使う -->
+		<dependency>
+			<groupId>com.drewnoakes</groupId>
+			<artifactId>metadata-extractor</artifactId>
+			<version>2.22.0</version>
+		</dependency>
 	    <!-- メールを送る（JavaMailSender が使えるようになる） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

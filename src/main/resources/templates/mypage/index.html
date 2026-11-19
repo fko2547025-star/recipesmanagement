@@ -14,6 +14,16 @@
             <span class="material-symbols-rounded">check_circle</span><span th:text="${message}">更新しました</span>
         </div>
 
+        <!-- メールアドレスの確認が済んでいないときのお知らせ -->
+        <div th:if="${user.emailUnverified}" class="alert alert--info">
+            <span class="material-symbols-rounded">mail</span>
+            <span>メールアドレスの確認が済んでいません。届いたメールのリンクを開いてください。
+                  確認が済むまで、パスワードを忘れたときの再設定のメールは届きません。</span>
+            <form th:action="@{/email/resend}" method="post" style="display:inline">
+                <button type="submit" class="btn--sm btn--outline">確認メールをもう一度送る</button>
+            </form>
+        </div>
+
         <!-- ===== プロフィール（左）と数字のまとめ・料理レベル（右） ===== -->
         <div class="mypage-top">
             <section class="card profile-card">
@@ -45,6 +55,10 @@
                 </a>
                 <a href="/mypage/password" class="btn btn--outline btn--sm">
                     <span class="material-symbols-rounded">lock</span>パスワードの変更
+                </a>
+                <!-- 管理者だけ：通報の一覧 -->
+                <a th:if="${user.admin}" href="/admin/reports" class="btn btn--outline btn--sm">
+                    <span class="material-symbols-rounded">admin_panel_settings</span>通報の一覧（管理者）
                 </a>
             </section>
 
@@ -169,5 +183,6 @@
             </form>
         </dialog>
     </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

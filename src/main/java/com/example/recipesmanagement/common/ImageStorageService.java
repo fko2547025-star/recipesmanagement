@@ -56,10 +56,19 @@ public class ImageStorageService {
      *
      * ブラウザが送ってくる種類（Content-Type）は、送る側が自由に書けるので、それだけでは信用しない。
      * ファイルの中身の先頭を見て、本当に JPEG・PNG・WebP・GIF の画像か確かめる。
+     * さらに、壊れていない・大きすぎない（4000万画素まで）画像か確かめる（ImageSanitizer）。
      */
     public boolean isSupported(MultipartFile file) {
         String type = file.getContentType();
-        return type != null && EXTENSIONS.containsKey(type) && detectType(file) != null;
+        if (type == null || !EXTENSIONS.containsKey(type)) {
+            return false;
+        }
+        String detected = detectType(file);
+        try {
+            return detected != null && ImageSanitizer.isReadable(file.getBytes(), detected);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     /**
@@ -118,9 +127,10 @@ public class ImageStorageService {
         // 例：3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg
         String filename = UUID.randomUUID() + extension;
 
-        // アップロードされたデータを読み出して、フォルダに書き込む
-        try (InputStream in = file.getInputStream()) {
-            Files.copy(in, uploadDir.resolve(filename));
+        // 撮影場所（位置情報）などの写真の情報を取り除いてから、フォルダに書き込む（ImageSanitizer）
+        try {
+            byte[] cleaned = ImageSanitizer.sanitize(file.getBytes(), detected);
+            Files.write(uploadDir.resolve(filename), cleaned);
         } catch (IOException e) {
             throw new UncheckedIOException("写真の保存に失敗しました", e);
         }

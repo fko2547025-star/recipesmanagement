@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('通報')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container container--narrow">
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">flag</span>
+            <span th:text="${recipeId != null} ? 'レシピを通報' : 'コメントを通報'">レシピを通報</span>
+        </h1>
+
+        <div th:if="${error}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span><span th:text="${error}">エラー</span>
+        </div>
+
+        <form th:action="@{/reports}" method="post" class="card">
+            <input type="hidden" name="recipeId" th:value="${recipeId}" th:if="${recipeId != null}">
+            <input type="hidden" name="commentId" th:value="${commentId}" th:if="${commentId != null}">
+            <p class="note">
+                ルールに反する内容（ほかの人への悪口・迷惑な宣伝・不適切な写真・他人の作品の無断転載など）を、運営に知らせます。
+                通報したことは、投稿した人には知らされません。
+            </p>
+            <div class="form-field">
+                <label for="reason">通報の理由</label>
+                <textarea id="reason" name="reason" rows="4" required th:attr="maxlength=${maxLength}"
+                          th:text="${reason}" placeholder="例：ほかの人への悪口が書かれています"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn--danger btn--wide">通報する</button>
+                <a href="javascript:history.back()" class="btn btn--outline">キャンセル</a>
+            </div>
+        </form>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

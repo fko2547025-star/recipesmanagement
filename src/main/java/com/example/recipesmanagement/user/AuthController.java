@@ -1,5 +1,7 @@
 package com.example.recipesmanagement.user;
 
+import java.time.Duration;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -7,15 +9,27 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.recipesmanagement.common.RateLimiter;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 @Controller
 public class AuthController {
 
     private final AppUserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final RateLimiter rateLimiter;
+    private final EmailVerificationService verificationService;
 
-    public AuthController(AppUserRepository repository, PasswordEncoder passwordEncoder) {
+    // 同じ場所（IP アドレス）から1時間に作れるアカウントの数（大量にアカウントを作られないように）
+    public static final int REGISTER_PER_HOUR = 5;
+
+    public AuthController(AppUserRepository repository, PasswordEncoder passwordEncoder, RateLimiter rateLimiter,
+                          EmailVerificationService verificationService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.rateLimiter = rateLimiter;
+        this.verificationService = verificationService;
     }
 
     // ログイン画面
@@ -36,6 +50,7 @@ public class AuthController {
                            @RequestParam String email,             // ← 追加：メールアドレス
                            @RequestParam String password,
                            @RequestParam String passwordConfirm,
+                           HttpServletRequest request,
                            Model model) {
 
         // エラーで画面に戻ったとき、入力したユーザー名・メールアドレスを残しておく（パスワードは安全のため残さない）
@@ -78,10 +93,17 @@ public class AuthController {
             return "register";
         }
 
+        // 入力に問題が無く、登録する直前に数える（入力の間違いでは回数を使わない）
+        if (!rateLimiter.tryAcquire("register", request.getRemoteAddr(), REGISTER_PER_HOUR, Duration.ofHours(1))) {
+            model.addAttribute("error", "短い時間にたくさん登録されています。しばらくしてからもう一度お試しください");
+            return "register";
+        }
+
         AppUser user = new AppUser();
         user.setUsername(username);
         user.setEmail(normalizedEmail);                             // ← 追加
         user.setPassword(passwordEncoder.encode(password));   // 暗号化して保存
+        verificationService.startVerification(user);          // 確認のメールを送る（確認が済むまでは未確認）
         repository.save(user);
 
         return "redirect:/login?registered";

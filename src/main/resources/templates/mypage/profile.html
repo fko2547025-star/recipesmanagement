@@ -90,8 +90,15 @@
                     <span class="material-symbols-rounded">lock</span>パスワードを変更する
                 </a>
             </p>
+            <!-- 退会（すべてのデータを消す） -->
+            <p class="profile-form__password">
+                <a href="/mypage/delete">
+                    <span class="material-symbols-rounded">person_remove</span>退会する
+                </a>
+            </p>
         </form>
     </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
 
     <script>
         // 選んだ写真をその場で丸の中に表示する（まだ保存はしない）

@@ -174,6 +174,48 @@ class SecurityFixesTest {
     }
 
     @Test
+    void 他人が別の場所で失敗しても本人はロックされない() throws Exception {
+        createUser("gina-lock", "Correct-pass1");
+
+        // 攻撃する人（10.0.0.66）が10回失敗する
+        for (int i = 0; i < 10; i++) {
+            mvc.perform(loginFrom("gina-lock", "wrong-" + i, "10.0.0.66"))
+                    .andExpect(redirectedUrl("/login?error"));
+        }
+        mvc.perform(loginFrom("gina-lock", "Correct-pass1", "10.0.0.66"))
+                .andExpect(redirectedUrl("/login?locked"));
+        // 本人（10.0.0.7）はログインできる
+        mvc.perform(loginFrom("gina-lock", "Correct-pass1", "10.0.0.7"))
+                .andExpect(redirectedUrl("/recipes"));
+    }
+
+    @Test
+    void 同じ場所から多くのユーザー名で失敗するとその場所を止める() throws Exception {
+        createUser("hank-ok", "Correct-pass1");
+        for (int i = 0; i < 50; i++) {
+            mvc.perform(loginFrom("nobody-" + i, "wrong", "10.0.0.99"))
+                    .andExpect(redirectedUrl("/login?error"));
+        }
+        mvc.perform(loginFrom("hank-ok", "Correct-pass1", "10.0.0.99"))
+                .andExpect(redirectedUrl("/login?locked"));
+    }
+
+    /** 決まった場所（IP アドレス）からログインを申し込む */
+    private static org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder loginFrom(
+            String username, String password, String ip) {
+        return post("/login").param("username", username).param("password", password)
+                .with(csrf()).with(fromIp(ip));
+    }
+
+    /** リクエストを送ってきた場所（IP アドレス）を変える */
+    private static org.springframework.test.web.servlet.request.RequestPostProcessor fromIp(String ip) {
+        return request -> {
+            request.setRemoteAddr(ip);
+            return request;
+        };
+    }
+
+    @Test
     void 失敗が10回未満なら正しいパスワードでログインできる() throws Exception {
         createUser("frank-ok", "Correct-pass1");
         for (int i = 0; i < 3; i++) {

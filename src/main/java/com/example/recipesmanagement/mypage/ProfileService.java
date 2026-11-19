@@ -11,6 +11,7 @@ import com.example.recipesmanagement.common.ImageStorageService;
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
 import com.example.recipesmanagement.user.EmailRules;
+import com.example.recipesmanagement.user.EmailVerificationService;
 
 /**
  * プロフィール（ニックネーム・写真・アイコンの枠）の変更を担当するクラス。
@@ -26,10 +27,13 @@ public class ProfileService {
 
     private final AppUserRepository userRepository;
     private final ImageStorageService imageStorageService;
+    private final EmailVerificationService verificationService;
 
-    public ProfileService(AppUserRepository userRepository, ImageStorageService imageStorageService) {
+    public ProfileService(AppUserRepository userRepository, ImageStorageService imageStorageService,
+                          EmailVerificationService verificationService) {
         this.userRepository = userRepository;
         this.imageStorageService = imageStorageService;
+        this.verificationService = verificationService;
     }
 
     public List<String> validate(String nickname, String email, String avoidFoods, MultipartFile avatar) {
@@ -66,7 +70,14 @@ public class ProfileService {
         AppUser user = userRepository.findByUsername(username).orElseThrow();
 
         user.setNickname(nickname == null || nickname.isBlank() ? null : nickname.trim());
-        user.setEmail(EmailRules.normalize(email));
+        String newEmail = EmailRules.normalize(email);
+        boolean emailChanged = newEmail == null ? user.getEmail() != null
+                : !newEmail.equalsIgnoreCase(user.getEmail() == null ? "" : user.getEmail());
+        user.setEmail(newEmail);
+        if (emailChanged) {
+            // 新しいメールアドレスの確認をやり直す（確認のメールを送る）
+            verificationService.startVerification(user);
+        }
         user.setAvoidFoods(avoidFoods == null || avoidFoods.isBlank() ? null : avoidFoods.trim());
         String oldAvatar = user.getAvatarPath();
         if (avatar != null && !avatar.isEmpty()) {

@@ -11,4 +11,7 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     // そのユーザー名がすでに使われているか
     boolean existsByUsername(String username);
+
+    // メール確認のリンクのトークン（ハッシュ）で1件探す
+    Optional<AppUser> findByEmailVerifyToken(String emailVerifyToken);
 }

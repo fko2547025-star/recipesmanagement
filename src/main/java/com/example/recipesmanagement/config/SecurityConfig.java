@@ -19,13 +19,15 @@ public class SecurityConfig {
             // ページごとのアクセス制限（上から順に判定される）
             .authorizeHttpRequests(auth -> auth
                 // 新規登録・ログイン画面は誰でも
-                .requestMatchers("/login", "/register", "/password/**", "/error", "/css/**", "/images/**").permitAll()
+                .requestMatchers("/login", "/register", "/password/**", "/email/verify", "/privacy", "/terms", "/error", "/css/**", "/images/**").permitAll()
                 // CSS・画像・アップロード写真は、ログインしていなくても読み込めるようにする
                 .requestMatchers("/css/**", "/images/**", "/uploads/**", "/js/**").permitAll()
                 // レシピ投稿画面はログイン必須（下の /recipes/* より先に書く）
                 .requestMatchers("/recipes/new").authenticated()
                 // レシピ一覧・詳細・ランキングは「見るだけ」なら誰でも
                 .requestMatchers(HttpMethod.GET, "/", "/recipes", "/recipes/*", "/ranking", "/users/*", "/users/*/followers", "/users/*/following").permitAll()
+                // 管理者の画面は ADMIN だけ
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 // それ以外（投稿・いいね・コメント・マイページ・献立・食材管理）はログイン必須
                 .anyRequest().authenticated()
             )
@@ -43,6 +45,22 @@ public class SecurityConfig {
             // （パスワード再設定の画面の URL にはトークンが入っているので、外のサイトに渡らないように）
             .headers(headers -> headers
                 .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.SAME_ORIGIN))
+                // CSP（Content-Security-Policy）：画面が読み込んでよい場所を決める。
+                // 万一、悪い人のスクリプトが画面に入り込んでも、ほかのサイトから読み込んだり、ほかのサイトへ送ったりできないようにする。
+                //   ふだんは自分のサイト（'self'）だけ。文字・アイコンだけ Google Fonts から読み込む。
+                //   'unsafe-inline'：画面の中に直接書いた <script>・style・onclick を使っているので許可する
+                //   blob:：写真を選んだときの、送信前の見本の表示（URL.createObjectURL）に使う
+                .contentSecurityPolicy(csp -> csp.policyDirectives(String.join("; ",
+                        "default-src 'self'",
+                        "script-src 'self' 'unsafe-inline'",
+                        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                        "font-src 'self' https://fonts.gstatic.com",
+                        "img-src 'self' data: blob:",
+                        "connect-src 'self'",
+                        "object-src 'none'",
+                        "base-uri 'self'",
+                        "form-action 'self'",
+                        "frame-ancestors 'self'")))
             )
             // ログアウトの設定
             .logout(logout -> logout
