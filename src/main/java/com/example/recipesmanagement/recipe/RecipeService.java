@@ -147,6 +147,8 @@ public class RecipeService {
                 .collect(Collectors.joining("\n")));
         recipe.setMemo(blankToNull(form.getMemo()));
         recipe.setServings(form.getServings());
+        recipe.setCookingTime(form.getCookingTime());
+        recipe.setDifficulty(blankToNull(form.getDifficulty()));
 
         // 材料は「全部外してから、入力された行を入れ直す」
         // orphanRemoval = true なので、リストから外した古い材料は DB からも自動で DELETE される

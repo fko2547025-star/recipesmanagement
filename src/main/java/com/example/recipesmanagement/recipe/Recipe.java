@@ -42,6 +42,9 @@ public class Recipe {
      * Map は「キー → 値」の対応表。ここでは「カテゴリ名 → 絵文字」。
      * Map は順番を覚えていないので、並べるときは CATEGORIES を使い、アイコンだけこちらから取り出す。
      */
+    /** 難易度の選択肢（表示する順番）。投稿フォームの選択肢と入力チェックで使う */
+    public static final List<String> DIFFICULTIES = List.of("かんたん", "ふつう", "本格");
+
     public static final Map<String, String> CATEGORY_ICONS = Map.ofEntries(
         Map.entry("和食", "🍱"),
         Map.entry("洋食", "🍝"),
@@ -79,6 +82,12 @@ public class Recipe {
 
     // 何人分のレシピか（材料の分量は、この人数分で書かれている）
     private int servings = 2;
+
+    // 調理時間（分）。任意なので null のこともある
+    private Integer cookingTime;
+
+    // 難易度（DIFFICULTIES のどれか）。任意なので null のこともある
+    private String difficulty;
 
     // 写真の保存場所（写真アップロードを作るときに使う。今は空）
     private String imagePath;
@@ -130,6 +139,12 @@ public class Recipe {
 
     public int getServings() { return servings; }
     public void setServings(int servings) { this.servings = servings; }
+
+    public Integer getCookingTime() { return cookingTime; }
+    public void setCookingTime(Integer cookingTime) { this.cookingTime = cookingTime; }
+
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
 
     public String getImagePath() { return imagePath; }
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }

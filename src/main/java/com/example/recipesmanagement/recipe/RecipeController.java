@@ -299,6 +299,7 @@ public class RecipeController {
         model.addAttribute("form", form);
         model.addAttribute("categories", Recipe.CATEGORIES);
         model.addAttribute("categoryIcons", Recipe.CATEGORY_ICONS);   // ← 追加：選択肢に絵文字を付けるため
+        model.addAttribute("difficulties", Recipe.DIFFICULTIES);     // 難易度の選択肢
         model.addAttribute("recipeId", recipeId);
         model.addAttribute("currentImage", currentImage);
         return "recipes/form";

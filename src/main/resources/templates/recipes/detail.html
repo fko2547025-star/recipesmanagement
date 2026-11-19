@@ -35,6 +35,13 @@
                     <a class="chip" th:href="@{/recipes(category=${recipe.category})}"
                     th:text="${recipe.categoryIcon} + ' ' + ${recipe.category}">🍱 和食</a>
                     <span class="chip chip--soft" th:text="${recipe.servings} + '人分'">2人分</span>
+                    <!-- 調理時間・難易度は、入力されているときだけ -->
+                    <span class="chip chip--soft" th:if="${recipe.cookingTime != null}">
+                        <span class="material-symbols-rounded">schedule</span><span th:text="${recipe.cookingTime} + '分'">15分</span>
+                    </span>
+                    <span class="chip chip--soft" th:if="${recipe.difficulty != null}">
+                        <span class="material-symbols-rounded">local_fire_department</span><span th:text="${recipe.difficulty}">かんたん</span>
+                    </span>
                 </div>
 
                 <p th:if="${recipe.description}" class="recipe-detail__desc" th:text="${recipe.description}">説明</p>

@@ -18,6 +18,8 @@ public class RecipeForm {
     private String description;    // 説明（任意）
     private List<String> steps = new ArrayList<>();   // 作り方（行ごとの入力値）
     private Integer servings;      // 何人分
+    private Integer cookingTime;   // 調理時間（分・任意）
+    private String difficulty;     // 難易度（任意）
     private String memo;           // メモ（任意）
 
     // 材料（行ごとの入力値）。分量は空欄や数字以外もありえるので String で受け取る
@@ -36,6 +38,8 @@ public class RecipeForm {
         form.setDescription(recipe.getDescription());
         form.setSteps(new ArrayList<>(recipe.getStepList()));
         form.setServings(recipe.getServings());
+        form.setCookingTime(recipe.getCookingTime());
+        form.setDifficulty(recipe.getDifficulty());
         form.setMemo(recipe.getMemo());
         for (RecipeIngredient ing : recipe.getIngredients()) {
             form.ingredientNames.add(ing.getName());
@@ -94,7 +98,15 @@ public class RecipeForm {
     
         if (servings == null || servings < 1 || servings > 20) {
             errors.add("何人分かを1〜20で入力してください");
-        } 
+        }
+
+        // 調理時間・難易度は任意。入力されたときだけ確かめる
+        if (cookingTime != null && (cookingTime < 1 || cookingTime > 999)) {
+            errors.add("調理時間は1〜999分で入力してください");
+        }
+        if (!isBlank(difficulty) && !Recipe.DIFFICULTIES.contains(difficulty)) {
+            errors.add("難易度を選び直してください");
+        }
 
         // 材料：名前のある行が1つ以上あるか、分量が数字になっているか
         boolean hasIngredient = false;
@@ -159,5 +171,11 @@ public class RecipeForm {
 
     public String getMemo() { return memo; }
     public void setMemo(String memo) { this.memo = memo; }
+
+    public Integer getCookingTime() { return cookingTime; }
+    public void setCookingTime(Integer cookingTime) { this.cookingTime = cookingTime; }
+
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
 
 }
