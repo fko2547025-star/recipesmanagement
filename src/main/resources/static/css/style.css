@@ -24,6 +24,7 @@
    == 20. 調理中モード
    == 21. AI（会話の表示・献立の登録）
    == 22. 一覧のいいね・カテゴリの写真・写真が全面のレシピカード
+   == 23. 称号・料理レベル・プロフィールの枠（つやのある金属・光の演出）
 
    スマホ用の調整（画面の幅が 768px 未満）は、それぞれの章の最後に書いている
    ================================================== */
@@ -3814,4 +3815,369 @@ body.is-cooking { overflow: hidden; }
     .recipe-card__body { padding: 10px 10px 42px; }
     .recipe-card__tags { gap: 4px; margin-bottom: 6px; }
     .recipe-card .recipe-card__meta { padding: 0 10px 10px; }
+}
+
+
+/* ==================================================
+   == 23. 称号・料理レベル・プロフィールの枠（つやのある金属・光の演出）
+   16章（料理ランク）の見た目を、ここで上書きする。色は16章の --rank-color・--rank-light・--rank-dark を使う。
+   つやの作り方：
+     ・金属：上が明るく、真ん中に影が入るグラデーション
+     ・ガラスの反射：上半分に、白から透明になるグラデーションを重ねる（::before）
+     ・光が走る：細い白い帯を、左から右へ動かす（::after）
+   ================================================== */
+
+/* --frame-glow（枠の外側の光の大きさ）に「長さ」という型を教える → 光が脈打つアニメーションができる */
+@property --frame-glow {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+/* ----- 23-1. 称号のラベル：金属のプレート＋ガラスの反射＋走る光 ----- */
+.reward-badge[class*="rank--"] {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;               /* 中の重ね順を、このラベルの中だけで決める */
+    border: 1px solid var(--rank-dark);
+    background: linear-gradient(180deg,
+        color-mix(in srgb, var(--rank-light) 55%, #fff) 0%,
+        var(--rank-light) 22%,
+        var(--rank-color) 50%,
+        var(--rank-dark) 52%,
+        var(--rank-color) 78%,
+        var(--rank-light) 100%);
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),     /* 上のふちの光 */
+        inset 0 -3px 4px rgba(0, 0, 0, 0.35),        /* 下のふちの影 */
+        inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+        0 4px 14px color-mix(in srgb, var(--rank-color) 60%, transparent),
+        0 0 18px color-mix(in srgb, var(--rank-light) 45%, transparent);
+}
+
+/* 上半分のガラスの反射 */
+.reward-badge[class*="rank--"]::before {
+    content: "";
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    top: 2px;
+    height: 48%;
+    z-index: 0;
+    border-radius: 999px 999px 40% 40% / 999px 999px 100% 100%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.15));
+    pointer-events: none;
+}
+
+/* 数秒ごとに、白い光がプレートの上を走る */
+.reward-badge[class*="rank--"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(105deg,
+        transparent 30%, rgba(255, 255, 255, 0.25) 42%, rgba(255, 255, 255, 0.95) 50%,
+        rgba(255, 255, 255, 0.25) 58%, transparent 70%);
+    mix-blend-mode: screen;
+    transform: translateX(-130%);
+    animation: plate-shine 2.6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes plate-shine {
+    0%, 55% { transform: translateX(-130%); }   /* しばらく止まってから */
+    100%    { transform: translateX(130%); }    /* 左から右へ走る */
+}
+
+/* 文字とエンブレムは、反射より手前に出す */
+.reward-badge > * { position: relative; z-index: 1; }
+
+.reward-badge .rank-emblem {
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
+}
+
+/* Lv.8：深紅のプレートに金のふち。まわりが金色に脈打つ */
+.reward-badge.rank--predator {
+    border: 2px solid #f6cf5a;
+    background: linear-gradient(180deg, #ff9a7e 0%, #ee4a3a 24%, #c41e1e 50%, #8a0f12 53%, #c8241f 80%, #f06a4f 100%);
+    color: #fff6d6;
+    animation: gold-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes gold-pulse {
+    0%, 100% {
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -3px 4px rgba(0, 0, 0, 0.35),
+                    0 0 10px rgba(255, 190, 70, 0.55);
+    }
+    50% {
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -3px 4px rgba(0, 0, 0, 0.35),
+                    0 0 24px rgba(255, 190, 70, 0.95);
+    }
+}
+
+/* ----- 23-2. 料理レベルのカード ----- */
+.level[class*="rank--"] {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--rank-color) 35%, #fff);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--rank-color) 12%, #fff), #fff 65%);
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--rank-color) 20%, transparent);
+}
+
+/* エンブレム：大きくして影と光を付け、ふわふわ浮かせる */
+.level[class*="rank--"] .level__icon img {
+    width: 58px;
+    height: 58px;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35))
+            drop-shadow(0 0 8px color-mix(in srgb, var(--rank-color) 70%, transparent));
+    animation: emblem-float 3s ease-in-out infinite;
+}
+
+@keyframes emblem-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+}
+
+/* 「Lv.8」の丸いラベル：金属のプレート＋ガラスの反射 */
+.level[class*="rank--"] .level__lv {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--rank-dark);
+    background: linear-gradient(180deg, var(--rank-light), var(--rank-color) 50%, var(--rank-dark) 52%, var(--rank-color));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 6px color-mix(in srgb, var(--rank-color) 45%, transparent);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    font-size: 0.85rem;
+}
+
+.level[class*="rank--"] .level__lv::before {
+    content: "";
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 1px;
+    height: 50%;
+    border-radius: 999px 999px 40% 40% / 999px 999px 100% 100%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.1));
+}
+
+.level__title { font-size: 1.25rem; }
+
+/* 進み具合のバー：太くして、くぼんだ溝に見せる */
+.level .level__bar {
+    height: 14px;
+    background: #ece2d5;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+
+/* バーの中身：ランクの色の金属に斜めの縞。縞が流れる */
+.level[class*="rank--"] .level__fill {
+    position: relative;
+    background:
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.18) 0 8px, transparent 8px 16px),
+        linear-gradient(180deg, var(--rank-light), var(--rank-color) 55%, var(--rank-dark));
+    background-size: 22px 22px, 100% 100%;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--rank-color) 70%, transparent);
+    animation: bar-stripes 1.2s linear infinite;
+}
+
+@keyframes bar-stripes {
+    to { background-position: 22px 0, 0 0; }
+}
+
+/* バーの上半分のガラスの反射 */
+.level[class*="rank--"] .level__fill::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 1px;
+    height: 45%;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.15));
+}
+
+/* バーの上を、白い光が走る */
+.level[class*="rank--"] .level__fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.9) 50%, transparent 60%) no-repeat;
+    background-size: 40% 100%;
+    animation: bar-glint 2.8s ease-in-out infinite;
+}
+
+@keyframes bar-glint {
+    from { background-position: -60% 0; }
+    to   { background-position: 160% 0; }
+}
+
+/* Lv.8：黒に近い深紅のカードに金のふち。きらめき・斜めに流れる光・金箔の文字 */
+.level.rank--predator {
+    border: 2px solid #e9b949;
+    background:
+        radial-gradient(circle at 12% 18%, rgba(255, 200, 90, 0.28), transparent 38%),
+        radial-gradient(circle at 92% 110%, rgba(230, 60, 40, 0.35), transparent 45%),
+        linear-gradient(135deg, #3d0f0c, #1d0907 58%, #3a1608);
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.4),
+        0 10px 30px rgba(120, 20, 10, 0.45),
+        0 0 26px rgba(233, 185, 73, 0.35);
+}
+
+/* 小さな光の点が瞬く */
+.level.rank--predator::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        radial-gradient(2px 2px at 20% 30%, #fff6c8, transparent),
+        radial-gradient(1.5px 1.5px at 70% 20%, #ffe28a, transparent),
+        radial-gradient(2px 2px at 85% 65%, #fff6c8, transparent),
+        radial-gradient(1.5px 1.5px at 40% 80%, #ffe28a, transparent),
+        radial-gradient(1px 1px at 55% 45%, #fff, transparent);
+    animation: twinkle 2.6s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.35; }
+    50%      { opacity: 1; }
+}
+
+/* カードの表面を、斜めに光が流れる */
+.level.rank--predator::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(115deg,
+        transparent 35%, rgba(255, 230, 160, 0.18) 48%, rgba(255, 255, 255, 0.28) 50%,
+        rgba(255, 230, 160, 0.18) 52%, transparent 65%);
+    background-size: 250% 100%;
+    animation: card-sheen 4.5s ease-in-out infinite;
+}
+
+@keyframes card-sheen {
+    from { background-position: 120% 0; }
+    to   { background-position: -120% 0; }
+}
+
+/* 「伝説のシェフ」：金箔のように光る文字（グラデーションを文字の形に切り抜いて、横に流す） */
+.level.rank--predator .level__title {
+    background: linear-gradient(90deg, #fff1b0, #f2b93b 30%, #fff6cf 50%, #e3a52c 70%, #fff1b0);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 1.4rem;
+    filter: drop-shadow(0 0 6px rgba(255, 200, 90, 0.6));
+    animation: foil 4s linear infinite;
+}
+
+@keyframes foil {
+    to { background-position: -200% 0; }
+}
+
+.level.rank--predator .level__points { color: #f6cf5a; }
+.level.rank--predator .level__next { color: #ffe9a8; }
+.level.rank--predator .level__hint { color: rgba(255, 236, 200, 0.65); }
+
+.level.rank--predator .level__bar {
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.level.rank--predator .level__fill {
+    background:
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.22) 0 8px, transparent 8px 16px),
+        linear-gradient(180deg, #fff1b0, #f2b93b 45%, #c9861c 55%, #f6cf5a);
+    background-size: 22px 22px, 100% 100%;
+    box-shadow: 0 0 14px rgba(246, 207, 90, 0.85);
+}
+
+/* ----- 23-3. プロフィールの枠：つやのある金属の輪＋白い縁取り＋外側のリング＋光 ----- */
+/* 輪の明るい部分を白く鋭くして、強い光の筋を2本入れる（輪が回ると、光の筋も回る） */
+.avatar[class*="frame--"] {
+    background:
+        linear-gradient(#e7ddd2, #e7ddd2) padding-box,
+        conic-gradient(from var(--frame-angle),
+            #fff 0deg, var(--rank-light) 14deg, var(--rank-color) 60deg, var(--rank-dark) 110deg,
+            var(--rank-color) 150deg, #fff 180deg, var(--rank-light) 194deg, var(--rank-color) 240deg,
+            var(--rank-dark) 290deg, var(--rank-color) 330deg, #fff 360deg) border-box;
+    box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.9),
+        0 0 0 4px var(--rank-dark),
+        0 6px 14px rgba(0, 0, 0, 0.25),
+        0 0 var(--frame-glow) var(--rank-color);
+}
+
+/* 大きなアイコン（マイページなど）：輪を太くし、白・濃い色・明るい色・ランクの色・白のリングを重ねる */
+.avatar--xl[class*="frame--"] {
+    --frame-width: 8px;
+    position: relative;
+    box-shadow:
+        0 0 0 3px rgba(255, 255, 255, 0.98),
+        0 0 0 6px var(--rank-dark),
+        0 0 0 7px color-mix(in srgb, var(--rank-light) 40%, #fff),
+        0 0 0 9px var(--rank-color),
+        0 0 0 10px rgba(255, 255, 255, 0.7),
+        0 12px 26px rgba(0, 0, 0, 0.3),
+        0 0 var(--frame-glow) var(--rank-color);
+}
+
+/* 大きなアイコンの写真の上側に、ガラスのような反射を薄く重ねる */
+.avatar--xl[class*="frame--"]::after {
+    content: "";
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    top: 6%;
+    height: 38%;
+    border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+    pointer-events: none;
+}
+
+/* Lv.8：金と深紅の輪が回り、金色の光が脈打つ */
+.avatar.frame--predator {
+    background:
+        linear-gradient(#e7ddd2, #e7ddd2) padding-box,
+        conic-gradient(from var(--frame-angle),
+            #fff 0deg, #fff3b0 12deg, #f2b93b 40deg, #c41e1e 80deg, #8a0f12 110deg, #f6cf5a 150deg,
+            #fff 180deg, #fff3b0 192deg, #e0302f 240deg, #8a0f12 280deg, #f2b93b 320deg, #fff 360deg) border-box;
+    animation: frame-spin 2.5s linear infinite, frame-pulse 2.4s ease-in-out infinite;
+}
+
+.avatar--xl.frame--predator {
+    box-shadow:
+        0 0 0 3px #fffbe8,
+        0 0 0 6px #a8761a,
+        0 0 0 7px #fff3b0,
+        0 0 0 10px #e7b23e,
+        0 0 0 11px rgba(255, 255, 255, 0.75),
+        0 12px 26px rgba(0, 0, 0, 0.32),
+        0 0 var(--frame-glow) rgba(255, 170, 60, 0.95);
+}
+
+@keyframes frame-pulse {
+    0%, 100% { --frame-glow: 22px; }
+    50%      { --frame-glow: 44px; }
+}
+
+/* ----- 23-4. 動きを減らす設定の端末では、動きを止める ----- */
+@media (prefers-reduced-motion: reduce) {
+    .reward-badge[class*="rank--"]::after,
+    .reward-badge.rank--predator,
+    .level[class*="rank--"] .level__icon img,
+    .level[class*="rank--"] .level__fill,
+    .level[class*="rank--"] .level__fill::after,
+    .level.rank--predator::before,
+    .level.rank--predator::after,
+    .level.rank--predator .level__title,
+    .avatar[class*="frame--"] {
+        animation: none;
+    }
 }
