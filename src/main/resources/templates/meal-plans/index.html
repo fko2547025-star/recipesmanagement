@@ -52,18 +52,6 @@
             ===== 1週間（月〜日の7列） =====
             week：DayPlans のリスト。1日ごとに slots（朝・昼・夜 → 献立のリスト）を持っている
         -->
-        <!-- スマホ用：日付の丸を押すと、その日の朝・昼・夜を写真のカードで表示する（PC では隠して、7日分を並べる） -->
-        <nav class="day-picker" aria-label="日付を選ぶ">
-            <button type="button" th:each="day, st : ${week}" class="day-picker__day"
-                    th:classappend="${day.today} ? 'is-today'" th:attr="data-index=${st.index}"
-                    onclick="selectDay(Number(this.dataset.index))">
-                <span class="day-picker__dow" th:text="${#temporals.format(day.date, 'E')}">月</span>
-                <span class="day-picker__num" th:text="${day.date.dayOfMonth}">16</span>
-                <!-- 献立がある日は、下に小さな点を出す（下の JavaScript で付ける） -->
-                <span class="day-picker__dot"></span>
-            </button>
-        </nav>
-
         <div class="week">
             <section th:each="day : ${week}" class="day" th:classappend="${day.today} ? 'is-today'">
                 <header class="day__head">
@@ -111,24 +99,11 @@
     </main>
 
     <script>
-        // ===== スマホ：日付を選んで、その日だけ表示する =====
-        const days = document.querySelectorAll('.week .day');
-        const pickers = document.querySelectorAll('.day-picker__day');
-
-        function selectDay(index) {
-            days.forEach((d, i) => d.classList.toggle('is-selected', i === index));
-            pickers.forEach((p, i) => {
-                p.classList.toggle('is-selected', i === index);
-                p.setAttribute('aria-pressed', i === index);
-            });
+        // スマホで横スクロールになるときは、今日の列が見えるところまで自動でスクロールする
+        const today = document.querySelector('.day.is-today');
+        if (today) {
+            today.scrollIntoView({ inline: 'center', block: 'nearest' });
         }
-
-        // 献立がある日に点を付ける
-        days.forEach((d, i) => pickers[i]?.classList.toggle('has-plans', d.querySelector('.plan') !== null));
-
-        // 最初は今日（この週に今日が無ければ月曜日）を選んでおく
-        const todayIndex = [...days].findIndex(d => d.classList.contains('is-today'));
-        selectDay(todayIndex >= 0 ? todayIndex : 0);
     </script>
 </body>
 </html>
