@@ -1,0 +1,10 @@
+# Dependabot：使っている部品（ライブラリ）に新しい版やセキュリティの修正が出たら、
+# GitHub が自動で「更新のプルリクエスト」を作ってくれる。中身を確かめてからマージする。
+version: 2
+updates:
+  # pom.xml の部品（Spring Boot など）
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5

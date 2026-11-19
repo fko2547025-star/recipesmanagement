@@ -42,6 +42,13 @@ class LegalPagesTest {
     }
 
     @Test
+    void 読み込んでよい場所を決めるヘッダーが付く() throws Exception {
+        mvc.perform(get("/login"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Content-Security-Policy", containsString("default-src 'self'")));
+    }
+
+    @Test
     void 登録画面とログイン画面にリンクがある() throws Exception {
         String register = mvc.perform(get("/register")).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         assertThat(register).contains("href=\"/terms\"").contains("同意したものとします");

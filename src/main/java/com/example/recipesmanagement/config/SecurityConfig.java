@@ -45,6 +45,22 @@ public class SecurityConfig {
             // （パスワード再設定の画面の URL にはトークンが入っているので、外のサイトに渡らないように）
             .headers(headers -> headers
                 .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.SAME_ORIGIN))
+                // CSP（Content-Security-Policy）：画面が読み込んでよい場所を決める。
+                // 万一、悪い人のスクリプトが画面に入り込んでも、ほかのサイトから読み込んだり、ほかのサイトへ送ったりできないようにする。
+                //   ふだんは自分のサイト（'self'）だけ。文字・アイコンだけ Google Fonts から読み込む。
+                //   'unsafe-inline'：画面の中に直接書いた <script>・style・onclick を使っているので許可する
+                //   blob:：写真を選んだときの、送信前の見本の表示（URL.createObjectURL）に使う
+                .contentSecurityPolicy(csp -> csp.policyDirectives(String.join("; ",
+                        "default-src 'self'",
+                        "script-src 'self' 'unsafe-inline'",
+                        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                        "font-src 'self' https://fonts.gstatic.com",
+                        "img-src 'self' data: blob:",
+                        "connect-src 'self'",
+                        "object-src 'none'",
+                        "base-uri 'self'",
+                        "form-action 'self'",
+                        "frame-ancestors 'self'")))
             )
             // ログアウトの設定
             .logout(logout -> logout
