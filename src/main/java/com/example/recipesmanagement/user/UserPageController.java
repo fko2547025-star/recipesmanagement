@@ -50,7 +50,9 @@ public class UserPageController {
     @GetMapping("/users/{id:\\d+}")
     public String show(@PathVariable Long id, Principal principal, Model model) {
         // 存在しない id なら 404
+        // 管理者のアカウントは、ほかの人には見せない（管理者は投稿などをしない専用のアカウントのため）
         AppUser user = userRepository.findById(id)
+                .filter(u -> !u.isAdmin())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         // 自分のページを開いたときは、マイページへ（いいね・コメントのタブや、プロフィール編集があるので）

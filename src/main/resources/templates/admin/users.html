@@ -24,18 +24,20 @@
                 <tbody>
                     <tr th:each="u : ${users}" th:classappend="${u.suspended} ? 'is-suspended'">
                         <td>
-                            <a th:href="@{/users/{id}(id=${u.id})}" target="_blank" th:text="'@' + ${u.username}">@taro</a>
+                            <a th:unless="${u.admin}" th:href="@{/users/{id}(id=${u.id})}" target="_blank" th:text="'@' + ${u.username}">@taro</a>
+                            <span th:if="${u.admin}" th:text="'@' + ${u.username}">@admin</span>
                             <small class="text-muted" th:if="${u.nickname}" th:text="${u.nickname}">たろう</small>
                         </td>
                         <td>
                             <span th:text="${u.email ?: '（未登録）'}">a@example.com</span>
                             <small th:if="${u.email != null and !u.emailVerified}" class="text-muted">（未確認）</small>
                         </td>
-                        <td th:text="${u.recipeCount}">3</td>
-                        <td th:text="${u.commentCount}">5</td>
-                        <td th:text="${u.reportedCount}" th:classappend="${u.reportedCount > 0} ? 'text-danger'">0</td>
+                        <!-- 管理者は投稿などをしないので、数は出さない -->
+                        <td th:text="${u.admin} ? '—' : ${u.recipeCount}">3</td>
+                        <td th:text="${u.admin} ? '—' : ${u.commentCount}">5</td>
+                        <td th:text="${u.admin} ? '—' : ${u.reportedCount}" th:classappend="${!u.admin and u.reportedCount > 0} ? 'text-danger'">0</td>
                         <td>
-                            <span th:if="${u.admin}" class="admin-badge">管理者</span>
+                            <a th:if="${u.admin}" href="/admin/admins" class="admin-badge">管理者</a>
                             <span th:if="${u.suspended}" class="admin-badge is-danger">利用停止</span>
                             <small th:if="${u.suspended and u.suspendedReason != null}" class="text-muted"
                                    th:text="${u.suspendedReason}">理由</small>

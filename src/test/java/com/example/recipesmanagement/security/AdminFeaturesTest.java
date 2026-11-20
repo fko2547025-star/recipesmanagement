@@ -107,7 +107,7 @@ class AdminFeaturesTest {
     void 管理者画面の各ページが開ける() throws Exception {
         for (String url : new String[] {"/admin", "/admin/users", "/admin/recipes", "/admin/recipes?featured=true",
                 "/admin/comments", "/admin/reports", "/admin/inquiries", "/admin/inquiries?done=true",
-                "/admin/announcements", "/admin/ng-words", "/admin/logs", "/admin/users?q=a"}) {
+                "/admin/announcements", "/admin/ng-words", "/admin/logs", "/admin/users?q=a", "/admin/admins", "/admin/account"}) {
             page(url, ADMIN);
         }
     }
@@ -117,7 +117,9 @@ class AdminFeaturesTest {
     @Test
     void 利用停止にするとログアウトされ理由が表示され操作が記録される() throws Exception {
         AppUser target = createUser("bad-user", "USER");
-        createUser("boss", "ADMIN");
+        if (!users.existsByUsername("boss")) {
+            createUser("boss", "ADMIN");
+        }
 
         mvc.perform(post("/admin/users/" + target.getId() + "/suspend").with(csrf()).with(ADMIN).param("reason", "宣伝の繰り返し"))
                 .andExpect(redirectedUrl("/admin/users"));
@@ -223,5 +225,44 @@ class AdminFeaturesTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM recipes WHERE id = ?", Integer.class, recipeId)).isZero();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM admin_logs WHERE action IN ('レシピを削除', 'コメントを削除')",
                 Integer.class)).isGreaterThanOrEqualTo(2);
+    }
+
+    // ===== 管理者の追加・削除・パスワード =====
+
+    @Test
+    void 管理者画面から管理者を追加でき追加した管理者でログインできる() throws Exception {
+        if (!users.existsByUsername("boss")) {   // ほかのテストで作られていることもある
+            createUser("boss", "ADMIN");
+        }
+        mvc.perform(post("/admin/admins").with(csrf()).with(ADMIN)
+                        .param("username", "new-admin").param("email", "")
+                        .param("password", "Admin-pass1").param("passwordConfirm", "Admin-pass1"))
+                .andExpect(redirectedUrl("/admin/admins"));
+        assertThat(users.findByUsername("new-admin").orElseThrow().isAdmin()).isTrue();
+        mvc.perform(formLogin().user("new-admin").password("Admin-pass1")).andExpect(redirectedUrl("/admin"));
+
+        // 確認のパスワードが違うと追加しない
+        mvc.perform(post("/admin/admins").with(csrf()).with(ADMIN)
+                        .param("username", "bad-admin").param("password", "Admin-pass1").param("passwordConfirm", "other-pass1"))
+                .andExpect(model().attributeExists("errors"));
+        assertThat(users.existsByUsername("bad-admin")).isFalse();
+
+        // 自分自身は削除できない・ほかの管理者は削除できる
+        Long me = users.findByUsername("boss").orElseThrow().getId();
+        mvc.perform(post("/admin/admins/" + me + "/delete").with(csrf()).with(ADMIN)).andExpect(status().isBadRequest());
+        Long other = users.findByUsername("new-admin").orElseThrow().getId();
+        mvc.perform(post("/admin/admins/" + other + "/delete").with(csrf()).with(ADMIN)).andExpect(redirectedUrl("/admin/admins"));
+        assertThat(users.existsByUsername("new-admin")).isFalse();
+    }
+
+    @Test
+    void 管理者は自分のパスワードを変えられ管理者のプロフィールは見せない() throws Exception {
+        AppUser admin = createUser("pw-admin", "ADMIN");
+        mvc.perform(post("/admin/account").with(csrf()).with(user("pw-admin").roles("ADMIN"))
+                        .param("currentPassword", "Correct-pass1").param("newPassword", "Changed-pass1").param("confirmPassword", "Changed-pass1"))
+                .andExpect(redirectedUrl("/admin/account"));
+        mvc.perform(formLogin().user("pw-admin").password("Changed-pass1")).andExpect(redirectedUrl("/admin"));
+
+        mvc.perform(get("/users/" + admin.getId())).andExpect(status().isNotFound());
     }
 }
