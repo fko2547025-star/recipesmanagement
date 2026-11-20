@@ -92,6 +92,9 @@ public class Recipe {
     // 写真の保存場所（写真アップロードを作るときに使う。今は空）
     private String imagePath;
 
+    // 管理者が選んだ「おすすめ」なら true（ホームの上に並べる）
+    private boolean featured;
+
     // 投稿日時
     // DB が DEFAULT CURRENT_TIMESTAMP で自動で入れるので、Java からは書き込まない
     // insertable = false：INSERT のときにこの列を送らない
@@ -145,6 +148,9 @@ public class Recipe {
 
     public String getDifficulty() { return difficulty; }
     public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+
+    public boolean isFeatured() { return featured; }
+    public void setFeatured(boolean featured) { this.featured = featured; }
 
     public String getImagePath() { return imagePath; }
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }

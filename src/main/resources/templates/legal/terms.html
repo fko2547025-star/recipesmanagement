@@ -60,7 +60,8 @@
             <p>この規約は、日本の法律にしたがって解釈します。</p>
 
             <h2>問い合わせ先</h2>
-            <p th:text="${contact}">【問い合わせ先】</p>
+            <p><a href="/contact">お問い合わせの画面</a>から、お送りください。</p>
+            <p th:if="${contact != null and !#strings.isEmpty(contact) and contact != '【問い合わせ先】'}" th:text="'そのほかの連絡先：' + ${contact}">【問い合わせ先】</p>
 
             <p class="text-muted">2026年11月19日 制定</p>
         </article>

@@ -40,14 +40,14 @@
 
     <!-- 写真の右上の ♡。ログイン中は押すとその場でいいね（/js/like.js）、ログインしていなければログイン画面へ。
          <a> の中に <button> は入れられないので、カードの中に重ねて置く -->
-    <button th:if="${loginUsername != null}" type="button" class="card-like"
+    <button th:if="${userMode}" type="button" class="card-like"
             th:with="liked=${likedRecipeIds.contains(recipe.id)}"
             th:classappend="${liked} ? 'is-liked'"
             th:attr="data-url=@{/recipes/{id}/like(id=${recipe.id})},data-recipe=${recipe.id},aria-pressed=${liked}"
             th:title="${liked} ? 'いいねを取り消す' : 'いいね'">
         <span class="material-symbols-rounded">favorite</span>
     </button>
-    <a th:unless="${loginUsername != null}" href="/login" class="card-like" title="ログインしていいね">
+    <a th:if="${loginUsername == null}" href="/login" class="card-like" title="ログインしていいね">
         <span class="material-symbols-rounded">favorite</span>
     </a>
 

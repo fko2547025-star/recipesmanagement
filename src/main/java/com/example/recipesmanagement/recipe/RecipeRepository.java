@@ -24,6 +24,10 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long> {
     @EntityGraph(attributePaths = "user")
     List<Recipe> findAllByOrderByIdDesc();
 
+    // 管理者が選んだ「おすすめ」のレシピを新しい順に（ホームの上に並べる）
+    @EntityGraph(attributePaths = "user")
+    List<Recipe> findByFeaturedTrueOrderByIdDesc();
+
     // カテゴリで絞り込んで新しい順に（投稿者も一緒に取得）
     // SQL のイメージ：... WHERE category = ? ORDER BY id DESC
     @EntityGraph(attributePaths = "user")

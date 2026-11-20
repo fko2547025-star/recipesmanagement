@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('お問い合わせ（管理者）')}"></head>
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('inquiries')}"></nav>
+        <div class="admin-main">
+            <a href="/admin/inquiries" class="back-link"><span class="material-symbols-rounded">arrow_back</span>お問い合わせの一覧</a>
+            <h1 class="page-title"><span class="material-symbols-rounded">mail</span>お問い合わせ</h1>
+            <th:block th:replace="~{fragments/admin :: messages}"></th:block>
+
+            <section class="card section-card">
+                <p class="text-muted">
+                    <span th:text="${#temporals.format(inquiry.createdAt, 'yyyy/MM/dd HH:mm')}">2026/11/20</span>
+                    ・<span th:text="${inquiry.categoryLabel}">使い方の質問</span>
+                    ・<span th:text="${inquiry.user != null} ? '@' + ${inquiry.user.username} : 'ログインなし'">@taro</span>
+                    ・返信先：<span th:text="${inquiry.email}">a@example.com</span>
+                </p>
+                <!-- 送られてきた文章なので th:text（改行はそのまま見せる） -->
+                <p class="admin-message" th:text="${inquiry.message}">内容</p>
+                <p>
+                    <span th:if="${inquiry.done}" class="admin-badge is-star">対応済み</span>
+                    <span th:unless="${inquiry.done}" class="admin-badge is-danger">未対応</span>
+                </p>
+            </section>
+
+            <section th:if="${inquiry.reply != null}" class="card section-card">
+                <h2 class="section-title">送った返信
+                    <small class="text-muted" th:text="${#temporals.format(inquiry.repliedAt, 'yyyy/MM/dd HH:mm')}">2026/11/20</small>
+                </h2>
+                <p class="admin-message" th:text="${inquiry.reply}">返信</p>
+            </section>
+
+            <form th:action="@{/admin/inquiries/{id}/reply(id=${inquiry.id})}" method="post" class="card section-card">
+                <div class="form-field">
+                    <label for="reply" th:text="${inquiry.reply != null} ? 'もう一度返信する' : 'メールで返信する'">メールで返信する</label>
+                    <textarea id="reply" name="reply" rows="6" required th:attr="maxlength=${maxReply}" th:text="${draft}"
+                              placeholder="返信の内容。送ると、相手のメールアドレスに届き、対応済みになります"></textarea>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn--sm">返信を送る</button></div>
+            </form>
+
+            <form th:action="@{/admin/inquiries/{id}/toggle(id=${inquiry.id})}" method="post">
+                <button type="submit" class="btn--outline btn--sm"
+                        th:text="${inquiry.done} ? '未対応に戻す' : 'メールを送らずに対応済みにする'">対応済みにする</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

@@ -36,8 +36,8 @@
                     <span class="material-symbols-rounded">emoji_events</span><span>ランキング</span>
                 </a>
 
-                <!-- ログイン中だけ表示 -->
-                <th:block th:if="${loginUsername != null}">
+                <!-- ふつうのユーザーとしてログイン中だけ表示（管理者には出さない） -->
+                <th:block th:if="${userMode}">
                     <a href="/meal-plans" class="site-nav__link"
                        th:classappend="${#strings.startsWith(currentPath, '/meal-plans')} ? 'is-active'">
                         <span class="material-symbols-rounded">restaurant</span><span>献立</span>
@@ -66,8 +66,18 @@
                     <a href="/register" class="site-header__text-link">新規登録</a>
                 </th:block>
 
-                <!-- ログイン中：投稿ボタンとユーザーメニュー -->
-                <th:block th:if="${loginUsername != null}">
+                <!-- 管理者：管理者画面への入口とログアウトだけ（ユーザーの機能は使わない） -->
+                <th:block th:if="${adminMode}">
+                    <a href="/admin" class="btn btn--light btn--sm">
+                        <span class="material-symbols-rounded">admin_panel_settings</span>管理者画面
+                    </a>
+                    <form th:action="@{/logout}" method="post" style="display:inline">
+                        <button type="submit" class="site-header__text-link">ログアウト</button>
+                    </form>
+                </th:block>
+
+                <!-- ユーザー：投稿ボタンとユーザーメニュー -->
+                <th:block th:if="${userMode}">
                     <a href="/recipes/new" class="btn btn--light btn--sm">
                         <span class="material-symbols-rounded">edit</span>投稿
                     </a>
@@ -105,6 +115,10 @@
                     </details>
                 </th:block>
             </div>
+        </div>
+        <!-- お知らせ（管理者が「表示中」にしたもの）。管理者が書いた文章も th:text で表示する -->
+        <div th:each="a : ${announcements}" class="announce-bar">
+            <span class="material-symbols-rounded">campaign</span><span th:text="${a.message}">お知らせ</span>
         </div>
     </header>
 </body>

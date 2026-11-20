@@ -35,7 +35,7 @@ class LegalPagesTest {
     void ログインしていなくても見られる() throws Exception {
         String privacy = mvc.perform(get("/privacy")).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        assertThat(privacy).contains("CookBuddy 運営チーム").contains("【問い合わせ先】");
+        assertThat(privacy).contains("CookBuddy 運営チーム").contains("href=\"/contact\"");
         String terms = mvc.perform(get("/terms")).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         assertThat(terms).contains("してはいけないこと");

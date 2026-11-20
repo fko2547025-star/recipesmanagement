@@ -76,6 +76,27 @@ public class ReportService {
         return reportRepository.findAllByOrderByIdDesc();
     }
 
+    /** 通報されたものの説明（操作の記録用）。例：レシピ「カレー」(id=3) */
+    @Transactional(readOnly = true)
+    public String describeTarget(Long reportId) {
+        Report report = reportRepository.findById(reportId).orElseThrow(ReportService::notFound);
+        if (report.getRecipe() != null) {
+            return "レシピ「" + report.getRecipe().getTitle() + "」(id=" + report.getRecipe().getId() + ")";
+        }
+        if (report.getComment() != null) {
+            String text = report.getComment().getContent() == null ? "" : report.getComment().getContent();
+            return "コメント「" + (text.length() > 30 ? text.substring(0, 30) + "…" : text)
+                    + "」(id=" + report.getComment().getId() + ")";
+        }
+        return "(通報 id=" + reportId + ")";
+    }
+
+    /** 通報の理由（操作の記録用） */
+    @Transactional(readOnly = true)
+    public String reasonOf(Long reportId) {
+        return reportRepository.findById(reportId).map(Report::getReason).orElse("");
+    }
+
     /** 通報を取り下げる（問題が無かったとき） */
     @Transactional
     public void dismiss(Long reportId) {

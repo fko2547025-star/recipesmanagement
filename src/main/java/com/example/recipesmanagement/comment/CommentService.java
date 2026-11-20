@@ -22,10 +22,13 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final RecipeRepository recipeRepository;
     private final ImageStorageService imageStorageService;
+    private final com.example.recipesmanagement.admin.NgWordService ngWordService;   // NGワードのチェック
 
     public CommentService(CommentRepository commentRepository,
                           RecipeRepository recipeRepository,
-                          ImageStorageService imageStorageService) {
+                          ImageStorageService imageStorageService,
+                          com.example.recipesmanagement.admin.NgWordService ngWordService) {
+        this.ngWordService = ngWordService;
         this.commentRepository = commentRepository;
         this.recipeRepository = recipeRepository;
         this.imageStorageService = imageStorageService;
@@ -41,7 +44,7 @@ public class CommentService {
         if (content.trim().length() > Comment.MAX_LENGTH) {
             return "コメントは" + Comment.MAX_LENGTH + "文字以内で入力してください";
         }
-        return null;
+        return ngWordService.check(content);   // NGワードが入っていればエラー
     }
 
     /**

@@ -54,10 +54,6 @@
                 <a href="/mypage/password" class="btn btn--outline btn--sm">
                     <span class="material-symbols-rounded">lock</span>パスワードの変更
                 </a>
-                <!-- 管理者だけ：通報の一覧 -->
-                <a th:if="${user.admin}" href="/admin/reports" class="btn btn--outline btn--sm">
-                    <span class="material-symbols-rounded">admin_panel_settings</span>通報の一覧（管理者）
-                </a>
             </section>
 
             <section class="card stats-card">

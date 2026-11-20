@@ -4412,3 +4412,149 @@ body.is-crop-open { overflow: hidden; }
     gap: 10px;
     margin-top: 16px;
 }
+
+/* =====================================================================
+   27. 管理者画面（ユーザー画面とは別の見た目：濃い色のヘッダー＋左のメニュー）
+   ===================================================================== */
+.admin-page { background: #f4f1ee; }
+
+.admin-header { background: #2f2a26; }
+.admin-header .brand { font-size: 1.1rem; }
+.admin-header .site-header__actions { display: flex; align-items: center; gap: 14px; }
+.admin-header .site-header__text-link { display: inline-flex; align-items: center; gap: 4px; color: #fff; }
+.admin-header__name { color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; }
+.admin-header .site-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.admin-header .site-header__actions { margin-left: auto; }
+.admin-header .btn { white-space: nowrap; }
+
+/* 左のメニュー＋右の中身 */
+.admin-shell {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+
+.admin-nav {
+    position: sticky;
+    top: 84px;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px;
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.admin-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: #3a332d;
+    text-decoration: none;
+    font-size: 0.92rem;
+}
+.admin-nav a:hover { background: #f1ebe5; }
+.admin-nav a.is-active { background: #2f2a26; color: #fff; }
+
+.admin-main { min-width: 0; }
+
+/* ダッシュボードの数字 */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+.admin-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    color: inherit;
+    text-decoration: none;
+}
+.admin-stat__label { color: var(--text-muted); font-size: 0.85rem; }
+.admin-stat__value { font-size: 1.8rem; line-height: 1.2; }
+.admin-stat small { color: var(--text-muted); }
+.admin-stat.is-alert { border-left: 5px solid var(--danger); }
+.admin-stat.is-alert .admin-stat__value { color: var(--danger); }
+
+/* 検索 */
+.admin-search { display: flex; gap: 8px; margin: 12px 0 6px; }
+.admin-search input { flex: 1; }
+
+/* 表 */
+.admin-table-wrap { overflow-x: auto; border-radius: var(--radius); background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.admin-table th { padding: 10px 12px; background: #f1ebe5; text-align: left; white-space: nowrap; }
+.admin-table td { padding: 10px 12px; border-top: 1px solid #eee6de; vertical-align: top; }
+.admin-table td small { display: block; }
+.admin-table tr.is-suspended td { background: #fbefee; }
+.admin-text { max-width: 360px; overflow-wrap: anywhere; }
+.admin-actions { white-space: nowrap; }
+.admin-actions form { display: inline-block; margin: 0 4px 4px 0; }
+
+/* 小さな印 */
+.admin-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    background: #ece5de;
+    color: #4a4038;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+.admin-badge.is-danger { background: #f6d6d3; color: #a12a1f; }
+.admin-badge.is-star { background: #fbecc4; color: #7a5300; }
+
+/* 送られてきた文章（改行をそのまま見せる） */
+.admin-message { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
+
+/* NGワードの一覧 */
+.admin-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; }
+.admin-chips li {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 6px 4px 12px;
+    border-radius: var(--radius-pill);
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.admin-chips form { display: inline; }
+.admin-chips__remove { padding: 2px; border: none; background: none; color: var(--text-muted); cursor: pointer; box-shadow: none; }
+.admin-chips__remove .material-symbols-rounded { font-size: 1rem; }
+
+/* スマホ：メニューを上に横並び（横にスクロール） */
+@media (max-width: 767px) {
+    .admin-shell { grid-template-columns: 1fr; padding-top: 12px; }
+    .admin-nav { position: static; flex-direction: row; overflow-x: auto; }
+    .admin-nav a { white-space: nowrap; }
+    .admin-header .brand { font-size: 0.95rem; }
+    .admin-header__name,
+    .admin-header__app,
+    .admin-header__label { display: none; }   /* スマホでは短く：「管理者画面」とアイコンだけ */
+}
+
+/* ===== お知らせの帯（ヘッダーの下。管理者が「表示中」にしたもの） ===== */
+.announce-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #fbecc4;
+    color: #5c3d00;
+    font-size: 0.88rem;
+    text-align: center;
+}
+.announce-bar .material-symbols-rounded { font-size: 1.1rem; }

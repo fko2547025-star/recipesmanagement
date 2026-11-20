@@ -84,7 +84,7 @@
                 </section>
 
                 <!-- ===== いいね（保存）・献立に追加（ログイン中だけ） ===== -->
-                <div id="like" class="recipe-actions" th:if="${loginUsername != null}">
+                <div id="like" class="recipe-actions" th:if="${userMode}">
                     <form th:action="@{/recipes/{id}/like(id=${recipe.id})}" method="post">
                         <!-- いいね済みなら、枠だけのボタンにして「済み」と表示 -->
                         <button type="submit" class="btn--block" th:classappend="${liked} ? 'btn--outline'">
@@ -102,7 +102,7 @@
                 </p>
 
                 <!-- ===== 投稿者本人だけ：編集・削除 ===== -->
-                <div class="owner-actions" th:if="${loginUsername != null and loginUsername == recipe.user.username}">
+                <div class="owner-actions" th:if="${userMode and loginUsername == recipe.user.username}">
                     <a th:href="@{/recipes/{id}/edit(id=${recipe.id})}" class="btn btn--outline btn--sm">
                         <span class="material-symbols-rounded">edit</span>編集
                     </a>
@@ -113,8 +113,25 @@
                         </button>
                     </form>
                 </div>
+                <!-- ===== 管理者：おすすめの切り替えと削除（管理者画面と同じ処理） ===== -->
+                <div class="owner-actions" th:if="${adminMode}">
+                    <form th:action="@{/admin/recipes/{id}/feature(id=${recipe.id})}" method="post">
+                        <input type="hidden" name="back" th:value="'/recipes/' + ${recipe.id}">
+                        <button type="submit" class="btn--outline btn--sm">
+                            <span class="material-symbols-rounded">star</span>
+                            <span th:text="${recipe.featured} ? 'おすすめから外す' : 'おすすめにする'">おすすめにする</span>
+                        </button>
+                    </form>
+                    <form th:action="@{/admin/recipes/{id}/delete(id=${recipe.id})}" method="post"
+                          onsubmit="return confirm('管理者として、このレシピを削除しますか？');">
+                        <button type="submit" class="btn--danger btn--sm">
+                            <span class="material-symbols-rounded">delete</span>管理者として削除
+                        </button>
+                    </form>
+                </div>
+
                 <!-- ===== 投稿者以外：通報 ===== -->
-                <p th:if="${loginUsername != null and loginUsername != recipe.user.username}" class="note">
+                <p th:if="${userMode and loginUsername != recipe.user.username}" class="note">
                     <a th:href="@{/reports/new(recipeId=${recipe.id})}" class="comment__action">
                         <span class="material-symbols-rounded">flag</span>このレシピを通報
                     </a>
@@ -145,7 +162,7 @@
         <section class="card section-card" id="ai-ask" th:if="${aiEnabled}">
             <h2 class="section-title"><span class="material-symbols-rounded">smart_toy</span>AIに質問</h2>
 
-            <th:block th:if="${loginUsername != null}">
+            <th:block th:if="${userMode}">
                 <p class="note">このレシピの材料や作り方を踏まえて、AIが答えます（例：「みりんが無いときは？」「焦げないコツは？」）。続けて質問することもできます。回答まで数十秒かかることがあります。</p>
                 <!-- 会話の表示場所（質問と回答が順に並ぶ）。中身は /js/ai.js が足していく -->
                 <div id="aiAnswer" class="ai-chat is-hidden"></div>
@@ -282,7 +299,7 @@
                     <small class="text-muted" th:if="${c.edited}">（編集済み）</small>
 
                     <!-- 自分のコメントだけ：編集・削除 -->
-                    <th:block th:if="${loginUsername != null and loginUsername == c.user.username}">
+                    <th:block th:if="${userMode and loginUsername == c.user.username}">
                         <a th:href="@{/comments/{id}/edit(id=${c.id})}" class="comment__action">編集</a>
                         <form th:action="@{/comments/{id}/delete(id=${c.id})}" method="post" style="display:inline"
                               onsubmit="return confirm('このコメントを削除しますか？');">
@@ -290,7 +307,7 @@
                         </form>
                     </th:block>
                     <!-- ほかの人のコメント：通報 -->
-                    <a th:if="${loginUsername != null and loginUsername != c.user.username}"
+                    <a th:if="${userMode and loginUsername != c.user.username}"
                        th:href="@{/reports/new(commentId=${c.id})}" class="comment__action" title="このコメントを通報">通報</a>
                 </div>
 
@@ -303,7 +320,7 @@
 
             <!-- ===== コメント・つくれぽの投稿（ログイン中だけ） ===== -->
             <!-- 写真を送るので multipart/form-data -->
-            <form th:if="${loginUsername != null}" class="comment-form" enctype="multipart/form-data"
+            <form th:if="${userMode}" class="comment-form" enctype="multipart/form-data"
                   th:action="@{/recipes/{id}/comments(id=${recipe.id})}" method="post">
                 <!-- 入力チェックでエラーになったときだけ表示（フラッシュ属性） -->
                 <p th:if="${commentError}" th:text="${commentError}" class="text-danger">コメントを入力してください</p>
@@ -536,8 +553,8 @@
         }
     </script>
     <!-- 写真の切り抜き（コメントの写真） -->
-    <script th:if="${loginUsername != null}" src="/js/photo-crop.js"></script>
+    <script th:if="${userMode}" src="/js/photo-crop.js"></script>
     <!-- AIに質問を送る共通の処理（ログイン中だけ使うので、ログイン中だけ読み込む） -->
-    <script th:if="${loginUsername != null and aiEnabled}" src="/js/ai.js"></script>
+    <script th:if="${userMode and aiEnabled}" src="/js/ai.js"></script>
 </body>
 </html>

@@ -27,6 +27,10 @@ public class AppUser {
     // 管理者にするには、データベースで直接 UPDATE users SET role = 'ADMIN' WHERE username = '…'; を実行する
     private String role = "USER";
 
+    // 利用停止中か。利用停止中のユーザーは、ログインしてもすぐにログアウトされ、理由が表示される
+    private boolean suspended;
+    private String suspendedReason;
+
     // メールアドレスの確認が済んでいるか。確認が済むまで、パスワード再設定のメールは送らない。
     // 前からいるユーザーは確認済みとして扱う（データベースの既定値も TRUE）
     private boolean emailVerified = true;
@@ -67,6 +71,12 @@ public class AppUser {
 
     /** 管理者か（画面では ${loginUser.admin}） */
     public boolean isAdmin() { return "ADMIN".equals(role); }
+
+    public boolean isSuspended() { return suspended; }
+    public void setSuspended(boolean suspended) { this.suspended = suspended; }
+
+    public String getSuspendedReason() { return suspendedReason; }
+    public void setSuspendedReason(String suspendedReason) { this.suspendedReason = suspendedReason; }
 
     public boolean isEmailVerified() { return emailVerified; }
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }

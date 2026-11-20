@@ -60,6 +60,26 @@ public class LoginUserAdvice {
     }
 
     /**
+     * ふつうのユーザーとしてログインしているか（投稿・いいね・コメントなどのボタンを出すか）。
+     * 管理者はユーザーの機能を使えないので false。全画面で ${userMode} として使える。
+     */
+    @ModelAttribute("userMode")
+    public boolean userMode(Principal principal) {
+        return principal != null && !isAdmin(principal);
+    }
+
+    /** 管理者としてログインしているか。全画面で ${adminMode} として使える */
+    @ModelAttribute("adminMode")
+    public boolean adminMode(Principal principal) {
+        return principal != null && isAdmin(principal);
+    }
+
+    private static boolean isAdmin(Principal principal) {
+        return principal instanceof org.springframework.security.core.Authentication auth
+                && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    /**
      * 期限が近い食材の数（ヘッダーの「食材管理」のバッジ用）。全画面で ${expiringCount} として使える。
      * ログインしていなければ 0。
      *
