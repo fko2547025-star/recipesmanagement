@@ -45,10 +45,11 @@
                             写真をアップロード
                             <small>またはドラッグ＆ドロップ</small>
                         </span>
+                        <!-- data-crop：選んだあと、横4：縦3 で写す範囲を決める（photo-crop.js） -->
                         <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"
-                               onchange="previewPhoto(this)">
+                               data-crop="4/3" onchange="previewPhoto(this)">
                     </label>
-                    <small class="field-hint">JPEG・PNG・WebP・GIF、5MBまで</small>
+                    <small class="field-hint">JPEG・PNG・WebP・GIF。選んだあとに写す範囲を決められます（大きい写真は自動で小さくします）</small>
                     <small th:if="${errors != null}" class="field-hint text-danger">※写真を選んでいた場合は、もう一度選んでください</small>
                     <!-- チェックすると removeImage=true が送られる。チェックしないと何も送られない -->
                     <label th:if="${currentImage != null}" class="check">
@@ -190,6 +191,8 @@
     </main>
     <footer th:replace="~{fragments/footer :: footer}"></footer>
 
+    <!-- 写真の切り抜き（data-crop の付いた写真の欄） -->
+    <script src="/js/photo-crop.js"></script>
     <script>
         // ===== 行を追加する（材料・作り方で共通） =====
         // id で指定した入れ物の1行目をコピーして、中身を空にしてから一番下に足す

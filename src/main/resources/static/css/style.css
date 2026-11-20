@@ -1,5 +1,5 @@
 /* ==================================================
-   Recipi 共通スタイル（カフェ風デザイン）
+   CookBuddy 共通スタイル（カフェ風デザイン）
 
    目次（Ctrl + F で「== 番号.」を検索すると、その章に飛べる）
    == 1.  基本設定（色・文字・大きさの変数）
@@ -4328,3 +4328,87 @@ body.is-cooking { overflow: hidden; }
     margin: auto 0;         /* 上下の余白を自動にして、残りの空きを上下に同じだけ分ける */
 }
 
+
+/* =====================================================================
+   26. 写真の切り抜き画面（photo-crop.js）
+   ===================================================================== */
+
+/* 開いている間は、後ろの画面をスクロールさせない */
+body.is-crop-open { overflow: hidden; }
+
+/* 画面全体を暗くして、真ん中に切り抜きの窓を出す */
+.crop-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(30, 20, 12, 0.72);
+}
+
+.crop-dialog {
+    width: min(560px, 100%);
+    max-height: 100%;
+    overflow: auto;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: var(--surface, #fffaf3);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.crop-dialog__title { margin: 0 0 4px; font-size: 1.1rem; }
+.crop-dialog__hint { margin: 0 0 12px; color: var(--text-muted); font-size: 0.82rem; }
+
+/* 切り抜く範囲（この枠の中に見えている部分が、そのまま写真になる） */
+.crop-stage {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    border-radius: var(--radius-sm);
+    background: #2b211a;
+    cursor: grab;
+    touch-action: none;          /* 指で動かしたとき、画面がスクロールしないように */
+    user-select: none;
+}
+.crop-stage:active { cursor: grabbing; }
+
+/* 写真は元の大きさのまま置き、transform で動かす・回す・拡大する（photo-crop.js） */
+.crop-stage__img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    max-width: none;
+    width: auto;
+    height: auto;
+    transform-origin: center;
+    pointer-events: none;
+}
+
+/* プロフィール写真：丸い枠で見せる（丸の外側を暗くする。切り抜くのは正方形） */
+.crop-stage.is-round::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+.crop-tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    color: var(--text-muted);
+}
+.crop-zoom { flex: 1; accent-color: var(--primary); }
+
+.crop-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @ControllerAdvice
 public class SiteInfoAdvice {
 
-    @Value("${app.operator-name:Recipe 運営チーム}")
+    @Value("${app.operator-name:CookBuddy 運営チーム}")
     private String operatorName;
 
     @Value("${app.contact:【問い合わせ先】}")

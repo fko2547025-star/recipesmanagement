@@ -100,15 +100,15 @@ public class EmailVerificationService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailFrom);
         message.setTo(user.getEmail());
-        message.setSubject("【Recipe】メールアドレスの確認");
+        message.setSubject("【CookBuddy】メールアドレスの確認");
         message.setText(user.getDisplayName() + " さん\n\n"
-                + "Recipe にメールアドレスが登録されました。\n"
+                + "CookBuddy にメールアドレスが登録されました。\n"
                 + "次のリンクを開いて、メールアドレスの確認を済ませてください。\n"
                 + "（確認が済むと、パスワードを忘れたときに再設定のメールを受け取れます）\n\n"
                 + link + "\n\n"
                 + "このリンクの有効期限は" + EXPIRE_HOURS + "時間です。\n"
                 + "心当たりが無い場合は、このメールを無視してください。\n\n"
-                + "Recipe");
+                + "CookBuddy");
         try {
             mailSender.send(message);
         } catch (MailException e) {

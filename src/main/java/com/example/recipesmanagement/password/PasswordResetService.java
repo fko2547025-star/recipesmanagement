@@ -141,14 +141,14 @@ public class PasswordResetService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailFrom);
         message.setTo(user.getEmail());
-        message.setSubject("【Recipe】パスワードの再設定");
+        message.setSubject("【CookBuddy】パスワードの再設定");
         message.setText(user.getDisplayName() + " さん\n\n"
                 + "パスワードの再設定のお申し込みを受け付けました。\n"
                 + "次のリンクを開いて、新しいパスワードを設定してください。\n\n"
                 + link + "\n\n"
                 + "このリンクの有効期限は" + EXPIRE_MINUTES + "分です。1回だけ使えます。\n"
                 + "心当たりが無い場合は、このメールを無視してください（パスワードは変わりません）。\n\n"
-                + "Recipe");
+                + "CookBuddy");
         try {
             mailSender.send(message);
         } catch (MailException e) {

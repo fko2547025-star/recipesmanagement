@@ -323,8 +323,9 @@
                     <!-- 写真：ボタンの形の label の中に、見えないファイル選択欄を入れる（プロフィール編集と同じ） -->
                     <label class="btn btn--outline btn--sm">
                         <span class="material-symbols-rounded">photo_camera</span>写真を付ける
+                        <!-- data-crop：選んだあと、横4：縦3 で写す範囲を決める（photo-crop.js） -->
                         <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"
-                               class="visually-hidden" onchange="previewCommentPhoto(this)">
+                               class="visually-hidden" data-crop="4/3" onchange="previewCommentPhoto(this)">
                     </label>
                     <!-- 選んだ写真の見本 -->
                     <img id="commentPhotoPreview" class="comment-form__preview is-hidden" alt="">
@@ -534,6 +535,8 @@
             document.querySelector('input[name="cookedReport"]').checked = true;
         }
     </script>
+    <!-- 写真の切り抜き（コメントの写真） -->
+    <script th:if="${loginUsername != null}" src="/js/photo-crop.js"></script>
     <!-- AIに質問を送る共通の処理（ログイン中だけ使うので、ログイン中だけ読み込む） -->
     <script th:if="${loginUsername != null and aiEnabled}" src="/js/ai.js"></script>
 </body>
