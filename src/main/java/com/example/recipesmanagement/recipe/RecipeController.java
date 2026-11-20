@@ -57,6 +57,7 @@ public class RecipeController {
     private final CookingRecordService cookingRecordService;
     private final FollowService followService;
     private final CategoryImages categoryImages;
+    private final com.example.recipesmanagement.admin.NgWordService ngWordService;   // NGワードのチェック
 
     public RecipeController(RecipeRepository repository,
                             RecipeService recipeService,
@@ -66,7 +67,8 @@ public class RecipeController {
                             StockCheckService stockCheckService,
                             CookingRecordService cookingRecordService,
                             FollowService followService,
-                            CategoryImages categoryImages) {
+                            CategoryImages categoryImages,
+                            com.example.recipesmanagement.admin.NgWordService ngWordService) {
         this.repository = repository;
         this.recipeService = recipeService;
         this.userRepository = userRepository;
@@ -76,6 +78,7 @@ public class RecipeController {
         this.cookingRecordService = cookingRecordService;
         this.followService = followService;
         this.categoryImages = categoryImages;
+        this.ngWordService = ngWordService;
     }
 
     /**
@@ -149,7 +152,10 @@ public class RecipeController {
         model.addAttribute("q", q);
         model.addAttribute("sort", sort);
         model.addAttribute("feed", feed);
-        model.addAttribute("likeCounts", likeCounts);   // id → いいね数                                 // 今の検索語
+        model.addAttribute("likeCounts", likeCounts);   // id → いいね数
+        // おすすめ（管理者が選んだもの）は、検索・カテゴリ・フォロー中で絞り込んでいないときだけ出す
+        boolean plainList = keyword.isEmpty() && !hasCategory && !onlyFollowing;
+        model.addAttribute("featuredRecipes", plainList ? repository.findByFeaturedTrueOrderByIdDesc() : List.of());
         return "recipes/list";
     }
     
@@ -314,6 +320,17 @@ public class RecipeController {
      */
     private List<String> validate(RecipeForm form, MultipartFile image) {
         List<String> errors = form.validate();
+        // 管理者が登録した NGワードが入っていないか（料理名・説明・作り方・材料・メモ）
+        List<String> texts = new java.util.ArrayList<>();
+        texts.add(form.getTitle());
+        texts.add(form.getDescription());
+        texts.add(form.getMemo());
+        texts.addAll(form.getSteps());
+        texts.addAll(form.getIngredientNames());
+        String ngError = ngWordService.check(texts);
+        if (ngError != null) {
+            errors.add(ngError);
+        }
         if (!recipeService.isAcceptableImage(image)) {
             errors.add("写真は JPEG・PNG・WebP・GIF のいずれかを選んでください");
         }

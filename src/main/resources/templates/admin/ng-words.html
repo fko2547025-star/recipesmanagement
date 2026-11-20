@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('NGワード（管理者）')}"></head>
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('ng-words')}"></nav>
+        <div class="admin-main">
+            <h1 class="page-title"><span class="material-symbols-rounded">block</span>NGワード</h1>
+            <th:block th:replace="~{fragments/admin :: messages}"></th:block>
+            <p class="note">ここに登録した言葉を含むレシピ・コメント・ニックネームは、投稿・保存できなくなります。
+                全角・半角、大文字・小文字の違いは区別しません。すでに投稿されているものは消えません。</p>
+
+            <form th:action="@{/admin/ng-words}" method="post" class="admin-search">
+                <input type="text" name="word" required th:attr="maxlength=${maxLength}" placeholder="追加する言葉">
+                <button type="submit" class="btn--sm">追加</button>
+            </form>
+
+            <p th:if="${#lists.isEmpty(words)}" class="note">NGワードはまだありません。</p>
+            <ul class="admin-chips" th:unless="${#lists.isEmpty(words)}">
+                <li th:each="w : ${words}">
+                    <span th:text="${w.word}">言葉</span>
+                    <form th:action="@{/admin/ng-words/{id}/delete(id=${w.id})}" method="post">
+                        <button type="submit" class="admin-chips__remove" title="削除">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </main>
+</body>
+</html>

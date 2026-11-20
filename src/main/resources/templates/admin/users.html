@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('ユーザー（管理者）')}"></head>
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('users')}"></nav>
+        <div class="admin-main">
+            <h1 class="page-title"><span class="material-symbols-rounded">group</span>ユーザー</h1>
+            <th:block th:replace="~{fragments/admin :: messages}"></th:block>
+
+            <form action="/admin/users" method="get" class="admin-search">
+                <input type="search" name="q" th:value="${q}" placeholder="ユーザーID・ニックネーム・メールアドレスで検索">
+                <button type="submit" class="btn--sm">検索</button>
+            </form>
+            <p class="note" th:text="'新しい順に最大 ' + ${limit} + ' 件を表示しています'">新しい順に最大100件</p>
+
+            <!-- ユーザーが書いた名前などは、必ず th:text で表示する -->
+            <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>ユーザー</th><th>メール</th><th>投稿</th><th>コメント</th><th>通報された</th><th>状態</th><th>操作</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}" th:classappend="${u.suspended} ? 'is-suspended'">
+                        <td>
+                            <a th:href="@{/users/{id}(id=${u.id})}" target="_blank" th:text="'@' + ${u.username}">@taro</a>
+                            <small class="text-muted" th:if="${u.nickname}" th:text="${u.nickname}">たろう</small>
+                        </td>
+                        <td>
+                            <span th:text="${u.email ?: '（未登録）'}">a@example.com</span>
+                            <small th:if="${u.email != null and !u.emailVerified}" class="text-muted">（未確認）</small>
+                        </td>
+                        <td th:text="${u.recipeCount}">3</td>
+                        <td th:text="${u.commentCount}">5</td>
+                        <td th:text="${u.reportedCount}" th:classappend="${u.reportedCount > 0} ? 'text-danger'">0</td>
+                        <td>
+                            <span th:if="${u.admin}" class="admin-badge">管理者</span>
+                            <span th:if="${u.suspended}" class="admin-badge is-danger">利用停止</span>
+                            <small th:if="${u.suspended and u.suspendedReason != null}" class="text-muted"
+                                   th:text="${u.suspendedReason}">理由</small>
+                            <span th:if="${!u.admin and !u.suspended}" class="text-muted">利用中</span>
+                        </td>
+                        <td class="admin-actions">
+                            <th:block th:unless="${u.admin}">
+                                <!-- 利用停止（理由は本人のログイン画面に表示される） -->
+                                <form th:unless="${u.suspended}" th:action="@{/admin/users/{id}/suspend(id=${u.id})}" method="post"
+                                      onsubmit="const r = prompt('利用停止の理由（本人に表示されます）'); if (r === null) return false; this.reason.value = r; return true;">
+                                    <input type="hidden" name="reason">
+                                    <button type="submit" class="btn--outline btn--sm">利用停止</button>
+                                </form>
+                                <form th:if="${u.suspended}" th:action="@{/admin/users/{id}/unsuspend(id=${u.id})}" method="post">
+                                    <button type="submit" class="btn--outline btn--sm">解除</button>
+                                </form>
+                                <form th:action="@{/admin/users/{id}/delete(id=${u.id})}" method="post"
+                                      th:attr="onsubmit=|return confirm('@${u.username} を強制退会させますか？ すべての投稿が消え、元に戻せません。');|">
+                                    <button type="submit" class="btn--danger btn--sm">強制退会</button>
+                                </form>
+                            </th:block>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+            <p th:if="${#lists.isEmpty(users)}" class="note">見つかりませんでした。</p>
+        </div>
+    </main>
+</body>
+</html>

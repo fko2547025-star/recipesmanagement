@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('お問い合わせ')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="container container--narrow">
+        <h1 class="page-title">
+            <span class="material-symbols-rounded">mail</span>お問い合わせ
+        </h1>
+
+        <!-- 送ったあと（フラッシュ属性） -->
+        <div th:if="${sent}" class="alert alert--success">
+            <span class="material-symbols-rounded">mark_email_read</span>
+            <span>お問い合わせを受け付けました。内容を確認のうえ、入力されたメールアドレスにお返事します。
+                  返事には数日かかることがあります。</span>
+        </div>
+
+        <div th:if="${errors != null}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span>
+            <ul class="alert__list"><li th:each="e : ${errors}" th:text="${e}">エラー</li></ul>
+        </div>
+
+        <form th:unless="${sent}" th:action="@{/contact}" method="post" class="card">
+            <p class="note">使い方の質問、不具合の報告、アカウントのことなど、お気軽にお送りください。
+                ログインできないときも、ここから送れます。</p>
+            <div class="form-field">
+                <label for="category">種類</label>
+                <select id="category" name="category" required>
+                    <option th:each="c : ${categories}" th:value="${c.key}" th:text="${c.value}"
+                            th:selected="${c.key == category}">使い方の質問</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="email">返信先のメールアドレス</label>
+                <input type="email" id="email" name="email" th:value="${email}" required maxlength="255" autocomplete="email">
+            </div>
+            <div class="form-field">
+                <label for="message">内容</label>
+                <textarea id="message" name="message" rows="7" required th:attr="maxlength=${maxLength}"
+                          th:text="${message}" placeholder="できるだけ詳しく書いてください（不具合なら、どの画面で何をしたときか）"></textarea>
+                <small class="field-hint" th:text="${maxLength} + '文字まで'">1000文字まで</small>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn--wide">送信する</button>
+            </div>
+        </form>
+    </main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

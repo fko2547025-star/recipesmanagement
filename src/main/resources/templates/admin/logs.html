@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('操作の記録（管理者）')}"></head>
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('logs')}"></nav>
+        <div class="admin-main">
+            <h1 class="page-title"><span class="material-symbols-rounded">history</span>操作の記録</h1>
+            <p class="note">管理者が行った操作を、新しい順に最大200件表示します。</p>
+            <p th:if="${#lists.isEmpty(logs)}" class="note">まだ操作の記録はありません。</p>
+            <div class="admin-table-wrap" th:unless="${#lists.isEmpty(logs)}">
+            <table class="admin-table">
+                <thead><tr><th>日時</th><th>管理者</th><th>操作</th><th>対象</th><th>理由など</th></tr></thead>
+                <tbody>
+                    <tr th:each="l : ${logs}">
+                        <td class="text-muted" th:text="${#temporals.format(l.createdAt, 'yyyy/MM/dd HH:mm')}">2026/11/20</td>
+                        <td th:text="'@' + ${l.adminName}">@admin</td>
+                        <td th:text="${l.action}">レシピを削除</td>
+                        <td class="admin-text" th:text="${l.target}">「カレー」</td>
+                        <td class="admin-text text-muted" th:text="${l.detail}">理由</td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

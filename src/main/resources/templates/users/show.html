@@ -27,7 +27,7 @@
                 </p>
 
                 <!-- フォローボタン（データが変わるので POST）。押すたびに、フォローする／やめるが切り替わる -->
-                <form th:if="${loginUsername != null}" th:action="@{/users/{id}/follow(id=${user.id})}" method="post">
+                <form th:if="${userMode}" th:action="@{/users/{id}/follow(id=${user.id})}" method="post">
                     <!-- フォロー中なら枠だけのボタンにする（いいねボタンと同じ考え方） -->
                     <button type="submit" class="btn" th:classappend="${following} ? 'btn--outline'">
                         <span class="material-symbols-rounded" th:text="${following} ? 'how_to_reg' : 'person_add'">person_add</span>

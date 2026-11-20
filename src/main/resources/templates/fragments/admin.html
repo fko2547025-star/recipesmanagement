@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!--
+        管理者画面の共通部品。ユーザー画面とは別の見た目（濃い色のヘッダー＋左のメニュー）にする。
+        使い方（各画面）：
+            <header th:replace="~{fragments/admin :: header}"></header>
+            <main class="admin-shell">
+                <nav th:replace="~{fragments/admin :: sidebar('users')}"></nav>
+                <div class="admin-main"> ...画面の中身... </div>
+            </main>
+    -->
+
+    <!-- ===== 上のバー ===== -->
+    <header th:fragment="header" class="site-header admin-header">
+        <div class="site-header__inner">
+            <a href="/admin" class="brand">
+                <span class="material-symbols-rounded">admin_panel_settings</span><span class="admin-header__app">CookBuddy </span>管理者画面
+            </a>
+            <div class="site-header__actions">
+                <!-- 管理者もレシピを見ることはできる（投稿・いいね・コメントはできない） -->
+                <a href="/recipes" class="site-header__text-link" target="_blank">
+                    <span class="material-symbols-rounded">open_in_new</span><span class="admin-header__label">サイトを見る</span>
+                </a>
+                <span class="admin-header__name" th:text="'@' + ${loginUsername}">@admin</span>
+                <form th:action="@{/logout}" method="post" style="display:inline">
+                    <button type="submit" class="btn btn--light btn--sm">ログアウト</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== 左のメニュー ===== -->
+    <nav th:fragment="sidebar(active)" class="admin-nav">
+        <a href="/admin" th:classappend="${active == 'dashboard'} ? 'is-active'">
+            <span class="material-symbols-rounded">dashboard</span>ダッシュボード</a>
+        <a href="/admin/reports" th:classappend="${active == 'reports'} ? 'is-active'">
+            <span class="material-symbols-rounded">flag</span>通報</a>
+        <a href="/admin/inquiries" th:classappend="${active == 'inquiries'} ? 'is-active'">
+            <span class="material-symbols-rounded">mail</span>お問い合わせ</a>
+        <a href="/admin/users" th:classappend="${active == 'users'} ? 'is-active'">
+            <span class="material-symbols-rounded">group</span>ユーザー</a>
+        <a href="/admin/recipes" th:classappend="${active == 'recipes'} ? 'is-active'">
+            <span class="material-symbols-rounded">menu_book</span>レシピ・おすすめ</a>
+        <a href="/admin/comments" th:classappend="${active == 'comments'} ? 'is-active'">
+            <span class="material-symbols-rounded">chat</span>コメント</a>
+        <a href="/admin/announcements" th:classappend="${active == 'announcements'} ? 'is-active'">
+            <span class="material-symbols-rounded">campaign</span>お知らせ</a>
+        <a href="/admin/ng-words" th:classappend="${active == 'ng-words'} ? 'is-active'">
+            <span class="material-symbols-rounded">block</span>NGワード</a>
+        <a href="/admin/logs" th:classappend="${active == 'logs'} ? 'is-active'">
+            <span class="material-symbols-rounded">history</span>操作の記録</a>
+    </nav>
+
+    <!-- ===== 操作のあとのメッセージ（フラッシュ属性） ===== -->
+    <th:block th:fragment="messages">
+        <div th:if="${message}" class="alert alert--success">
+            <span class="material-symbols-rounded">check_circle</span><span th:text="${message}">完了しました</span>
+        </div>
+        <div th:if="${error}" class="alert alert--error">
+            <span class="material-symbols-rounded">error</span><span th:text="${error}">エラー</span>
+        </div>
+    </th:block>
+</body>
+</html>

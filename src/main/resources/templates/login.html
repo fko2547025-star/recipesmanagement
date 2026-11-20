@@ -7,7 +7,7 @@
 
     <main class="auth-card">
         <a href="/recipes" class="brand brand--large">
-            <span class="material-symbols-rounded">soup_kitchen</span>Recipi
+            <span class="material-symbols-rounded">soup_kitchen</span>CookBuddy
         </a>
         <p class="auth-card__lead">ログインして、もっと便利に！</p>
 
@@ -27,6 +27,12 @@
         </div>
         <div th:if="${param.reset}" class="alert alert--success">
             <span class="material-symbols-rounded">check_circle</span>パスワードを再設定しました。新しいパスワードでログインしてください
+        </div>
+        <!-- 利用停止中：理由を出す（AuthController が渡す） -->
+        <div th:if="${param.suspended}" class="alert alert--error">
+            <span class="material-symbols-rounded">block</span>
+            <span>このアカウントは利用停止中です。理由：<span th:text="${suspendedReason}">理由</span><br>
+                  心当たりが無い場合は、<a href="/contact">お問い合わせ</a>からご連絡ください。</span>
         </div>
         <div th:if="${param.deleted}" class="alert alert--info">
             <span class="material-symbols-rounded">check_circle</span>退会しました。ご利用ありがとうございました

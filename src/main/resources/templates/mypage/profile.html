@@ -39,8 +39,10 @@
 
                 <label class="btn btn--outline btn--sm">
                     <span class="material-symbols-rounded">photo_camera</span>写真を選ぶ
+                    <!-- data-crop：選んだあと、正方形（丸い枠）で写す範囲を決める（photo-crop.js） -->
                     <input type="file" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif"
-                           class="visually-hidden" onchange="previewAvatar(this)">
+                           class="visually-hidden" data-crop="1/1" data-crop-round data-crop-max="800"
+                           onchange="previewAvatar(this)">
                 </label>
                 <label th:if="${user.avatarPath != null}" class="check">
                     <input type="checkbox" name="removeAvatar" value="true"> 写真を削除する
@@ -100,6 +102,8 @@
     </main>
     <footer th:replace="~{fragments/footer :: footer}"></footer>
 
+    <!-- 写真の切り抜き -->
+    <script src="/js/photo-crop.js"></script>
     <script>
         // 選んだ写真をその場で丸の中に表示する（まだ保存はしない）
         function previewAvatar(input) {

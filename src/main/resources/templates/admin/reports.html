@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('通報の一覧')}"></head>
-<body>
-    <div th:replace="~{fragments/header :: header}"></div>
-
-    <main class="container">
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('reports')}"></nav>
+        <div class="admin-main">
         <h1 class="page-title">
-            <span class="material-symbols-rounded">admin_panel_settings</span>通報の一覧（管理者）
+            <span class="material-symbols-rounded">flag</span>通報
         </h1>
-
-        <div th:if="${message}" class="alert alert--success">
-            <span class="material-symbols-rounded">check_circle</span><span th:text="${message}">削除しました</span>
-        </div>
+        <th:block th:replace="~{fragments/admin :: messages}"></th:block>
+        <p class="note">対応すると、「操作の記録」に残ります。</p>
 
         <p th:if="${#lists.isEmpty(reports)}" class="note">通報はありません。</p>
 
@@ -50,7 +49,7 @@
                 </form>
             </div>
         </section>
+        </div>
     </main>
-    <footer th:replace="~{fragments/footer :: footer}"></footer>
-</body>
+    </body>
 </html>

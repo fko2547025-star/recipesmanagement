@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('管理者画面')}"></head>
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('dashboard')}"></nav>
+        <div class="admin-main">
+            <h1 class="page-title"><span class="material-symbols-rounded">dashboard</span>ダッシュボード</h1>
+
+            <!-- 対応が必要なもの -->
+            <div class="admin-stats">
+                <a href="/admin/reports" class="admin-stat" th:classappend="${stats.openReports > 0} ? 'is-alert'">
+                    <span class="admin-stat__label">未対応の通報</span>
+                    <strong class="admin-stat__value" th:text="${stats.openReports}">0</strong>
+                </a>
+                <a href="/admin/inquiries" class="admin-stat" th:classappend="${stats.openInquiries > 0} ? 'is-alert'">
+                    <span class="admin-stat__label">未対応のお問い合わせ</span>
+                    <strong class="admin-stat__value" th:text="${stats.openInquiries}">0</strong>
+                </a>
+            </div>
+
+            <!-- 数字のまとめ -->
+            <div class="admin-stats">
+                <a href="/admin/users" class="admin-stat">
+                    <span class="admin-stat__label">ユーザー</span>
+                    <strong class="admin-stat__value" th:text="${stats.users}">0</strong>
+                    <small th:if="${stats.suspendedUsers > 0}" th:text="'うち利用停止 ' + ${stats.suspendedUsers}">うち利用停止 0</small>
+                </a>
+                <a href="/admin/recipes" class="admin-stat">
+                    <span class="admin-stat__label">レシピ</span>
+                    <strong class="admin-stat__value" th:text="${stats.recipes}">0</strong>
+                    <small th:text="'今日の投稿 ' + ${stats.recipesToday}">今日の投稿 0</small>
+                </a>
+                <a href="/admin/comments" class="admin-stat">
+                    <span class="admin-stat__label">コメント</span>
+                    <strong class="admin-stat__value" th:text="${stats.comments}">0</strong>
+                </a>
+            </div>
+
+            <section class="card section-card">
+                <h2 class="section-title"><span class="material-symbols-rounded">history</span>最近の操作</h2>
+                <p th:if="${#lists.isEmpty(recentLogs)}" class="note">まだ操作の記録はありません。</p>
+                <table th:unless="${#lists.isEmpty(recentLogs)}" class="admin-table">
+                    <tr th:each="l : ${recentLogs}">
+                        <td class="text-muted" th:text="${#temporals.format(l.createdAt, 'MM/dd HH:mm')}">11/20 10:00</td>
+                        <td th:text="'@' + ${l.adminName}">@admin</td>
+                        <td th:text="${l.action}">レシピを削除</td>
+                        <td th:text="${l.target}">「カレー」</td>
+                    </tr>
+                </table>
+                <a href="/admin/logs" class="section-link">すべて見る<span class="material-symbols-rounded">chevron_right</span></a>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

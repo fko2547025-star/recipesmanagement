@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('お知らせ（管理者）')}"></head>
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('announcements')}"></nav>
+        <div class="admin-main">
+            <h1 class="page-title"><span class="material-symbols-rounded">campaign</span>お知らせ</h1>
+            <th:block th:replace="~{fragments/admin :: messages}"></th:block>
+
+            <form th:action="@{/admin/announcements}" method="post" class="card section-card">
+                <div class="form-field">
+                    <label for="message">新しいお知らせ（「表示中」のものは、ユーザーの全画面の上に帯で出ます）</label>
+                    <input type="text" id="message" name="message" th:value="${draft}" required
+                           th:attr="maxlength=${maxLength}" placeholder="例：11月30日 2:00〜3:00 はメンテナンスのため使えません">
+                </div>
+                <div class="form-actions"><button type="submit" class="btn--sm">作成する</button></div>
+            </form>
+
+            <p th:if="${#lists.isEmpty(announcements)}" class="note">お知らせはありません。</p>
+            <div class="admin-table-wrap" th:unless="${#lists.isEmpty(announcements)}">
+            <table class="admin-table">
+                <thead><tr><th>お知らせ</th><th>作成日</th><th>状態</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="a : ${announcements}">
+                        <td class="admin-text" th:text="${a.message}">メンテナンスのお知らせ</td>
+                        <td class="text-muted" th:text="${#temporals.format(a.createdAt, 'yyyy/MM/dd HH:mm')}">2026/11/20</td>
+                        <td>
+                            <span th:if="${a.active}" class="admin-badge is-star">表示中</span>
+                            <span th:unless="${a.active}" class="text-muted">表示しない</span>
+                        </td>
+                        <td class="admin-actions">
+                            <form th:action="@{/admin/announcements/{id}/toggle(id=${a.id})}" method="post">
+                                <button type="submit" class="btn--outline btn--sm" th:text="${a.active} ? '表示しない' : '表示する'">表示しない</button>
+                            </form>
+                            <form th:action="@{/admin/announcements/{id}/delete(id=${a.id})}" method="post"
+                                  onsubmit="return confirm('このお知らせを削除しますか？');">
+                                <button type="submit" class="btn--danger btn--sm">削除</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('レシピ（管理者）')}"></head>
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('recipes')}"></nav>
+        <div class="admin-main">
+            <h1 class="page-title"><span class="material-symbols-rounded">menu_book</span>レシピ・おすすめ</h1>
+            <th:block th:replace="~{fragments/admin :: messages}"></th:block>
+
+            <nav class="tabs">
+                <a th:href="@{/admin/recipes}" class="tab" th:classappend="${!featured} ? 'is-active'">すべて</a>
+                <a th:href="@{/admin/recipes(featured=true)}" class="tab" th:classappend="${featured} ? 'is-active'">★ おすすめ中</a>
+            </nav>
+            <form action="/admin/recipes" method="get" class="admin-search">
+                <input type="hidden" name="featured" th:value="${featured}">
+                <input type="search" name="q" th:value="${q}" placeholder="料理名・投稿者のユーザーIDで検索">
+                <button type="submit" class="btn--sm">検索</button>
+            </form>
+            <p class="note">「おすすめ」にしたレシピは、ホームの上に並びます。</p>
+
+            <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>料理名</th><th>投稿者</th><th>投稿日</th><th>いいね</th><th>コメント</th><th>通報</th><th>操作</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r : ${recipes}">
+                        <td>
+                            <span th:if="${r.featured}" class="admin-badge is-star">★ おすすめ</span>
+                            <a th:href="@{/recipes/{id}(id=${r.id})}" target="_blank" th:text="${r.title}">カレー</a>
+                            <small class="text-muted" th:text="${r.category}">洋食</small>
+                        </td>
+                        <td th:text="'@' + ${r.author}">@taro</td>
+                        <td class="text-muted" th:text="${r.createdAt != null} ? ${#temporals.format(r.createdAt, 'yyyy/MM/dd')} : ''">2026/11/20</td>
+                        <td th:text="${r.likeCount}">0</td>
+                        <td th:text="${r.commentCount}">0</td>
+                        <td th:text="${r.reportCount}" th:classappend="${r.reportCount > 0} ? 'text-danger'">0</td>
+                        <td class="admin-actions">
+                            <form th:action="@{/admin/recipes/{id}/feature(id=${r.id})}" method="post">
+                                <input type="hidden" name="back" th:value="${featured} ? '/admin/recipes?featured=true' : '/admin/recipes'">
+                                <button type="submit" class="btn--outline btn--sm" th:text="${r.featured} ? 'おすすめから外す' : 'おすすめにする'">おすすめにする</button>
+                            </form>
+                            <form th:action="@{/admin/recipes/{id}/delete(id=${r.id})}" method="post"
+                                  onsubmit="return confirm('このレシピを削除しますか？ いいね・コメントも消え、元に戻せません。');">
+                                <button type="submit" class="btn--danger btn--sm">削除</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+            <p th:if="${#lists.isEmpty(recipes)}" class="note">見つかりませんでした。</p>
+        </div>
+    </main>
+</body>
+</html>

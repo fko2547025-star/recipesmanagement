@@ -1,6 +1,7 @@
 package com.example.recipesmanagement.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -16,9 +17,18 @@ import com.example.recipesmanagement.common.ImageStorageService;
 public class WebConfig implements WebMvcConfigurer {
 
     private final ImageStorageService imageStorageService;
+    private final SuspendedUserInterceptor suspendedUserInterceptor;
 
-    public WebConfig(ImageStorageService imageStorageService) {
+    public WebConfig(ImageStorageService imageStorageService, SuspendedUserInterceptor suspendedUserInterceptor) {
         this.imageStorageService = imageStorageService;
+        this.suspendedUserInterceptor = suspendedUserInterceptor;
+    }
+
+    /** 画面を開くたびに、利用停止中のユーザーでないか確かめる（写真や CSS は除く） */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(suspendedUserInterceptor)
+                .excludePathPatterns("/css/**", "/js/**", "/images/**", "/uploads/**", "/login", "/error");
     }
 
     @Override

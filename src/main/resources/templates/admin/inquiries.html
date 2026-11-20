@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('お問い合わせ（管理者）')}"></head>
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('inquiries')}"></nav>
+        <div class="admin-main">
+            <h1 class="page-title"><span class="material-symbols-rounded">mail</span>お問い合わせ</h1>
+            <th:block th:replace="~{fragments/admin :: messages}"></th:block>
+
+            <nav class="tabs">
+                <a th:href="@{/admin/inquiries}" class="tab" th:classappend="${!done} ? 'is-active'">未対応</a>
+                <a th:href="@{/admin/inquiries(done=true)}" class="tab" th:classappend="${done} ? 'is-active'">対応済み</a>
+            </nav>
+
+            <p th:if="${#lists.isEmpty(inquiries)}" class="note" th:text="${done} ? '対応済みのお問い合わせはありません。' : '未対応のお問い合わせはありません。'">ありません</p>
+            <div class="admin-table-wrap" th:unless="${#lists.isEmpty(inquiries)}">
+            <table class="admin-table">
+                <thead><tr><th>受付日時</th><th>種類</th><th>送った人</th><th>内容</th><th></th></tr></thead>
+                <tbody>
+                    <tr th:each="i : ${inquiries}">
+                        <td class="text-muted" th:text="${#temporals.format(i.createdAt, 'yyyy/MM/dd HH:mm')}">2026/11/20</td>
+                        <td th:text="${i.categoryLabel}">使い方の質問</td>
+                        <td>
+                            <span th:if="${i.user != null}" th:text="'@' + ${i.user.username}">@taro</span>
+                            <span th:if="${i.user == null}" class="text-muted">ログインなし</span>
+                            <small class="text-muted" th:text="${i.email}">a@example.com</small>
+                        </td>
+                        <td class="admin-text" th:text="${#strings.abbreviate(i.message, 60)}">内容</td>
+                        <td><a th:href="@{/admin/inquiries/{id}(id=${i.id})}" class="btn btn--outline btn--sm">開く</a></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

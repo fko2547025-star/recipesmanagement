@@ -34,7 +34,13 @@ public class AuthController {
 
     // ログイン画面
     @GetMapping("/login")
-    public String login() {
+    public String login(jakarta.servlet.http.HttpSession session, Model model) {
+        // 利用停止でログアウトされたときは、その理由を1回だけ表示する（SuspendedUserInterceptor が入れている）
+        Object reason = session.getAttribute(com.example.recipesmanagement.config.SuspendedUserInterceptor.REASON_KEY);
+        if (reason != null) {
+            model.addAttribute("suspendedReason", reason);
+            session.removeAttribute(com.example.recipesmanagement.config.SuspendedUserInterceptor.REASON_KEY);
+        }
         return "login";
     }
 

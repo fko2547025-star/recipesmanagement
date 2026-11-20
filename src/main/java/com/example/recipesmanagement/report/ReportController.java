@@ -2,17 +2,14 @@ package com.example.recipesmanagement.report;
 
 import java.security.Principal;
 import java.time.Duration;
-import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.example.recipesmanagement.common.ImageStorageService;
 import com.example.recipesmanagement.common.RateLimiter;
 import com.example.recipesmanagement.user.AppUser;
 import com.example.recipesmanagement.user.AppUserRepository;
@@ -36,14 +33,12 @@ public class ReportController {
 
     private final ReportService reportService;
     private final AppUserRepository userRepository;
-    private final ImageStorageService imageStorageService;
     private final RateLimiter rateLimiter;
 
     public ReportController(ReportService reportService, AppUserRepository userRepository,
-                            ImageStorageService imageStorageService, RateLimiter rateLimiter) {
+                            RateLimiter rateLimiter) {
         this.reportService = reportService;
         this.userRepository = userRepository;
-        this.imageStorageService = imageStorageService;
         this.rateLimiter = rateLimiter;
     }
 
@@ -93,27 +88,5 @@ public class ReportController {
         redirectAttributes.addFlashAttribute("reported", true);
         return "redirect:/recipes/" + backTo;
     }
-
-    // ===== 管理者 =====
-
-    @GetMapping("/admin/reports")
-    public String list(Model model) {
-        model.addAttribute("reports", reportService.findAll());
-        return "admin/reports";
-    }
-
-    @PostMapping("/admin/reports/{id:\\d+}/delete-target")
-    public String deleteTarget(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        List<String> images = reportService.deleteTarget(id);
-        images.forEach(imageStorageService::delete);   // データベースを消し終わってから、写真のファイルを消す
-        redirectAttributes.addFlashAttribute("message", "通報されたものを削除しました");
-        return "redirect:/admin/reports";
-    }
-
-    @PostMapping("/admin/reports/{id:\\d+}/dismiss")
-    public String dismiss(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        reportService.dismiss(id);
-        redirectAttributes.addFlashAttribute("message", "通報を取り下げました");
-        return "redirect:/admin/reports";
-    }
+    // 管理者の通報の一覧・対応は AdminController（/admin/reports）にある
 }

@@ -28,9 +28,12 @@ public class ProfileService {
     private final AppUserRepository userRepository;
     private final ImageStorageService imageStorageService;
     private final EmailVerificationService verificationService;
+    private final com.example.recipesmanagement.admin.NgWordService ngWordService;
 
     public ProfileService(AppUserRepository userRepository, ImageStorageService imageStorageService,
-                          EmailVerificationService verificationService) {
+                          EmailVerificationService verificationService,
+                          com.example.recipesmanagement.admin.NgWordService ngWordService) {
+        this.ngWordService = ngWordService;
         this.userRepository = userRepository;
         this.imageStorageService = imageStorageService;
         this.verificationService = verificationService;
@@ -40,6 +43,10 @@ public class ProfileService {
         List<String> errors = new ArrayList<>();
         if (nickname != null && nickname.trim().length() > NICKNAME_MAX) {
             errors.add("ニックネームは" + NICKNAME_MAX + "文字以内で入力してください");
+        }
+        String ngError = ngWordService.check(nickname);   // NGワードが入っていればエラー
+        if (ngError != null) {
+            errors.add(ngError);
         }
         if (avoidFoods != null && avoidFoods.trim().length() > AVOID_FOODS_MAX) {
             errors.add("アレルギー・苦手な食材は" + AVOID_FOODS_MAX + "文字以内で入力してください");
