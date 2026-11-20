@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('管理者（管理者）')}"></head>
+<body class="admin-page">
+    <header th:replace="~{fragments/admin :: header}"></header>
+    <main class="admin-shell">
+        <nav th:replace="~{fragments/admin :: sidebar('admins')}"></nav>
+        <div class="admin-main">
+            <h1 class="page-title"><span class="material-symbols-rounded">shield_person</span>管理者</h1>
+            <th:block th:replace="~{fragments/admin :: messages}"></th:block>
+            <div th:if="${errors != null}" class="alert alert--error">
+                <span class="material-symbols-rounded">error</span>
+                <ul class="alert__list"><li th:each="e : ${errors}" th:text="${e}">エラー</li></ul>
+            </div>
+
+            <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead><tr><th>ユーザーID</th><th>メール</th><th>操作</th></tr></thead>
+                <tbody>
+                    <tr th:each="a : ${admins}">
+                        <td>
+                            <span th:text="'@' + ${a.username}">@admin</span>
+                            <span th:if="${a.username == loginUsername}" class="admin-badge">あなた</span>
+                        </td>
+                        <td th:text="${a.email ?: '（未登録）'}">admin@example.com</td>
+                        <td class="admin-actions">
+                            <!-- 自分自身と、最後の1人は削除できない -->
+                            <form th:if="${a.username != loginUsername and #lists.size(admins) > 1}"
+                                  th:action="@{/admin/admins/{id}/delete(id=${a.id})}" method="post"
+                                  th:attr="onsubmit=|return confirm('管理者 @${a.username} を削除しますか？');|">
+                                <button type="submit" class="btn--danger btn--sm">削除</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+
+            <form th:action="@{/admin/admins}" method="post" class="card section-card">
+                <h2 class="section-title"><span class="material-symbols-rounded">person_add</span>管理者を追加</h2>
+                <p class="note">管理者は、投稿・いいね・コメントなどのユーザーの機能は使えません（管理者画面だけを使う専用のアカウント）。</p>
+                <div class="form-field">
+                    <label for="username">ユーザーID（半角英数字・-・_、3〜50文字）</label>
+                    <input type="text" id="username" name="username" th:value="${username}" required maxlength="50" autocomplete="off">
+                </div>
+                <div class="form-field">
+                    <label for="email">メールアドレス（任意。パスワードを忘れたときの再設定に使う）</label>
+                    <input type="email" id="email" name="email" th:value="${email}" maxlength="255" autocomplete="off">
+                </div>
+                <div class="form-field">
+                    <label for="password">パスワード</label>
+                    <input type="password" id="password" name="password" required th:attr="minlength=${minLength}" autocomplete="new-password">
+                    <small class="field-hint" th:text="${minLength} + '文字以上'">8文字以上</small>
+                </div>
+                <div class="form-field">
+                    <label for="passwordConfirm">パスワード（確認）</label>
+                    <input type="password" id="passwordConfirm" name="passwordConfirm" required autocomplete="new-password">
+                </div>
+                <div class="form-actions"><button type="submit" class="btn--sm">追加する</button></div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

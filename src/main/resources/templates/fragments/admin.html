@@ -50,6 +50,10 @@
             <span class="material-symbols-rounded">block</span>NGワード</a>
         <a href="/admin/logs" th:classappend="${active == 'logs'} ? 'is-active'">
             <span class="material-symbols-rounded">history</span>操作の記録</a>
+        <a href="/admin/admins" th:classappend="${active == 'admins'} ? 'is-active'">
+            <span class="material-symbols-rounded">shield_person</span>管理者</a>
+        <a href="/admin/account" th:classappend="${active == 'account'} ? 'is-active'">
+            <span class="material-symbols-rounded">lock</span>パスワードの変更</a>
     </nav>
 
     <!-- ===== 操作のあとのメッセージ（フラッシュ属性） ===== -->
