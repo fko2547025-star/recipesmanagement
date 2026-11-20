@@ -265,4 +265,25 @@ class AdminFeaturesTest {
 
         mvc.perform(get("/users/" + admin.getId())).andExpect(status().isNotFound());
     }
+
+    @Test
+    void ユーザーの一覧では管理者が一番上に出る() throws Exception {
+        createUser("order-admin", "ADMIN");
+        createUser("order-user-newest", "USER");   // 管理者より後に登録したユーザー
+        String html = page("/admin/users", ADMIN);
+        assertThat(html.indexOf("@order-admin")).isLessThan(html.indexOf("@order-user-newest"));
+    }
+
+    @Test
+    void 管理者はアカウント設定から確認メールを送れる() throws Exception {
+        AppUser admin = createUser("mail-admin", "ADMIN");
+        admin.setEmail("mail-admin@example.com");
+        admin.setEmailVerified(false);
+        users.save(admin);
+        assertThat(page("/admin/account", user("mail-admin").roles("ADMIN"))).contains("未確認").contains("確認メールを送る");
+
+        mvc.perform(post("/admin/account/verify-email").with(csrf()).with(user("mail-admin").roles("ADMIN")))
+                .andExpect(redirectedUrl("/admin/account"));
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
 }

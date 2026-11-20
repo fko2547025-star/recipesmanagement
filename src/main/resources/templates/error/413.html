@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('ファイルが大きすぎます')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main th:replace="~{fragments/error :: box('photo_size_select_large', '413', 'ファイルが大きすぎます', '送れるのは、1回の送信で合計10MBまでです。写真を小さくしてから、もう一度お試しください。')}"></main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

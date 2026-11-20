@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!--
+        エラーページの共通部品（templates/error/ の各ページで使う）。
+        Spring Boot は、エラーの番号に合わせて error/404.html・error/4xx.html・error/5xx.html などを自動で使う。
+        エラーの詳しい中身（プログラムの場所など）は、画面には出さない（サーバーのログで見る）。
+
+        使い方：<main th:replace="~{fragments/error :: box('search_off', '404', 'ページが見つかりません', '…説明…')}"></main>
+    -->
+    <main th:fragment="box(icon, code, title, message)" class="container container--narrow">
+        <section class="card error-box">
+            <span class="material-symbols-rounded error-box__icon" th:text="${icon}">error</span>
+            <p class="error-box__code" th:text="${code}">404</p>
+            <h1 class="error-box__title" th:text="${title}">ページが見つかりません</h1>
+            <p class="error-box__message" th:text="${message}">説明</p>
+
+            <div class="error-box__actions">
+                <!-- 管理者は管理者画面へ、それ以外はホームへ -->
+                <a th:if="${adminMode}" href="/admin" class="btn btn--wide">
+                    <span class="material-symbols-rounded">admin_panel_settings</span>管理者画面へ</a>
+                <a th:unless="${adminMode}" href="/recipes" class="btn btn--wide">
+                    <span class="material-symbols-rounded">home</span>ホームへ</a>
+                <a href="javascript:history.back()" class="btn btn--outline">
+                    <span class="material-symbols-rounded">arrow_back</span>前の画面に戻る</a>
+            </div>
+
+            <!-- 404 のときだけ：レシピを探す -->
+            <form th:if="${code == '404'}" action="/recipes" method="get" class="search-bar error-box__search">
+                <span class="material-symbols-rounded">search</span>
+                <input type="search" name="q" placeholder="料理名または材料でレシピを探す" maxlength="100">
+                <button type="submit">検索</button>
+            </form>
+
+            <!-- サーバーのエラーのときだけ：お問い合わせ -->
+            <p th:if="${code == '500'}" class="note">何度も同じエラーになるときは、
+                <a href="/contact">お問い合わせ</a>から、どの画面で何をしたときかを教えてください。</p>
+        </section>
+    </main>
+</body>
+</html>

@@ -4558,3 +4558,18 @@ body.is-crop-open { overflow: hidden; }
     text-align: center;
 }
 .announce-bar .material-symbols-rounded { font-size: 1.1rem; }
+
+/* =====================================================================
+   28. エラーページ（templates/error/）
+   ===================================================================== */
+.error-box {
+    margin: 32px auto;
+    padding: 36px 28px;
+    text-align: center;
+}
+.error-box__icon { font-size: 3.4rem; color: var(--primary); }
+.error-box__code { margin: 4px 0 0; color: var(--text-muted); font-size: 0.9rem; letter-spacing: 0.2em; }
+.error-box__title { margin: 6px 0 10px; font-size: 1.4rem; }
+.error-box__message { margin: 0 auto 22px; max-width: 460px; line-height: 1.8; color: var(--text-muted); }
+.error-box__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.error-box__search { margin: 24px auto 0; max-width: 460px; }

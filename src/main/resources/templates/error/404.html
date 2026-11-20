@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('ページが見つかりません')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main th:replace="~{fragments/error :: box('search_off', '404', 'ページが見つかりません', 'URL が間違っているか、レシピなどが削除された可能性があります。')}"></main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

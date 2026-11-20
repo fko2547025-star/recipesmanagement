@@ -95,7 +95,7 @@ public class AdminService {
                              OR rp.comment_id IN (SELECT id FROM comments WHERE user_id = u.id)) AS reported_count
                 FROM users u
                 WHERE CAST(? AS VARCHAR) IS NULL OR LOWER(u.username) LIKE ? OR LOWER(u.nickname) LIKE ? OR LOWER(u.email) LIKE ?
-                ORDER BY u.id DESC
+                ORDER BY CASE WHEN u.role = 'ADMIN' THEN 0 ELSE 1 END, u.id DESC   -- 管理者を先に、そのあと新しい順
                 LIMIT ?""",
                 (rs, i) -> new UserRow(rs.getLong("id"), rs.getString("username"), rs.getString("nickname"),
                         rs.getString("email"), rs.getBoolean("email_verified"), "ADMIN".equals(rs.getString("role")),

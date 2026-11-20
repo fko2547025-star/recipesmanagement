@@ -19,7 +19,8 @@
                   マイページから、確認のメールをもう一度送れます。</span>
         </div>
 
-        <a href="/mypage" class="auth-card__link">マイページへ</a>
+        <a th:unless="${adminMode}" href="/mypage" class="auth-card__link">マイページへ</a>
+        <a th:if="${adminMode}" href="/admin/account" class="auth-card__link">管理者画面へ</a>
     </main>
     <footer th:replace="~{fragments/footer :: footer}"></footer>
 

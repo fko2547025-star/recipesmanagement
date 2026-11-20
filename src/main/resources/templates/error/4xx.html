@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('受け付けられませんでした')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main th:replace="~{fragments/error :: box('report', '400', 'うまく受け付けられませんでした', '送られた内容に問題があったため、処理できませんでした。前の画面に戻って、もう一度お試しください。')}"></main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
