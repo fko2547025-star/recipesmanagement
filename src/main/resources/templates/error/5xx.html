@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('エラーが起きました')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main th:replace="~{fragments/error :: box('cloud_off', '500', 'エラーが起きました', '申し訳ありません。サーバーで問題が起きました。時間をおいて、もう一度お試しください。')}"></main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

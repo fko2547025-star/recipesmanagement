@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('表示できません')}"></head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main th:replace="~{fragments/error :: box('lock', '403', 'このページは表示できません', 'このページを見る権限がありません。ほかの人のレシピは編集できません。管理者のアカウントでは、投稿などのユーザーの機能は使えません。')}"></main>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

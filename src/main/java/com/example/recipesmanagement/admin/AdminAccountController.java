@@ -33,12 +33,21 @@ public class AdminAccountController {
     private final AdminAccountService accountService;
     private final PasswordService passwordService;
     private final AdminLogService logService;
+    private final com.example.recipesmanagement.user.EmailVerificationService verificationService;
+    private final com.example.recipesmanagement.user.AppUserRepository userRepository;
+    private final com.example.recipesmanagement.common.RateLimiter rateLimiter;
 
     public AdminAccountController(AdminAccountService accountService, PasswordService passwordService,
-                                  AdminLogService logService) {
+                                  AdminLogService logService,
+                                  com.example.recipesmanagement.user.EmailVerificationService verificationService,
+                                  com.example.recipesmanagement.user.AppUserRepository userRepository,
+                                  com.example.recipesmanagement.common.RateLimiter rateLimiter) {
         this.accountService = accountService;
         this.passwordService = passwordService;
         this.logService = logService;
+        this.verificationService = verificationService;
+        this.userRepository = userRepository;
+        this.rateLimiter = rateLimiter;
     }
 
     @GetMapping("/admins")
@@ -75,9 +84,24 @@ public class AdminAccountController {
     }
 
     @GetMapping("/account")
-    public String account(Model model) {
-        model.addAttribute("minLength", PasswordRules.MIN_LENGTH);
+    public String account(Principal principal, Model model) {
+        addAccountAttributes(principal, model);
         return "admin/account";
+    }
+
+    /**
+     * メールアドレスの確認メールを送る（管理者はマイページを使えないので、ここから送る）。
+     * 確認が済むと、パスワードを忘れたときに再設定のメールを受け取れる。1時間に3回まで。
+     */
+    @PostMapping("/account/verify-email")
+    public String sendVerification(Principal principal, RedirectAttributes ra) {
+        if (rateLimiter.tryAcquire("verify-resend", principal.getName(), 3, java.time.Duration.ofHours(1))) {
+            verificationService.resend(principal.getName());
+            ra.addFlashAttribute("message", "確認のメールを送りました。メールのリンクを開いてください");
+        } else {
+            ra.addFlashAttribute("error", "短い時間にたくさん送っています。しばらくしてからもう一度お試しください");
+        }
+        return "redirect:/admin/account";
     }
 
     @PostMapping("/account")
@@ -88,12 +112,17 @@ public class AdminAccountController {
         List<String> errors = passwordService.change(principal.getName(), currentPassword, newPassword, confirmPassword);
         if (!errors.isEmpty()) {
             model.addAttribute("errors", errors);
-            model.addAttribute("minLength", PasswordRules.MIN_LENGTH);
+            addAccountAttributes(principal, model);
             return "admin/account";
         }
         logService.record(principal, "自分のパスワードを変更", "@" + principal.getName(), null);
         ra.addFlashAttribute("message", "パスワードを変更しました");
         return "redirect:/admin/account";
+    }
+
+    private void addAccountAttributes(Principal principal, Model model) {
+        model.addAttribute("minLength", PasswordRules.MIN_LENGTH);
+        model.addAttribute("me", userRepository.findByUsername(principal.getName()).orElseThrow());
     }
 
     private void addAdminsAttributes(Model model) {

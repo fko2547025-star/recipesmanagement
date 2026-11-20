@@ -1,19 +1,39 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('パスワードの変更（管理者）')}"></head>
+<head th:replace="~{fragments/head :: head('アカウント設定（管理者）')}"></head>
 <body class="admin-page">
     <header th:replace="~{fragments/admin :: header}"></header>
     <main class="admin-shell">
         <nav th:replace="~{fragments/admin :: sidebar('account')}"></nav>
         <div class="admin-main">
-            <h1 class="page-title"><span class="material-symbols-rounded">lock</span>パスワードの変更</h1>
+            <h1 class="page-title"><span class="material-symbols-rounded">manage_accounts</span>アカウント設定</h1>
             <th:block th:replace="~{fragments/admin :: messages}"></th:block>
             <div th:if="${errors != null}" class="alert alert--error">
                 <span class="material-symbols-rounded">error</span>
                 <ul class="alert__list"><li th:each="e : ${errors}" th:text="${e}">エラー</li></ul>
             </div>
 
+            <!-- メールアドレスの確認（確認が済むと、パスワードを忘れたときに再設定のメールが届く） -->
+            <section class="card section-card">
+                <h2 class="section-title"><span class="material-symbols-rounded">mail</span>メールアドレス</h2>
+                <p th:if="${me.email == null}" class="note">メールアドレスが登録されていません。パスワードを忘れたときに再設定できないので、ほかの管理者に頼んで作り直してもらってください。</p>
+                <th:block th:if="${me.email != null}">
+                    <p>
+                        <span th:text="${me.email}">admin@example.com</span>
+                        <span th:if="${me.emailVerified}" class="admin-badge is-star">確認済み</span>
+                        <span th:unless="${me.emailVerified}" class="admin-badge is-danger">未確認</span>
+                    </p>
+                    <th:block th:unless="${me.emailVerified}">
+                        <p class="note">確認が済むまで、パスワードを忘れたときの再設定のメールは届きません。</p>
+                        <form th:action="@{/admin/account/verify-email}" method="post">
+                            <button type="submit" class="btn--outline btn--sm">確認メールを送る</button>
+                        </form>
+                    </th:block>
+                </th:block>
+            </section>
+
             <form th:action="@{/admin/account}" method="post" class="card section-card">
+                <h2 class="section-title"><span class="material-symbols-rounded">lock</span>パスワードの変更</h2>
                 <p class="note" th:text="'@' + ${loginUsername} + ' のパスワードを変更します'">@admin のパスワードを変更します</p>
                 <div class="form-field">
                     <label for="currentPassword">今のパスワード</label>
