@@ -35,6 +35,8 @@ public class CommentController {
 
     // 1人が1分間に投稿できるコメントの数（大量の書き込みを防ぐ）
     public static final int COMMENTS_PER_MINUTE = 5;
+    // 1人が1時間に投稿できるコメントの数（写真付きで大量に投稿されて、ディスクがいっぱいにならないように）
+    public static final int COMMENTS_PER_HOUR = 30;
 
     public CommentController(CommentService commentService, AppUserRepository userRepository, RateLimiter rateLimiter) {
         this.commentService = commentService;
@@ -58,7 +60,8 @@ public class CommentController {
 
         String error = commentService.validate(content, image);
         if (error == null
-                && !rateLimiter.tryAcquire("comment", principal.getName(), COMMENTS_PER_MINUTE, Duration.ofMinutes(1))) {
+                && (!rateLimiter.tryAcquire("comment", principal.getName(), COMMENTS_PER_MINUTE, Duration.ofMinutes(1))
+                    || !rateLimiter.tryAcquire("comment-hour", principal.getName(), COMMENTS_PER_HOUR, Duration.ofHours(1)))) {
             error = "短い時間にたくさん投稿されています。少し待ってからもう一度お試しください";
         }
         if (error != null) {

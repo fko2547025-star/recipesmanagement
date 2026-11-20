@@ -44,6 +44,10 @@ public class MyPageController {
     private final PasswordService passwordService;
     private final CookingRecordService cookingRecordService;
     private final FollowService followService;
+    private final com.example.recipesmanagement.common.RateLimiter rateLimiter;
+
+    // 1人が1時間にプロフィールの写真を変えられる回数（写真で、サーバーのディスクがいっぱいにならないように）
+    public static final int AVATAR_CHANGES_PER_HOUR = 10;
 
     public MyPageController(RecipeRepository recipeRepository,
                             AppUserRepository userRepository,
@@ -52,7 +56,8 @@ public class MyPageController {
                             ProfileService profileService,
                             PasswordService passwordService,
                             CookingRecordService cookingRecordService,
-                            FollowService followService) {
+                            FollowService followService,
+                            com.example.recipesmanagement.common.RateLimiter rateLimiter) {
         this.recipeRepository = recipeRepository;
         this.userRepository = userRepository;
         this.likeRepository = likeRepository;
@@ -61,6 +66,7 @@ public class MyPageController {
         this.passwordService = passwordService;
         this.cookingRecordService = cookingRecordService;
         this.followService = followService;
+        this.rateLimiter = rateLimiter;
     }
 
     // ===== マイページ =====
@@ -129,6 +135,12 @@ public class MyPageController {
         AppUser user = currentUser(principal);
 
         List<String> errors = profileService.validate(nickname, email, avoidFoods, avatar);
+        // 写真を変えるときだけ数える（ニックネームなどの変更では回数を使わない）
+        boolean changingAvatar = avatar != null && !avatar.isEmpty();
+        if (errors.isEmpty() && changingAvatar && !rateLimiter.tryAcquire("avatar", principal.getName(),
+                AVATAR_CHANGES_PER_HOUR, java.time.Duration.ofHours(1))) {
+            errors.add("短い時間に何度も写真を変えています。しばらくしてからもう一度お試しください");
+        }
         if (!errors.isEmpty()) {
             model.addAttribute("errors", errors);
             addProfileFormAttributes(model, user, nickname, email, avoidFoods);   // 入力した値を残して戻す

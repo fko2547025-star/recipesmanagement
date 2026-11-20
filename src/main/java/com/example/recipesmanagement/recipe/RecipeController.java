@@ -58,6 +58,10 @@ public class RecipeController {
     private final FollowService followService;
     private final CategoryImages categoryImages;
     private final com.example.recipesmanagement.admin.NgWordService ngWordService;   // NGワードのチェック
+    private final com.example.recipesmanagement.common.RateLimiter rateLimiter;
+
+    // 1人が1時間に投稿できるレシピの数（大量に投稿されて、写真でサーバーのディスクがいっぱいにならないように）
+    public static final int RECIPES_PER_HOUR = 10;
 
     public RecipeController(RecipeRepository repository,
                             RecipeService recipeService,
@@ -68,7 +72,8 @@ public class RecipeController {
                             CookingRecordService cookingRecordService,
                             FollowService followService,
                             CategoryImages categoryImages,
-                            com.example.recipesmanagement.admin.NgWordService ngWordService) {
+                            com.example.recipesmanagement.admin.NgWordService ngWordService,
+                            com.example.recipesmanagement.common.RateLimiter rateLimiter) {
         this.repository = repository;
         this.recipeService = recipeService;
         this.userRepository = userRepository;
@@ -79,6 +84,7 @@ public class RecipeController {
         this.followService = followService;
         this.categoryImages = categoryImages;
         this.ngWordService = ngWordService;
+        this.rateLimiter = rateLimiter;
     }
 
     /**
@@ -233,6 +239,11 @@ public class RecipeController {
                          Model model) {
 
         List<String> errors = validate(form, image);
+        // 入力に問題が無く、投稿する直前に数える（入力の間違いでは回数を使わない）
+        if (errors.isEmpty() && !rateLimiter.tryAcquire("recipe", principal.getName(), RECIPES_PER_HOUR,
+                java.time.Duration.ofHours(1))) {
+            errors.add("短い時間にたくさん投稿されています。しばらくしてからもう一度お試しください");
+        }
         if (!errors.isEmpty()) {
             model.addAttribute("errors", errors);
             form.ensureRows(1,1);
